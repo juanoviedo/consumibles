@@ -1,0 +1,91 @@
+:root {
+	--main: #143358;
+	--complementary: #F2AA1F;
+	/* --obscure-color: rgba(51,51,51,.9); */
+	--obscure-color: #143358;
+	--secondary: #F1ECE7;
+}
+
+#menu-bar {
+	display: none;
+}
+
+header label {
+	float: right;
+	font-size: 30px;
+	margin: 6px;
+	cursor: pointer;
+	color: var(--secondary);
+}
+
+header > div > a {
+	position: fixed;
+	text-decoration: none;
+	font-size: 34px;
+	padding: 6px 6px;
+	cursor: pointer;
+	color: var(--secondary);
+}
+
+.menu {
+	position: absolute;
+	top: 50px;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background: #114358;
+	transition: all 0.5s;
+	transform: translateX(-100%);
+}
+
+.menu a {
+	display: block;
+	color: var(--secondary);
+	height: 50px;
+	text-decoration: none;
+	padding: 15px;
+	border-bottom: 1px solid rgba(255,255,255,.5);
+}
+
+header a:hover {
+	background: rgba(255,255,255,.2);
+}
+
+
+
+@media (max-width: 360px) {
+	.logo{
+		max-height:40px;
+	}
+
+	header > div > a {
+		font-size: 28px;
+	}
+
+	header label {
+		float: right;
+		font-size: 20px;
+		margin: 6px;
+		cursor: pointer;
+		color: var(--secondary);
+	}
+}
+
+@media (min-width: 850px) {
+	.menu {
+		position: static;
+		width: auto;
+		height: auto;
+		transform: translateX(0%);
+		float: right;
+		display: flex; 
+	}
+
+	.menu a {
+		border: none;
+	}
+
+	header label {
+		display: none;
+	}
+}
