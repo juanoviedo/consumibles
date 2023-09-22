@@ -19,14 +19,10 @@ body {
 
 .btn-whatsapp{
     display:block;
-    width:60px;
-    height:60px;
     color: var(--blue);
     position: fixed;
-    right:30px;
-    bottom:30px;
-    border-radius:50%;
-    line-height:80px;
+    right:18px;
+    bottom:14px;
     text-align:center;
     z-index:999;
 }
