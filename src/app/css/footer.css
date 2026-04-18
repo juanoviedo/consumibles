@@ -1,0 +1,34 @@
+:root {
+	--main-color: #114358;
+	--complementary-color: #F2AA1F;
+	--secondary-color: #F1ECE7;
+    --obscure-color: rgba(51,51,51,.9);
+}
+
+footer {
+    width: 100%;
+    background-color: var(--obscure-color);
+    padding-bottom: 30px;
+}
+
+footer > div{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 25px;
+    max-width: 450px;
+    margin: auto;
+}
+
+footer > div > p {
+    text-align: center;
+    margin: 2vw;
+    color: var(--secondary-color);
+}
+
+footer > div > div > a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    margin: 1vw;
+    font-size: 2em;
+}

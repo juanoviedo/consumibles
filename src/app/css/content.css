@@ -1,0 +1,121 @@
+
+:root {
+	--main-color: #114358;
+	--complementary-color: #F2AA1F;
+	--secondary-color: #F1ECE7;
+    --obscure-color: #090909;
+}
+
+.content {
+    display: flex;
+	justify-content: center;
+    box-sizing: border-box;
+	padding: 80px 0px;
+}
+
+.normal {
+	flex-wrap: wrap;
+}
+
+.reverse {
+	flex-wrap: wrap-reverse;
+	background-color: #eee;
+}
+
+/* .content > .text-content, .img-content { */
+.content > div {
+    margin: 10px 40px;
+    min-width: 200px;
+	max-width: 500px;
+    display: flex;
+	flex: 1 1 0px;
+}
+
+.content > div > div {
+	margin: auto 0;
+}
+
+.content > div > div > h2 {
+    color: var(--main-color);
+	margin: 12px 0;
+	letter-spacing: -1px;
+	font-size: 30px;
+}
+
+.content > div > div > h5,h4 {
+    color: var(--main-color);
+	margin: 12px 0;
+	letter-spacing: -1px;
+
+}
+
+.content > div > div > p {
+	font-size: 14px;
+	margin-bottom: 2vh;
+	line-height: 1.4;
+}
+.content > div > div > p > a {
+	color: var(--complementary-color);
+	text-decoration: none;
+	font-size: 14px;
+}
+
+.img-container {
+    width: 100%;
+}
+
+.img-container > img {
+	display: block;
+}
+
+.cuadrolink {
+	display: block;
+	padding: 2px;
+	border: 1px solid var(--main-color);
+	color: var(--main-color);
+	text-decoration: none;
+	font-weight: 600;
+	text-align: center;
+	width: fit-content;
+	font-size: 16px;
+
+	-webkit-transition: background-color 400ms linear, color 400ms linear;
+	-moz-transition: background-color 400ms linear, color 400ms linear;
+	-o-transition: background-color 400ms linear, color 400ms linear;
+	-ms-transition: background-color 400ms linear, color 400ms linear;
+	transition: background-color 400ms linear, color 400ms linear;
+}
+
+.cuadrodentro {
+	border: 1px solid var(--main-color);
+	width: 100%;
+	height: 100%;
+	padding: 14px 26px;
+}
+
+.cuadrolink:hover {
+	background: rgba(151,151,151,.5);
+	color: #fff;
+	background-color: var(--main-color);
+
+	-webkit-transition: background-color 400ms linear, color 400ms linear;
+	-moz-transition: background-color 400ms linear, color 400ms linear;
+	-o-transition: background-color 400ms linear, color 400ms linear;
+	-ms-transition: background-color 400ms linear, color 400ms linear;
+	transition: background-color 400ms linear, color 400ms linear;
+}
+
+/* If the screen size is 600px wide or less, set the font-size of <div> to 30px */
+@media screen and (max-width: 600px) {
+	.content > div > div > h2 {
+		font-size: 20px;
+	}
+
+	.cuadrodentro {
+		padding: 8px 20px;
+	}
+
+	.cuadrolink {
+		font-size: 14px;
+	}
+}

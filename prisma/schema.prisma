@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Product {
+  id           Int     @id @default(autoincrement())
+  codigo       String  @unique
+  nombre       String
+  precio       Int
+  imagenUrl    String
+  descripcion1 String
+  descripcion2 String
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  email        String  @unique
+  password     String
+  isSuperAdmin Boolean @default(false)
+  createdAt    DateTime @default(now())
+  resetToken   String?
+  resetTokenExpiry DateTime?
+}
