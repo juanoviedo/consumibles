@@ -10,78 +10,102 @@ export default function AdminClient({ products }: { products: any[] }) {
 
   return (
     <>
-      <section style={{ margin: "40px 0" }}>
-        <h2>Agregar Nuevo Producto</h2>
+      <section className="glass-container" style={{ marginBottom: "40px" }}>
+        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Agregar Nuevo Producto</h2>
         <form
           action={createProduct}
-          style={{
-            display: "flex", flexDirection: "column", gap: "10px",
-            maxWidth: "400px", background: "#f4f4f4", padding: "20px", borderRadius: "8px"
-          }}
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}
         >
-          <input type="text" name="codigo" placeholder="Código (ej. 220930)" required />
-          <input type="text" name="nombre" placeholder="Nombre" required />
-          <input type="number" name="precio" placeholder="Precio (COP)" required />
-          <input type="text" name="imagenUrl" placeholder="URL de Imagen (ej. /img/finecut.png)" required />
-          <textarea name="descripcion1" placeholder="Descripción 1" required />
-          <textarea name="descripcion2" placeholder="Descripción opcional 2" />
-          <button type="submit" style={{ background: "#8b0500", color: "#fff", padding: "10px", border: "none", cursor: "pointer" }}>
-            Guardar Nuevo Producto
-          </button>
+          <div className="admin-input-group">
+            <input type="text" name="codigo" placeholder="Código (ej. 220930)" required />
+          </div>
+          <div className="admin-input-group">
+            <input type="text" name="nombre" placeholder="Nombre" required />
+          </div>
+          <div className="admin-input-group">
+            <input type="number" name="precio" placeholder="Precio (COP)" required />
+          </div>
+          <div className="admin-input-group">
+            <input type="text" name="imagenUrl" placeholder="URL de Imagen (ej. /img/finecut.png)" required />
+          </div>
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+            <textarea name="descripcion1" placeholder="Descripción 1" required rows={3} />
+          </div>
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+            <textarea name="descripcion2" placeholder="Descripción opcional 2" rows={2} />
+          </div>
+          <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+            <button type="submit" className="admin-btn" style={{ maxWidth: "250px" }}>
+              Guardar Nuevo Producto
+            </button>
+          </div>
         </form>
       </section>
 
-      <h2>Productos Actuales</h2>
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
-        <thead>
-          <tr style={{ background: "#8b0500", color: "#fff", textAlign: "left" }}>
-            <th style={{ padding: "10px" }}>Código</th>
-            <th style={{ padding: "10px" }}>Imagen</th>
-            <th style={{ padding: "10px" }}>Nombre</th>
-            <th style={{ padding: "10px" }}>Precio</th>
-            <th style={{ padding: "10px" }}>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((p) => (
-            <tr key={p.id} style={{ borderBottom: "1px solid #ccc" }}>
-              {editingId === p.id ? (
-                <td colSpan={5} style={{ padding: "10px", background: "#f9f9f9" }}>
-                  <form action={async (formData) => { 
-                      await updateProduct(formData); 
-                      setEditingId(null); 
-                  }} style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
-                    <input type="hidden" name="id" value={p.id} />
-                    <input type="text" name="codigo" defaultValue={p.codigo} required />
-                    <input type="text" name="nombre" defaultValue={p.nombre} required />
-                    <input type="number" name="precio" defaultValue={p.precio} required />
-                    <input type="text" name="imagenUrl" defaultValue={p.imagenUrl} required />
-                    <textarea name="descripcion1" defaultValue={p.descripcion1} style={{width: "100%"}} required />
-                    <textarea name="descripcion2" defaultValue={p.descripcion2} style={{width: "100%"}} />
-                    <button type="submit" style={{ background: "green", color: "white", padding: "5px 10px", cursor: "pointer" }}>Guardar</button>
-                    <button type="button" onClick={cancelEdit} style={{ background: "#ccc", color: "black", padding: "5px 10px", cursor: "pointer" }}>Cancelar</button>
-                  </form>
-                </td>
-              ) : (
-                <>
-                  <td style={{ padding: "10px" }}>{p.codigo}</td>
-                  <td style={{ padding: "10px" }}>
-                    <img src={p.imagenUrl} alt={p.nombre} width="50" />
-                  </td>
-                  <td style={{ padding: "10px" }}>{p.nombre}</td>
-                  <td style={{ padding: "10px" }}>COP {p.precio}</td>
-                  <td style={{ padding: "10px", display: "flex", gap: "10px" }}>
-                    <button type="button" onClick={() => startEdit(p)} style={{ color: "blue", cursor: "pointer", border: "none", background: "none" }}>Editar</button>
-                    <form action={deleteProduct.bind(null, p.id)}>
-                      <button type="submit" style={{ color: "red", cursor: "pointer", border: "none", background: "none" }}>Borrar</button>
-                    </form>
-                  </td>
-                </>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
+        <div style={{ padding: "30px 30px 15px 30px" }}>
+          <h2 style={{ margin: 0 }}>Productos Actuales</h2>
+        </div>
+        
+        <div className="admin-table-container">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((p) => (
+                <tr key={p.id}>
+                  {editingId === p.id ? (
+                    <td colSpan={5}>
+                      <form action={async (formData) => { 
+                          await updateProduct(formData); 
+                          setEditingId(null); 
+                      }} className="admin-edit-form">
+                        <input type="hidden" name="id" value={p.id} />
+                        
+                        <div className="admin-input-group"><input type="text" name="codigo" defaultValue={p.codigo} required /></div>
+                        <div className="admin-input-group"><input type="text" name="nombre" defaultValue={p.nombre} required /></div>
+                        <div className="admin-input-group"><input type="number" name="precio" defaultValue={p.precio} required /></div>
+                        <div className="admin-input-group"><input type="text" name="imagenUrl" defaultValue={p.imagenUrl} required /></div>
+                        <div className="admin-input-group" style={{gridColumn: "1/-1"}}><textarea name="descripcion1" defaultValue={p.descripcion1} required /></div>
+                        <div className="admin-input-group" style={{gridColumn: "1/-1"}}><textarea name="descripcion2" defaultValue={p.descripcion2} /></div>
+                        
+                        <div className="admin-edit-form-full">
+                          <button type="submit" className="admin-btn admin-btn-success admin-btn-sm">Guardar</button>
+                          <button type="button" onClick={cancelEdit} className="admin-btn admin-btn-outline admin-btn-sm">Cancelar</button>
+                        </div>
+                      </form>
+                    </td>
+                  ) : (
+                    <>
+                      <td>{p.codigo}</td>
+                      <td>
+                        <img src={p.imagenUrl} alt={p.nombre} width="50" />
+                      </td>
+                      <td>{p.nombre}</td>
+                      <td>COP {p.precio}</td>
+                      <td>
+                        <div className="admin-table-actions">
+                          <button type="button" onClick={() => startEdit(p)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
+                          <form action={deleteProduct.bind(null, p.id)}>
+                            <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">Borrar</button>
+                          </form>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </>
   );
 }

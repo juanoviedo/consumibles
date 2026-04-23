@@ -4,7 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function getProducts() {
-  return await prisma.product.findMany();
+  const products = await prisma.product.findMany();
+  return products.map(p => ({
+    ...p,
+    precio: Number(p.precio)
+  }));
 }
 
 export async function createProduct(formData: FormData) {

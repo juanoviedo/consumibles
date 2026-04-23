@@ -35,7 +35,12 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="content normal">
+        <section className="content reverse">
+          <div>
+            <div className="img-container">
+              <img src="/img/corteaguapro.jpg" alt="ahorro" />
+            </div>
+          </div>
           <div>
             <div>
               <h2>Alíate con los Expertos</h2>
@@ -50,11 +55,6 @@ export default function Home() {
               <Link href="/catalogo" className="cuadrolink">
                 <div className="cuadrodentro">¡Ver catálogo!</div>
               </Link>
-            </div>
-          </div>
-          <div>
-            <div className="img-container">
-              <img src="/img/corteaguapro.jpg" alt="ahorro" />
             </div>
           </div>
         </section>
