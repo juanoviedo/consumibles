@@ -9,26 +9,30 @@ datasource db {
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model product {
+model Product {
   id           Int       @id @default(autoincrement())
   codigo       String    @unique
   nombre       String
   precio       Decimal   @db.Decimal(10, 2)
-  imagen_url   String
+  imagenUrl    String    @map("imagen_url")
   descripcion1 String
   descripcion2 String
-  created_at   DateTime? @default(now()) @db.Timestamp(6)
-  updated_at   DateTime? @default(now()) @db.Timestamp(6)
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime? @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  @@map("product")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model users {
+model User {
   id                 Int       @id @default(autoincrement())
   email              String    @unique
   password           String
-  is_super_admin     Boolean?  @default(false)
-  created_at         DateTime? @default(now()) @db.Timestamp(6)
-  updated_at         DateTime? @default(now()) @db.Timestamp(6)
-  reset_token        String?
-  reset_token_expiry DateTime? @db.Timestamp(6)
+  isSuperAdmin       Boolean?  @default(false) @map("is_super_admin")
+  createdAt          DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime? @default(now()) @map("updated_at") @db.Timestamp(6)
+  resetToken         String?   @map("reset_token")
+  resetTokenExpiry   DateTime? @map("reset_token_expiry") @db.Timestamp(6)
+
+  @@map("users")
 }
