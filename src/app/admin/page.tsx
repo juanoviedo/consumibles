@@ -16,7 +16,7 @@ export default async function AdminPage() {
   return (
     <div className="admin-body">
       <div className="admin-dashboard">
-        <header className="admin-header">
+        <div className="admin-header">
           <div>
             <h1>Centro de Administración</h1>
             <p style={{ color: "var(--admin-text-muted)", marginTop: "8px" }}>Gestión de Consumibles y ajustes de sistema.</p>
@@ -32,7 +32,7 @@ export default async function AdminPage() {
               </button>
             </form>
           </div>
-        </header>
+        </div>
 
         <AdminClient products={products} />
       </div>

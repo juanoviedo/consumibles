@@ -14,7 +14,7 @@ export default function AdminClient({ products }: { products: any[] }) {
         <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Agregar Nuevo Producto</h2>
         <form
           action={createProduct}
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}
+          className="admin-grid-form"
         >
           <div className="admin-input-group">
             <input type="text" name="codigo" placeholder="Código (ej. 220930)" required />
@@ -25,8 +25,15 @@ export default function AdminClient({ products }: { products: any[] }) {
           <div className="admin-input-group">
             <input type="number" name="precio" placeholder="Precio (COP)" required />
           </div>
-          <div className="admin-input-group">
-            <input type="text" name="imagenUrl" placeholder="URL de Imagen (ej. /img/finecut.png)" required />
+          <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1" }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>Subir Imagen Local (Opcional)</label>
+              <input type="file" name="imagenFile" accept="image/*" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>O Usar URL de Imagen</label>
+              <input type="text" name="imagenUrl" placeholder="URL de Imagen (ej. /img/finecut.png)" />
+            </div>
           </div>
           <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
             <textarea name="descripcion1" placeholder="Descripción 1" required rows={3} />
@@ -72,7 +79,16 @@ export default function AdminClient({ products }: { products: any[] }) {
                         <div className="admin-input-group"><input type="text" name="codigo" defaultValue={p.codigo} required /></div>
                         <div className="admin-input-group"><input type="text" name="nombre" defaultValue={p.nombre} required /></div>
                         <div className="admin-input-group"><input type="number" name="precio" defaultValue={p.precio} required /></div>
-                        <div className="admin-input-group"><input type="text" name="imagenUrl" defaultValue={p.imagenUrl} required /></div>
+                        <div className="admin-input-group" style={{ gridColumn: "1/-1", display: "flex", gap: "10px" }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ fontSize: "12px", display: "block" }}>Nueva Imagen (Reemplaza la actuaL)</label>
+                            <input type="file" name="imagenFile" accept="image/*" />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ fontSize: "12px", display: "block" }}>URL Actual / Nueva URL</label>
+                            <input type="text" name="imagenUrl" defaultValue={p.imagenUrl} />
+                          </div>
+                        </div>
                         <div className="admin-input-group" style={{gridColumn: "1/-1"}}><textarea name="descripcion1" defaultValue={p.descripcion1} required /></div>
                         <div className="admin-input-group" style={{gridColumn: "1/-1"}}><textarea name="descripcion2" defaultValue={p.descripcion2} /></div>
                         
