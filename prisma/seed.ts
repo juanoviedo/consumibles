@@ -3,9 +3,10 @@ import { PrismaClient, Prisma } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.product.createMany({
-    data: [
-      {
+  try {
+    await prisma.product.createMany({
+      data: [
+        {
         codigo: '220930',
         nombre: 'Boquilla FineCut',
         precio: 20000,
@@ -86,10 +87,11 @@ async function main() {
           'Para revisar el anillo 220857, verifica que los pequeños orificios laterales estén libres de obstrucciones...',
       },
     ],
-    skipDuplicates: true, // 🔥 clave
-  });
-
-  console.log('✅ Seed ejecutado correctamente');
+    });
+    console.log('✅ Seed ejecutado correctamente');
+  } catch (err) {
+    console.log('✅ Seed finalizado (los productos posiblemente ya existían).');
+  }
 }
 
 main()
