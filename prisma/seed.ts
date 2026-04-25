@@ -8,7 +8,7 @@ async function main() {
       {
         codigo: '220930',
         nombre: 'Boquilla FineCut',
-        precio: new Prisma.Decimal(20000),
+        precio: 20000,
         imagenUrl: '/img/finecut.png',
         descripcion1:
           'Es fácil de reconocer porque su punta es circular. Esta boquilla puede utilizarse con 30 a 45 amperios...',
@@ -18,7 +18,7 @@ async function main() {
       {
         codigo: '220941',
         nombre: 'Boquilla 45A',
-        precio: new Prisma.Decimal(20000),
+        precio: 20000,
         imagenUrl: '/img/boquilla45.png',
         descripcion1:
           'La boquilla de 45 amperios es la más utilizada en la industria...',
@@ -28,7 +28,7 @@ async function main() {
       {
         codigo: '220819',
         nombre: 'Boquilla 65A',
-        precio: new Prisma.Decimal(20000),
+        precio: 20000,
         imagenUrl: '/img/boquilla45.png',
         descripcion1:
           'La boquilla de 65 amperios puede ser utilizada por los equipos Powermax 65, 85 y 105...',
@@ -38,7 +38,7 @@ async function main() {
       {
         codigo: '220816',
         nombre: 'Boquilla 85A',
-        precio: new Prisma.Decimal(20000),
+        precio: 20000,
         imagenUrl: '/img/boquilla45.png',
         descripcion1:
           'La boquilla de 85 amperios puede ser utilizada los equipos Powermax 85 y 105...',
@@ -48,7 +48,7 @@ async function main() {
       {
         codigo: '220990',
         nombre: 'Boquilla 105A',
-        precio: new Prisma.Decimal(20000),
+        precio: 20000,
         imagenUrl: '/img/boquilla105.png',
         descripcion1:
           'Tener siempre mucho cuidado con esta boquilla, pues al ser parecida a las otras se suele utilizar con los consumibles inadecuados.',
@@ -58,7 +58,7 @@ async function main() {
       {
         codigo: '220842',
         nombre: 'Electrodo 10 - 105A',
-        precio: new Prisma.Decimal(28000),
+        precio: 28000,
         imagenUrl: '/img/electrode.png',
         descripcion1:
           'El electrodo sirve para todos los amperajes de equipos Powermax...',
@@ -68,7 +68,7 @@ async function main() {
       {
         codigo: '220818',
         nombre: 'Escudo de arrastre 15-85A',
-        precio: new Prisma.Decimal(40000),
+        precio: 40000,
         imagenUrl: '/img/escudo.png',
         descripcion1:
           'El escudo de arrastre se utiliza para cortes manuales. El escudo está diseñado para ser arrastrado...',
@@ -78,7 +78,7 @@ async function main() {
       {
         codigo: '220857',
         nombre: 'Anillo Difusor 10 - 105A',
-        precio: new Prisma.Decimal(40000),
+        precio: 40000,
         imagenUrl: '/img/AnilloDifusor.png',
         descripcion1:
           'Se encarga de centrar y distribuir uniformemente el flujo de gas alrededor del electrodo...',

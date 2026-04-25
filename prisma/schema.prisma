@@ -3,30 +3,32 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-model Product {
-  id           Int      @id @default(autoincrement())
-  codigo       String   @unique
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model product {
+  id           Int       @id @default(autoincrement())
+  codigo       String    @unique
   nombre       String
-  precio       Decimal  @db.Decimal(10, 2)
-  imagenUrl    String
+  precio       Decimal   @db.Decimal(10, 2)
+  imagen_url   String
   descripcion1 String
   descripcion2 String
-  createdAt    DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @default(now()) @db.Timestamp(6)
 }
 
-model User {
-  id                Int       @id @default(autoincrement())
-  email             String    @unique
-  password          String
-  isSuperAdmin      Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  resetToken        String?
-  resetTokenExpiry  DateTime?
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  id                 Int       @id @default(autoincrement())
+  email              String    @unique
+  password           String
+  is_super_admin     Boolean?  @default(false)
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @default(now()) @db.Timestamp(6)
+  reset_token        String?
+  reset_token_expiry DateTime? @db.Timestamp(6)
 }
