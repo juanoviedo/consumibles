@@ -6,6 +6,7 @@ export default function StoreFront({ products }: { products: any[] }) {
   const [carrito, setCarrito] = useState<Record<string, { nombre: string; precio: number; cantidad: number }>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(8);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Lazy loading by scroll
   useEffect(() => {
@@ -148,7 +149,12 @@ export default function StoreFront({ products }: { products: any[] }) {
 
 
 
-      <div id="carrito-flotante" className={totalItems > 0 ? "" : "carrito-oculto"}>
+      <div className="btn-flotante-carrito" onClick={() => setIsCartOpen(!isCartOpen)}>
+        <i className="icon-basket"></i>
+        {totalItems > 0 && <span className="badge-carrito">{totalItems}</span>}
+      </div>
+
+      <div id="carrito-flotante" className={isCartOpen ? "" : "carrito-oculto"}>
         <h3>Tu Pedido</h3>
         <ul id="lista-items">
           {Object.keys(carrito).map((codigo) => (

@@ -31,7 +31,7 @@ async function uploadImage(imageFile: File | null): Promise<string | null> {
 
 export async function getProducts() {
   const products = await prisma.product.findMany({
-    orderBy: { createdAt: 'desc' }
+    orderBy: { nombre: 'asc' }
   });
   return products.map(p => ({
     ...p,

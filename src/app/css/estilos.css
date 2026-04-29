@@ -132,7 +132,7 @@ section img {
 /* Carrito Flotante Estilizado */
 #carrito-flotante {
     position: fixed;
-    bottom: 80px; /* Subido para no tapar otros botones */
+    bottom: 150px; /* Subido para no tapar el boton flotante del carrito */
     right: 20px;
     background: #fff;
     border-radius: 8px;
@@ -141,6 +141,50 @@ section img {
     z-index: 1000;
     width: 280px;
     border-top: 5px solid #8b0500;
+}
+
+.btn-flotante-carrito {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    background-color: #8b0500;
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 1001;
+    transition: transform 0.3s ease;
+}
+
+.btn-flotante-carrito:hover {
+    transform: scale(1.1);
+}
+
+.badge-carrito {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+}
+
+.carrito-oculto {
+    display: none !important;
 }
 
 #lista-items {
