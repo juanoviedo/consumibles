@@ -29,7 +29,7 @@ export default function StoreFront({ products }: { products: any[] }) {
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
   const CONFIG = {
-    telefono: "573168314501",
+    telefono: "573332782483",
     mensajeCabecera: "¡Hola! Quisiera realizar el siguiente pedido:\n\n",
   };
 
