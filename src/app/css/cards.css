@@ -113,9 +113,62 @@
   }
   
   .products-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
     padding: 10px;
+  }
+  
+  /* Tarjetas más pequeñas para 2 columnas en móvil */
+  .product-card .img-container {
+    height: 120px;
+    padding: 5px;
+  }
+  
+  .product-card .card-body {
+    padding: 10px;
+  }
+  
+  .product-card h2 {
+    font-size: 1.1em;
+    margin: 0 0 5px 0;
+  }
+  
+  .product-card .codigo-ref {
+    font-size: 0.8em;
+    margin: 0 0 5px 0;
+  }
+  
+  .product-card .precio {
+    font-size: 1.2em;
+    margin: 0 0 10px 0;
+  }
+  
+  .product-card .desc {
+    font-size: 0.85em;
+    margin-bottom: 10px;
+  }
+  
+  .control-cantidad {
+    margin: 5px 0 10px 0;
+  }
+  
+  .btn-menos, .btn-mas {
+    padding: 5px 10px;
+    font-size: 1em;
+  }
+  
+  .indicador-carrito {
+    min-width: 30px;
+    padding: 0 5px;
+  }
+  
+  .cantidad-producto {
+    font-size: 0.9em;
+  }
+  
+  .cuadrodentro {
+    padding: 8px 5px;
+    font-size: 0.85em;
   }
 }
 
