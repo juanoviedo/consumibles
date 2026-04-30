@@ -68,9 +68,9 @@ export default function AdminSidebarClient({
             Mi Perfil
           </a>
 
-          <div style={{ marginTop: "auto", borderTop: "1px solid var(--admin-glass-border)", paddingTop: "20px" }}>
+          <div style={{ borderTop: "1px solid var(--admin-glass-border)", paddingTop: "10px", marginTop: "10px" }}>
             <form action={logoutAction}>
-              <button type="submit" className="admin-btn admin-btn-outline" style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: "10px" }}>
+              <button type="submit" className="admin-nav-item" style={{ width: "100%", background: "transparent", border: "none", textAlign: "left", cursor: "pointer", fontSize: "1rem", color: "#ef4444" }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                 Cerrar Sesión
               </button>

@@ -39,21 +39,31 @@ export default function AdminClient({ products, categories }: { products: any[],
             <input type="number" name="precio" defaultValue={editingProduct.precio} required />
           </div>
           <div className="admin-input-group">
-            <select name="categoryId" defaultValue={editingProduct.categoryId || ""} className="admin-input" style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}>
+            <select name="categoryId" defaultValue={editingProduct.categoryId || ""}>
               <option value="">Sin Categoría / Todas</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
             </select>
           </div>
-          <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1" }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>Nueva Imagen Local (Reemplaza la actual)</label>
+          <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>Nueva Imagen Principal Local</label>
               <input type="file" name="imagenFile" accept="image/*" />
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>O Usar URL de Imagen</label>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>O URL de Imagen Principal</label>
               <input type="text" name="imagenUrl" defaultValue={editingProduct.imagenUrl} />
+            </div>
+          </div>
+          <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap", borderTop: "1px solid var(--admin-glass-border)", paddingTop: "15px" }}>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>Subir a Galería (Múltiples fotos)</label>
+              <input type="file" name="galeriaFiles" accept="image/*" multiple />
+            </div>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>URLs de Galería (Separadas por coma)</label>
+              <textarea name="galeriaUrlsString" defaultValue={editingProduct.galeria?.join(", ") || ""} rows={2} style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }} placeholder="https://..., https://..." />
             </div>
           </div>
           <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
@@ -96,21 +106,31 @@ export default function AdminClient({ products, categories }: { products: any[],
             <input type="number" name="precio" placeholder="Precio (COP)" required />
           </div>
           <div className="admin-input-group">
-            <select name="categoryId" className="admin-input" style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}>
+            <select name="categoryId">
               <option value="">Sin Categoría / Todas</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
             </select>
           </div>
-          <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1" }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>Subir Imagen Local (Opcional)</label>
+          <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>Subir Imagen Principal Local</label>
               <input type="file" name="imagenFile" accept="image/*" />
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>O Usar URL de Imagen</label>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>O URL de Imagen Principal</label>
               <input type="text" name="imagenUrl" placeholder="URL de Imagen (ej. /img/finecut.png)" />
+            </div>
+          </div>
+          <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap", borderTop: "1px solid var(--admin-glass-border)", paddingTop: "15px" }}>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>Subir a Galería (Múltiples fotos)</label>
+              <input type="file" name="galeriaFiles" accept="image/*" multiple />
+            </div>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>URLs de Galería (Separadas por coma)</label>
+              <textarea name="galeriaUrlsString" rows={2} style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }} placeholder="https://..., https://..." />
             </div>
           </div>
           <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>

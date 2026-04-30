@@ -38,6 +38,10 @@ export default async function UsersPage() {
           <div className="admin-input-group">
             <input type="password" name="password" placeholder="Contraseña inicial" required />
           </div>
+          <div className="admin-input-group" style={{ gridColumn: "1/-1", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px" }}>
+            <input type="checkbox" name="isSuperAdmin" id="isSuperAdmin" value="true" style={{ width: "auto" }} />
+            <label htmlFor="isSuperAdmin" style={{ cursor: "pointer", color: "var(--admin-text-main)" }}>Este usuario será Super Admin (podrá gestionar a otros administradores)</label>
+          </div>
           <div style={{ gridColumn: "1/-1", display: "flex", justifyContent: "flex-end" }}>
             <button type="submit" className="admin-btn">Crear Administrador</button>
           </div>

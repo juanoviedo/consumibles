@@ -15,6 +15,7 @@ model Product {
   nombre       String
   precio       Decimal   @db.Decimal(10, 2)
   imagenUrl    String
+  galeria      String[]  @default([])
   descripcion1 String
   descripcion2 String
   categoryId   Int?

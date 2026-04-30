@@ -101,6 +101,58 @@ export default function StoreFront({ products, categories = [] }: { products: an
     );
   };
 
+  const ProductImageGallery = ({ imagenes, nombre }: { imagenes: string[], nombre: string }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    if (!imagenes || imagenes.length === 0) return (
+       <div className="img-container"><img src="" alt={nombre} /></div>
+    );
+    if (imagenes.length === 1) {
+      return (
+        <div className="img-container">
+          <img src={imagenes[0]} alt={nombre} />
+        </div>
+      );
+    }
+
+    const nextImage = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setCurrentIndex((prev) => (prev + 1) % imagenes.length);
+    };
+
+    const prevImage = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setCurrentIndex((prev) => (prev - 1 + imagenes.length) % imagenes.length);
+    };
+
+    return (
+      <div className="img-container" style={{ position: "relative" }}>
+        <img src={imagenes[currentIndex]} alt={`${nombre} - ${currentIndex + 1}`} />
+        
+        <button 
+          onClick={prevImage}
+          style={{ position: "absolute", left: "5px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}
+        >
+          &#10094;
+        </button>
+        <button 
+          onClick={nextImage}
+          style={{ position: "absolute", right: "5px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}
+        >
+          &#10095;
+        </button>
+        
+        <div style={{ position: "absolute", bottom: "5px", display: "flex", gap: "4px", left: "50%", transform: "translateX(-50%)" }}>
+          {imagenes.map((_, i) => (
+            <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: i === currentIndex ? "#8b0500" : "rgba(0,0,0,0.3)" }} />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <br></br>
@@ -147,9 +199,7 @@ export default function StoreFront({ products, categories = [] }: { products: an
         ) : (
           visibleProducts.map((p) => (
             <div key={p.id} className="product-card">
-              <div className="img-container">
-                <img src={p.imagenUrl} alt={p.nombre} />
-              </div>
+              <ProductImageGallery imagenes={[p.imagenUrl, ...(p.galeria || [])].filter(Boolean)} nombre={p.nombre} />
               <div className="card-body">
                 <h2>{p.nombre}</h2>
                 <p className="codigo-ref">Ref: {p.codigo}</p>

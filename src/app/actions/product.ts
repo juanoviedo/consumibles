@@ -61,8 +61,28 @@ export async function createProduct(formData: FormData) {
     // Continue with the manual string or empty string
   }
 
+  const galeriaFiles = formData.getAll("galeriaFiles") as File[];
+  const galeriaUrls: string[] = [];
+
+  for (const f of galeriaFiles) {
+    if (f && f.size > 0 && f.name !== "undefined") {
+      try {
+        const url = await uploadImage(f);
+        if (url) galeriaUrls.push(url);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
+
+  const galeriaUrlsString = formData.get("galeriaUrlsString") as string;
+  if (galeriaUrlsString) {
+    const splitUrls = galeriaUrlsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    galeriaUrls.push(...splitUrls);
+  }
+
   await prisma.product.create({
-    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", descripcion1, descripcion2, categoryId },
+    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", galeria: galeriaUrls, descripcion1, descripcion2, categoryId },
   });
 
   revalidatePath("/");
@@ -90,9 +110,29 @@ export async function updateProduct(formData: FormData) {
     console.error(err);
   }
 
+  const galeriaFiles = formData.getAll("galeriaFiles") as File[];
+  const galeriaUrls: string[] = [];
+
+  for (const f of galeriaFiles) {
+    if (f && f.size > 0 && f.name !== "undefined") {
+      try {
+        const url = await uploadImage(f);
+        if (url) galeriaUrls.push(url);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
+
+  const galeriaUrlsString = formData.get("galeriaUrlsString") as string;
+  if (galeriaUrlsString) {
+    const splitUrls = galeriaUrlsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    galeriaUrls.push(...splitUrls);
+  }
+
   await prisma.product.update({
     where: { id },
-    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", descripcion1, descripcion2, categoryId },
+    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", galeria: galeriaUrls, descripcion1, descripcion2, categoryId },
   });
 
   revalidatePath("/");

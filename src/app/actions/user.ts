@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 export async function createUserAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const isSuperAdmin = formData.get("isSuperAdmin") === "true";
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -18,7 +19,7 @@ export async function createUserAction(formData: FormData) {
     data: {
       email,
       password: hashedPassword,
-      isSuperAdmin: false // Siempre crea admin normal
+      isSuperAdmin
     }
   });
 
