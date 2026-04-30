@@ -138,7 +138,7 @@ export default function StoreFront({ products }: { products: any[] }) {
 
                 <ControlCantidad nombre={p.nombre} codigo={p.codigo} precio={p.precio} />
 
-                <a target="_blank" href={`https://wa.me/573168314501?text=Hola.%20Necesito%20mas%20info%20sobre%20${encodeURIComponent(p.nombre)}`} className="cuadrolink">
+                <a target="_blank" href={`https://wa.me/573332782483?text=Hola.%20Necesito%20mas%20info%20sobre%20${encodeURIComponent(p.nombre)}`} className="cuadrolink">
                   <div className="cuadrodentro">¡Consultar ahora!</div>
                 </a>
               </div>
