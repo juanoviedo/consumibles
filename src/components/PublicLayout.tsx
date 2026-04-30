@@ -5,9 +5,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     <>
       <header>
         <div className="contenedor">
-          <a href="/">Consumibles Duramax</a>
+          <a href="/">ConsumiblesCali.com</a>
           <nav className="menu">
-            <a href="/" className="sombrear">
+            <a href="/informacion" className="sombrear">
               ¡Somos expertos en Plasma!
             </a>
           </nav>

@@ -145,8 +145,7 @@
   }
   
   .product-card .desc {
-    font-size: 0.85em;
-    margin-bottom: 10px;
+    display: none;
   }
   
   .control-cantidad {

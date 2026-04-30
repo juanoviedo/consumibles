@@ -4,28 +4,71 @@ import { createCategory, updateCategory, deleteCategory } from "@/app/actions/ca
 
 export default function AdminCategories({ categories }: { categories: any[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [showNewForm, setShowNewForm] = useState(false);
 
   const startEdit = (c: any) => setEditingId(c.id);
   const cancelEdit = () => setEditingId(null);
 
-  return (
-    <>
+  const editingCategory = categories.find(c => c.id === editingId);
+
+  if (editingCategory) {
+    return (
+      <section className="glass-container" style={{ marginBottom: "40px" }}>
+        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Editar Categoría: {editingCategory.nombre}</h2>
+        <form
+          action={async (formData) => { 
+            await updateCategory(formData); 
+            setEditingId(null); 
+          }}
+          className="admin-grid-form"
+        >
+          <input type="hidden" name="id" value={editingCategory.id} />
+          <div className="admin-input-group">
+            <input type="text" name="nombre" defaultValue={editingCategory.nombre} required />
+          </div>
+          <div style={{ display: "flex", gap: "10px", marginTop: "10px", gridColumn: "1/-1" }}>
+            <button type="submit" className="admin-btn">Guardar Cambios</button>
+            <button type="button" className="admin-btn admin-btn-outline" onClick={cancelEdit}>Cancelar</button>
+          </div>
+        </form>
+      </section>
+    );
+  }
+
+  if (showNewForm) {
+    return (
       <section className="glass-container" style={{ marginBottom: "40px" }}>
         <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Agregar Nueva Categoría</h2>
         <form
-          action={createCategory}
+          action={async (formData) => {
+            await createCategory(formData);
+            setShowNewForm(false);
+          }}
           className="admin-grid-form"
         >
           <div className="admin-input-group">
             <input type="text" name="nombre" placeholder="Nombre de la Categoría" required />
           </div>
-          <div style={{ display: "flex", alignItems: "flex-end", marginBottom: "15px" }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "flex-end", marginBottom: "15px" }}>
             <button type="submit" className="admin-btn">
               Guardar Categoría
+            </button>
+            <button type="button" className="admin-btn admin-btn-outline" onClick={() => setShowNewForm(false)}>
+              Cancelar
             </button>
           </div>
         </form>
       </section>
+    );
+  }
+
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
+        <button className="admin-btn" onClick={() => setShowNewForm(true)}>
+          + Agregar Nueva Categoría
+        </button>
+      </div>
 
       <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
         <div style={{ padding: "30px 30px 15px 30px" }}>
@@ -44,36 +87,16 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
             <tbody>
               {categories.map((c) => (
                 <tr key={c.id}>
-                  {editingId === c.id ? (
-                    <td colSpan={3}>
-                      <form action={async (formData) => { 
-                          await updateCategory(formData); 
-                          setEditingId(null); 
-                      }} className="admin-edit-form" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                        <input type="hidden" name="id" value={c.id} />
-                        <div className="admin-input-group" style={{ marginBottom: 0, flex: 1 }}>
-                          <input type="text" name="nombre" defaultValue={c.nombre} required />
-                        </div>
-                        <div>
-                          <button type="submit" className="admin-btn admin-btn-success admin-btn-sm" style={{ marginRight: "10px" }}>Guardar</button>
-                          <button type="button" onClick={cancelEdit} className="admin-btn admin-btn-outline admin-btn-sm">Cancelar</button>
-                        </div>
+                  <td>{c.id}</td>
+                  <td>{c.nombre}</td>
+                  <td>
+                    <div className="admin-table-actions">
+                      <button type="button" onClick={() => startEdit(c)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
+                      <form action={deleteCategory.bind(null, c.id)}>
+                        <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">Borrar</button>
                       </form>
-                    </td>
-                  ) : (
-                    <>
-                      <td>{c.id}</td>
-                      <td>{c.nombre}</td>
-                      <td>
-                        <div className="admin-table-actions">
-                          <button type="button" onClick={() => startEdit(c)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
-                          <form action={deleteCategory.bind(null, c.id)}>
-                            <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">Borrar</button>
-                          </form>
-                        </div>
-                      </td>
-                    </>
-                  )}
+                    </div>
+                  </td>
                 </tr>
               ))}
               {categories.length === 0 && (

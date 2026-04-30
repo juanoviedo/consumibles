@@ -30,3 +30,30 @@ export async function deleteUserAction(id: number) {
   await prisma.user.delete({ where: { id } });
   revalidatePath("/admin/users");
 }
+
+export async function changePasswordAction(formData: FormData) {
+  const email = formData.get("email") as string;
+  const currentPassword = formData.get("currentPassword") as string;
+  const newPassword = formData.get("newPassword") as string;
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  
+  if (!user) {
+    return { error: "Usuario no encontrado." };
+  }
+
+  const isValid = await bcrypt.compare(currentPassword, user.password);
+  
+  if (!isValid) {
+    return { error: "La contraseña actual es incorrecta." };
+  }
+
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  
+  await prisma.user.update({
+    where: { email },
+    data: { password: hashedNewPassword }
+  });
+
+  return { success: true };
+}
