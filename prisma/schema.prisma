@@ -17,8 +17,19 @@ model Product {
   imagenUrl    String
   descripcion1 String
   descripcion2 String
+  categoryId   Int?
+  category     Category? @relation(fields: [categoryId], references: [id])
   createdAt    DateTime? @default(now()) @db.Timestamp(6)
   updatedAt    DateTime? @default(now()) @db.Timestamp(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Category {
+  id        Int       @id @default(autoincrement())
+  nombre    String    @unique
+  products  Product[]
+  createdAt DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt DateTime? @default(now()) @db.Timestamp(6)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

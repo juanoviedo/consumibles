@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 
-export default function StoreFront({ products }: { products: any[] }) {
+export default function StoreFront({ products, categories = [] }: { products: any[], categories?: any[] }) {
   const [carrito, setCarrito] = useState<Record<string, { nombre: string; precio: number; cantidad: number }>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(8);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
   // Lazy loading by scroll
   useEffect(() => {
@@ -21,10 +22,13 @@ export default function StoreFront({ products }: { products: any[] }) {
   }, []);
 
   const filteredProducts = products.filter(
-    (p) =>
-      p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.descripcion1 && p.descripcion1.toLowerCase().includes(searchTerm.toLowerCase()))
+    (p) => {
+      const matchesSearch = p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (p.descripcion1 && p.descripcion1.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesCategory = selectedCategory === null || p.categoryId === selectedCategory;
+      return matchesSearch && matchesCategory;
+    }
   );
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
@@ -103,6 +107,26 @@ export default function StoreFront({ products }: { products: any[] }) {
       <br></br>
       <br></br>
       <h2 className="products-title">Nuestro Catálogo</h2>
+
+      {categories && categories.length > 0 && (
+        <div className="categories-filter">
+          <button 
+             className={`category-pill ${selectedCategory === null ? 'active' : ''}`}
+             onClick={() => { setSelectedCategory(null); setVisibleCount(8); }}
+          >
+            Todos
+          </button>
+          {categories.map(c => (
+            <button 
+               key={c.id} 
+               className={`category-pill ${selectedCategory === c.id ? 'active' : ''}`}
+               onClick={() => { setSelectedCategory(c.id); setVisibleCount(8); }}
+            >
+              {c.nombre}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="search-container">
         <input

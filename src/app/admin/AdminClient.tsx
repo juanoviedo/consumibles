@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { createProduct, deleteProduct, updateProduct } from "@/app/actions/product";
 
-export default function AdminClient({ products }: { products: any[] }) {
+export default function AdminClient({ products, categories }: { products: any[], categories: any[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const startEdit = (p: any) => setEditingId(p.id);
@@ -24,6 +24,14 @@ export default function AdminClient({ products }: { products: any[] }) {
           </div>
           <div className="admin-input-group">
             <input type="number" name="precio" placeholder="Precio (COP)" required />
+          </div>
+          <div className="admin-input-group">
+            <select name="categoryId" className="admin-input" style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}>
+              <option value="">Sin Categoría / Todas</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id}>{c.nombre}</option>
+              ))}
+            </select>
           </div>
           <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1" }}>
             <div style={{ flex: 1 }}>
@@ -61,6 +69,7 @@ export default function AdminClient({ products }: { products: any[] }) {
                 <th>Código</th>
                 <th>Imagen</th>
                 <th>Nombre</th>
+                <th>Categoría</th>
                 <th>Precio</th>
                 <th>Acción</th>
               </tr>
@@ -79,6 +88,14 @@ export default function AdminClient({ products }: { products: any[] }) {
                         <div className="admin-input-group"><input type="text" name="codigo" defaultValue={p.codigo} required /></div>
                         <div className="admin-input-group"><input type="text" name="nombre" defaultValue={p.nombre} required /></div>
                         <div className="admin-input-group"><input type="number" name="precio" defaultValue={p.precio} required /></div>
+                        <div className="admin-input-group">
+                          <select name="categoryId" defaultValue={p.categoryId || ""} style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}>
+                            <option value="">Sin Categoría / Todas</option>
+                            {categories.map(c => (
+                              <option key={c.id} value={c.id}>{c.nombre}</option>
+                            ))}
+                          </select>
+                        </div>
                         <div className="admin-input-group" style={{ gridColumn: "1/-1", display: "flex", gap: "10px" }}>
                           <div style={{ flex: 1 }}>
                             <label style={{ fontSize: "12px", display: "block" }}>Nueva Imagen (Reemplaza la actuaL)</label>
@@ -105,6 +122,7 @@ export default function AdminClient({ products }: { products: any[] }) {
                         <img src={p.imagenUrl} alt={p.nombre} width="50" />
                       </td>
                       <td>{p.nombre}</td>
+                      <td>{p.category ? p.category.nombre : "-"}</td>
                       <td>COP {p.precio}</td>
                       <td>
                         <div className="admin-table-actions">

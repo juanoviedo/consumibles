@@ -31,7 +31,8 @@ async function uploadImage(imageFile: File | null): Promise<string | null> {
 
 export async function getProducts() {
   const products = await prisma.product.findMany({
-    orderBy: { nombre: 'asc' }
+    orderBy: { nombre: 'asc' },
+    include: { category: true }
   });
   return products.map(p => ({
     ...p,
@@ -46,6 +47,8 @@ export async function createProduct(formData: FormData) {
   let imagenUrl = formData.get("imagenUrl") as string;
   const descripcion1 = formData.get("descripcion1") as string;
   const descripcion2 = formData.get("descripcion2") as string;
+  const categoryIdRaw = formData.get("categoryId") as string;
+  const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
   
   const file = formData.get("imagenFile") as File | null;
   try {
@@ -59,7 +62,7 @@ export async function createProduct(formData: FormData) {
   }
 
   await prisma.product.create({
-    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", descripcion1, descripcion2 },
+    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", descripcion1, descripcion2, categoryId },
   });
 
   revalidatePath("/");
@@ -74,6 +77,8 @@ export async function updateProduct(formData: FormData) {
   let imagenUrl = formData.get("imagenUrl") as string;
   const descripcion1 = formData.get("descripcion1") as string;
   const descripcion2 = formData.get("descripcion2") as string;
+  const categoryIdRaw = formData.get("categoryId") as string;
+  const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
 
   const file = formData.get("imagenFile") as File | null;
   try {
@@ -87,7 +92,7 @@ export async function updateProduct(formData: FormData) {
 
   await prisma.product.update({
     where: { id },
-    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", descripcion1, descripcion2 },
+    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", descripcion1, descripcion2, categoryId },
   });
 
   revalidatePath("/");

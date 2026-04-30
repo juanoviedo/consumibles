@@ -207,3 +207,43 @@
   margin: 40px auto;
   grid-column: 1 / -1;
 }
+
+/* Filtro de Categorías */
+.categories-filter {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 20px;
+  justify-content: center;
+  margin-bottom: 20px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.categories-filter::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+.category-pill {
+  padding: 8px 16px;
+  background-color: #f4f4f4;
+  color: #555;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.category-pill:hover {
+  background-color: #e0e0e0;
+}
+
+.category-pill.active {
+  background-color: #8b0500;
+  color: white;
+  border-color: #8b0500;
+}

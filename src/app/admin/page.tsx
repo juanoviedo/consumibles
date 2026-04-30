@@ -1,8 +1,9 @@
 import { getProducts } from "@/app/actions/product";
+import { getCategories } from "@/app/actions/category";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/actions/auth";
-import AdminClient from "./AdminClient";
+import AdminDashboardClient from "./AdminDashboardClient";
 import "@/app/css/admin.css";
 
 export default async function AdminPage() {
@@ -12,6 +13,7 @@ export default async function AdminPage() {
 
   const sessionData = JSON.parse(session);
   const products = await getProducts();
+  const categories = await getCategories();
 
   return (
     <div className="admin-body">
@@ -34,7 +36,7 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <AdminClient products={products} />
+        <AdminDashboardClient products={products} categories={categories} />
       </div>
     </div>
   );
