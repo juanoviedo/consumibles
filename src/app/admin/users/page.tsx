@@ -79,7 +79,7 @@ export default async function UsersPage() {
                     </span>
                   </td>
                   <td>
-                    {!u.isSuperAdmin && (
+                    {u.email !== sessionData.email && (
                       <form action={async () => { "use server"; await deleteUserAction(u.id); }}>
                         <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">Revocar Acceso</button>
                       </form>
