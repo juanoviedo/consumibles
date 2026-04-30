@@ -120,7 +120,8 @@
   
   /* Tarjetas más pequeñas para 2 columnas en móvil */
   .product-card .img-container {
-    height: 120px;
+    height: auto;
+    aspect-ratio: 1 / 1;
     padding: 5px;
   }
   
