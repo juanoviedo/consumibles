@@ -210,14 +210,26 @@
 /* Filtro de Categorías */
 .categories-filter {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
+  overflow-x: auto;
   padding: 10px 20px;
-  justify-content: center;
+  justify-content: flex-start;
   margin-bottom: 20px;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+  scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch; /* Suavidad en iOS */
+}
+
+.categories-filter::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+@media (min-width: 769px) {
+  .categories-filter {
+    justify-content: center;
+  }
 }
 
 .category-pill {
