@@ -2,9 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Consumibles",
-  description: "Product Website",
-  keywords: "alarma,multas,pico y placa,SOAT"
+  title: {
+    template: "%s | Expertos en Corte Plasma",
+    default: "Consumibles y Asesoría para Corte Plasma | Industria Metalmecánica",
+  },
+  description: "Especialistas en consumibles, repuestos y asesoría técnica para equipos de corte plasma y mesas CNC. Potenciamos la industria metalmecánica.",
+  keywords: "consumibles plasma, corte plasma, mesas CNC, industria metalmecánica, Hypertherm, repuestos plasma, Powermax, MaxPro200",
+  openGraph: {
+    title: "Consumibles y Asesoría para Corte Plasma | Industria Metalmecánica",
+    description: "Especialistas en consumibles, repuestos y asesoría técnica gratuita para equipos de corte plasma y mesas CNC.",
+    type: "website",
+    locale: "es_CO",
+  }
 };
 
 export default function RootLayout({

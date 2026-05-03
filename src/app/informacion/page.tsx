@@ -1,15 +1,21 @@
 import PublicLayout from "@/components/PublicLayout";
 import Link from "next/link";
 import Image from "next/image";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Asesoría y Consumibles",
+  description: "Asesoría técnica telefónica gratuita y venta de consumibles para corte plasma y mesas CNC. Especialistas formados por Hypertherm.",
+};
 
 export default function Home() {
   return (
     <PublicLayout>
         <section className="intro">
-          <h1>¿Necesitas Consumibles?</h1>
+          <h1>Consumibles para Corte Plasma y Mesas CNC</h1>
           <h3>Por la compra de nuestros consumibles te damos asesoría telefonica técnica gratuita en corte plasma y mesas CNC</h3>
           <br />
-          <img src="/img/consumibles.jpg" alt="Cero Multas" />
+          <img src="/img/consumibles.jpg" alt="Consumibles y equipos para corte plasma CNC" />
         </section>
 
         <section className="content normal">
@@ -30,7 +36,7 @@ export default function Home() {
           </div>
           <div>
             <div className="img-container">
-              <img src="/img/image.jpg" alt="ahorro" />
+              <img src="/img/image.jpg" alt="Asesoría técnica para optimizar procesos de corte plasma" />
             </div>
           </div>
         </section>
@@ -38,7 +44,7 @@ export default function Home() {
         <section className="content reverse">
           <div>
             <div className="img-container">
-              <img src="/img/corteaguapro.jpg" alt="ahorro" />
+              <img src="/img/corteaguapro.jpg" alt="Especialistas en mesas CNC Hypertherm Powermax y MaxPro200" />
             </div>
           </div>
           <div>
