@@ -23,6 +23,7 @@ model Product {
   stock          Int             @default(0)
   minStock       Int             @default(0)
   incomingOrders IncomingOrder[]
+  quotationItems QuotationItem[]
   createdAt      DateTime?       @default(now()) @db.Timestamp(6)
   updatedAt      DateTime?       @default(now()) @db.Timestamp(6)
 }
@@ -60,3 +61,58 @@ model User {
   resetToken         String?
   resetTokenExpiry   DateTime? @db.Timestamp(6)
 }
+
+model Client {
+  id              Int                @id @default(autoincrement())
+  nit             String?            @unique
+  nombre          String
+  email           String?
+  telefono        String?
+  direccion       String?
+  quotations      Quotation[]
+  bills           BillOfCollection[]
+  createdAt       DateTime?          @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime?          @default(now()) @db.Timestamp(6)
+}
+
+model Quotation {
+  id               Int               @id @default(autoincrement())
+  numeroCotizacion String            @unique // E.g., COT-0001
+  clientId         Int
+  client           Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  items            QuotationItem[]
+  total            Decimal           @db.Decimal(10, 2) @default(0)
+  estado           String            @default("PENDIENTE") // PENDIENTE, APROBADA, RECHAZADA
+  billOfCollection BillOfCollection?
+  fecha            DateTime          @default(now()) @db.Timestamp(6)
+  createdAt        DateTime?         @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime?         @default(now()) @db.Timestamp(6)
+}
+
+model QuotationItem {
+  id             Int       @id @default(autoincrement())
+  quotationId    Int
+  quotation      Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  productId      Int
+  product        Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  cantidad       Int       @default(1)
+  precioUnitario Decimal   @db.Decimal(10, 2)
+  createdAt      DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model BillOfCollection {
+  id              Int       @id @default(autoincrement())
+  numeroCuenta    String    @unique // E.g., CC-0001
+  quotationId     Int       @unique // Relación 1-a-1 con la cotización aprobada
+  quotation       Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  clientId        Int
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  total           Decimal   @db.Decimal(10, 2)
+  estado          String    @default("PENDIENTE") // PENDIENTE, PAGADA, ANULADA
+  fecha           DateTime  @default(now()) @db.Timestamp(6)
+  fechaVencimiento DateTime? @db.Timestamp(6)
+  createdAt       DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime? @default(now()) @db.Timestamp(6)
+}
+
