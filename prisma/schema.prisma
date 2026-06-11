@@ -70,23 +70,32 @@ model Client {
   telefono        String?
   direccion       String?
   quotations      Quotation[]
-  bills           BillOfCollection[]
   createdAt       DateTime?          @default(now()) @db.Timestamp(6)
   updatedAt       DateTime?          @default(now()) @db.Timestamp(6)
 }
 
+enum QuotationStatus {
+  COTIZACION
+  APROBADA
+  RECHAZADA
+  CUENTA_COBRO
+  PAGADA
+}
+
 model Quotation {
-  id               Int               @id @default(autoincrement())
-  numeroCotizacion String            @unique // E.g., COT-0001
-  clientId         Int
-  client           Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  items            QuotationItem[]
-  total            Decimal           @db.Decimal(10, 2) @default(0)
-  estado           String            @default("PENDIENTE") // PENDIENTE, APROBADA, RECHAZADA
-  billOfCollection BillOfCollection?
-  fecha            DateTime          @default(now()) @db.Timestamp(6)
-  createdAt        DateTime?         @default(now()) @db.Timestamp(6)
-  updatedAt        DateTime?         @default(now()) @db.Timestamp(6)
+  id                Int             @id @default(autoincrement())
+  numeroCotizacion  String          @unique
+  numeroCuentaCobro String?         @unique // Generado al facturar / pasar a CUENTA_COBRO
+  estado            QuotationStatus @default(COTIZACION)
+  total             Decimal         @db.Decimal(10, 2) @default(0)
+  clientId          Int
+  client            Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  items             QuotationItem[]
+  fechaCotizacion   DateTime        @default(now()) @db.Timestamp(6)
+  fechaCuentaCobro  DateTime?       @db.Timestamp(6)
+  fechaVencimiento  DateTime?       @db.Timestamp(6)
+  createdAt         DateTime?       @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime?       @default(now()) @db.Timestamp(6)
 }
 
 model QuotationItem {
@@ -99,20 +108,5 @@ model QuotationItem {
   precioUnitario Decimal   @db.Decimal(10, 2)
   createdAt      DateTime? @default(now()) @db.Timestamp(6)
   updatedAt      DateTime? @default(now()) @db.Timestamp(6)
-}
-
-model BillOfCollection {
-  id              Int       @id @default(autoincrement())
-  numeroCuenta    String    @unique // E.g., CC-0001
-  quotationId     Int       @unique // Relación 1-a-1 con la cotización aprobada
-  quotation       Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
-  clientId        Int
-  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  total           Decimal   @db.Decimal(10, 2)
-  estado          String    @default("PENDIENTE") // PENDIENTE, PAGADA, ANULADA
-  fecha           DateTime  @default(now()) @db.Timestamp(6)
-  fechaVencimiento DateTime? @db.Timestamp(6)
-  createdAt       DateTime? @default(now()) @db.Timestamp(6)
-  updatedAt       DateTime? @default(now()) @db.Timestamp(6)
 }
 

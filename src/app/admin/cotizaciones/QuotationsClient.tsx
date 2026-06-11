@@ -1,0 +1,655 @@
+"use client";
+
+import { useState } from "react";
+import { 
+  createQuotation, 
+  convertToBillOfCollection, 
+  markAsPaid, 
+  markAsRejected, 
+  revertToQuotation, 
+  deleteQuotation 
+} from "@/app/actions/billing";
+
+interface QuotationItemInput {
+  productId: number;
+  nombre: string;
+  codigo: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+export default function QuotationsClient({
+  quotations,
+  clients,
+  products
+}: {
+  quotations: any[];
+  clients: any[];
+  products: any[];
+}) {
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [filterType, setFilterType] = useState<"TODAS" | "COTIZACIONES" | "CUENTAS_COBRO">("TODAS");
+  
+  // Creation States
+  const [selectedClientId, setSelectedClientId] = useState<number | "">("");
+  const [currentItems, setCurrentItems] = useState<QuotationItemInput[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<number | "">("");
+  const [itemQuantity, setItemQuantity] = useState<number>(1);
+  const [itemPriceOverride, setItemPriceOverride] = useState<number | "">("");
+
+  // Details Modal State
+  const [activeDetailsQuote, setActiveDetailsQuote] = useState<any | null>(null);
+
+  // Revert Modal State
+  const [activeRevertQuoteId, setActiveRevertQuoteId] = useState<number | null>(null);
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+    }).format(val);
+  };
+
+  const formatDate = (dateVal: any) => {
+    if (!dateVal) return "-";
+    return new Date(dateVal).toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  };
+
+  // Handle adding product to current quote creation list
+  const handleAddProduct = () => {
+    if (selectedProductId === "") return;
+    const prod = products.find(p => p.id === Number(selectedProductId));
+    if (!prod) return;
+
+    const price = itemPriceOverride !== "" ? Number(itemPriceOverride) : prod.precio;
+
+    // Check if already in list
+    const existingIndex = currentItems.findIndex(i => i.productId === prod.id);
+    if (existingIndex > -1) {
+      const updated = [...currentItems];
+      updated[existingIndex].cantidad += itemQuantity;
+      // Keep the latest price override
+      updated[existingIndex].precioUnitario = price;
+      setCurrentItems(updated);
+    } else {
+      setCurrentItems([
+        ...currentItems,
+        {
+          productId: prod.id,
+          nombre: prod.nombre,
+          codigo: prod.codigo,
+          cantidad: itemQuantity,
+          precioUnitario: price
+        }
+      ]);
+    }
+
+    // Reset items inputs
+    setSelectedProductId("");
+    setItemQuantity(1);
+    setItemPriceOverride("");
+  };
+
+  // Remove item from draft
+  const handleRemoveProduct = (productId: number) => {
+    setCurrentItems(currentItems.filter(i => i.productId !== productId));
+  };
+
+  // Prefill price when selecting product in dropdown
+  const handleProductChange = (id: string) => {
+    setSelectedProductId(id === "" ? "" : Number(id));
+    if (id !== "") {
+      const prod = products.find(p => p.id === Number(id));
+      if (prod) {
+        setItemPriceOverride(prod.precio);
+      }
+    } else {
+      setItemPriceOverride("");
+    }
+  };
+
+  // Submit quotation creation
+  const handleCreateQuotationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedClientId === "" || currentItems.length === 0) {
+      alert("Por favor, seleccione un cliente y añada al menos un producto.");
+      return;
+    }
+
+    try {
+      await createQuotation(
+        Number(selectedClientId),
+        currentItems.map(i => ({
+          productId: i.productId,
+          cantidad: i.cantidad,
+          precioUnitario: i.precioUnitario
+        }))
+      );
+      // Reset forms
+      setSelectedClientId("");
+      setCurrentItems([]);
+      setShowNewForm(false);
+    } catch (err: any) {
+      alert("Error al guardar: " + err.message);
+    }
+  };
+
+  // Filter logic
+  const filteredDocs = quotations.filter(q => {
+    if (filterType === "TODAS") return true;
+    if (filterType === "COTIZACIONES") {
+      return q.estado === "COTIZACION" || q.estado === "APROBADA" || q.estado === "RECHAZADA";
+    }
+    if (filterType === "CUENTAS_COBRO") {
+      return q.estado === "CUENTA_COBRO" || q.estado === "PAGADA";
+    }
+    return true;
+  });
+
+  const getStatusBadgeStyle = (status: string) => {
+    let background = "rgba(148, 163, 184, 0.2)";
+    let color = "#cbd5e1";
+    let border = "1px solid rgba(148, 163, 184, 0.3)";
+
+    switch (status) {
+      case "COTIZACION":
+        background = "rgba(245, 158, 11, 0.2)";
+        color = "#fbbf24";
+        border = "1px solid rgba(245, 158, 11, 0.3)";
+        break;
+      case "APROBADA":
+        background = "rgba(16, 185, 129, 0.2)";
+        color = "#34d399";
+        border = "1px solid rgba(16, 185, 129, 0.3)";
+        break;
+      case "RECHAZADA":
+        background = "rgba(239, 68, 68, 0.2)";
+        color = "#f87171";
+        border = "1px solid rgba(239, 68, 68, 0.3)";
+        break;
+      case "CUENTA_COBRO":
+        background = "rgba(59, 130, 246, 0.2)";
+        color = "#60a5fa";
+        border = "1px solid rgba(59, 130, 246, 0.3)";
+        break;
+      case "PAGADA":
+        background = "rgba(139, 92, 246, 0.2)";
+        color = "#a78bfa";
+        border = "1px solid rgba(139, 92, 246, 0.3)";
+        break;
+    }
+
+    return { background, color, border, padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" as const };
+  };
+
+  const translateStatus = (status: string) => {
+    switch (status) {
+      case "COTIZACION": return "Cotización";
+      case "APROBADA": return "Aprobada";
+      case "RECHAZADA": return "Rechazada";
+      case "CUENTA_COBRO": return "Cuenta de Cobro";
+      case "PAGADA": return "Pagada";
+      default: return status;
+    }
+  };
+
+  return (
+    <>
+      {/* 1. HEADER */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+        <div>
+          <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: 0 }}>Cotizaciones y Facturación</h1>
+          <p style={{ color: "var(--admin-text-muted)", marginTop: "4px" }}>
+            Genera cotizaciones y transfiérelas a cuentas de cobro de forma unificada en la base de datos.
+          </p>
+        </div>
+        <button className="admin-btn" onClick={() => setShowNewForm(true)}>
+          + Crear Cotización
+        </button>
+      </div>
+
+      {/* 2. FORMULARIO NUEVA COTIZACIÓN */}
+      {showNewForm && (
+        <section className="glass-container" style={{ marginBottom: "40px" }}>
+          <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Crear Nueva Cotización</h2>
+          <form onSubmit={handleCreateQuotationSubmit} className="admin-grid-form">
+            <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Cliente</label>
+              <select 
+                value={selectedClientId} 
+                onChange={(e) => setSelectedClientId(e.target.value === "" ? "" : Number(e.target.value))}
+                required
+              >
+                <option value="">-- Seleccionar Cliente --</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre} {c.nit ? `(NIT: ${c.nit})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sub-form to add item */}
+            <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--admin-glass-border)", paddingTop: "15px", marginTop: "10px" }}>
+              <h3 style={{ fontSize: "16px", marginTop: 0, marginBottom: "15px" }}>Agregar Productos a la Lista</h3>
+              <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
+                <div className="admin-input-group" style={{ flex: 2, minWidth: "200px", marginBottom: 0 }}>
+                  <label style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Producto</label>
+                  <select 
+                    value={selectedProductId}
+                    onChange={(e) => handleProductChange(e.target.value)}
+                  >
+                    <option value="">-- Seleccionar Producto --</option>
+                    {products.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre} (Ref: {p.codigo}) - Stock: {p.stock}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="admin-input-group" style={{ flex: 1, minWidth: "100px", marginBottom: 0 }}>
+                  <label style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Cantidad</label>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    value={itemQuantity}
+                    onChange={(e) => setItemQuantity(parseInt(e.target.value || "1", 10))}
+                  />
+                </div>
+
+                <div className="admin-input-group" style={{ flex: 1, minWidth: "120px", marginBottom: 0 }}>
+                  <label style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Precio Unitario</label>
+                  <input 
+                    type="number" 
+                    placeholder="Prefijado" 
+                    value={itemPriceOverride}
+                    onChange={(e) => setItemPriceOverride(e.target.value === "" ? "" : Number(e.target.value))}
+                  />
+                </div>
+
+                <div style={{ display: "flex", alignItems: "flex-end" }}>
+                  <button 
+                    type="button" 
+                    className="admin-btn admin-btn-outline" 
+                    style={{ height: "45px", padding: "0 20px" }}
+                    onClick={handleAddProduct}
+                  >
+                    Añadir
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* List of items currently added to the quote draft */}
+            <div style={{ gridColumn: "1 / -1", marginTop: "15px" }}>
+              <h4 style={{ fontSize: "14px", marginBottom: "10px" }}>Productos Cotizados:</h4>
+              <div className="admin-table-container" style={{ maxHeight: "200px", border: "1px solid var(--admin-glass-border)" }}>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Producto</th>
+                      <th>Cantidad</th>
+                      <th>Precio Unit.</th>
+                      <th>Subtotal</th>
+                      <th>Quitar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.map((item) => (
+                      <tr key={item.productId}>
+                        <td>{item.codigo}</td>
+                        <td>{item.nombre}</td>
+                        <td>{item.cantidad}</td>
+                        <td>{formatCurrency(item.precioUnitario)}</td>
+                        <td>{formatCurrency(item.cantidad * item.precioUnitario)}</td>
+                        <td>
+                          <button 
+                            type="button" 
+                            className="admin-btn admin-btn-danger admin-btn-sm"
+                            style={{ padding: "4px 8px" }}
+                            onClick={() => handleRemoveProduct(item.productId)}
+                          >
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {currentItems.length === 0 && (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: "center", color: "var(--admin-text-muted)", padding: "15px" }}>
+                          No has añadido productos a la lista todavía.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Total draft sum */}
+              {currentItems.length > 0 && (
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "15px", fontSize: "1.1rem" }}>
+                  <strong>Total: {formatCurrency(currentItems.reduce((acc, i) => acc + (i.cantidad * i.precioUnitario), 0))}</strong>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", marginTop: "20px", gridColumn: "1 / -1" }}>
+              <button 
+                type="submit" 
+                className="admin-btn"
+                disabled={currentItems.length === 0 || selectedClientId === ""}
+              >
+                Registrar Cotización
+              </button>
+              <button 
+                type="button" 
+                className="admin-btn admin-btn-outline" 
+                onClick={() => {
+                  setShowNewForm(false);
+                  setCurrentItems([]);
+                  setSelectedClientId("");
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {/* 3. FILTRO DE TIPO DE DOCUMENTO */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", alignItems: "center" }}>
+        <label style={{ color: "var(--admin-text-muted)", fontWeight: "bold" }}>Ver Tipo:</label>
+        <div style={{ display: "flex", gap: "5px", background: "rgba(0, 0, 0, 0.2)", borderRadius: "8px", padding: "4px" }}>
+          <button 
+            className={`admin-btn admin-btn-sm ${filterType === "TODAS" ? "" : "admin-btn-outline"}`}
+            style={{ border: "none", borderRadius: "6px" }}
+            onClick={() => setFilterType("TODAS")}
+          >
+            Todos
+          </button>
+          <button 
+            className={`admin-btn admin-btn-sm ${filterType === "COTIZACIONES" ? "" : "admin-btn-outline"}`}
+            style={{ border: "none", borderRadius: "6px" }}
+            onClick={() => setFilterType("COTIZACIONES")}
+          >
+            Cotizaciones
+          </button>
+          <button 
+            className={`admin-btn admin-btn-sm ${filterType === "CUENTAS_COBRO" ? "" : "admin-btn-outline"}`}
+            style={{ border: "none", borderRadius: "6px" }}
+            onClick={() => setFilterType("CUENTAS_COBRO")}
+          >
+            Cuentas de Cobro
+          </button>
+        </div>
+      </div>
+
+      {/* 4. TABLA DE DOCUMENTOS */}
+      <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
+        <div style={{ padding: "30px 30px 15px 30px" }}>
+          <h2 style={{ margin: 0 }}>Historial de Documentos</h2>
+        </div>
+
+        <div className="admin-table-container">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Nº Cotización</th>
+                <th>Nº Cuenta Cobro</th>
+                <th>Cliente</th>
+                <th>Fecha Cotización</th>
+                <th>Fecha Factura</th>
+                <th>Estado</th>
+                <th>Total</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDocs.map((q) => (
+                <tr key={q.id}>
+                  <td><strong>{q.numeroCotizacion}</strong></td>
+                  <td>{q.numeroCuentaCobro ? <strong style={{ color: "#60a5fa" }}>{q.numeroCuentaCobro}</strong> : "-"}</td>
+                  <td>{q.client?.nombre}</td>
+                  <td>{formatDate(q.fechaCotizacion)}</td>
+                  <td>{formatDate(q.fechaCuentaCobro)}</td>
+                  <td>
+                    <span style={getStatusBadgeStyle(q.estado)}>
+                      {translateStatus(q.estado)}
+                    </span>
+                  </td>
+                  <td>{formatCurrency(q.total)}</td>
+                  <td>
+                    <div className="admin-table-actions">
+                      <button 
+                        type="button" 
+                        className="admin-btn admin-btn-outline admin-btn-sm"
+                        onClick={() => setActiveDetailsQuote(q)}
+                      >
+                        Ver Detalle
+                      </button>
+
+                      {/* APROBAR Y FACTURAR (CONVIERTE A CUENTA COBRO Y DESCUENTA STOCK) */}
+                      {(q.estado === "COTIZACION" || q.estado === "APROBADA") && (
+                        <form action={convertToBillOfCollection.bind(null, q.id)}>
+                          <button type="submit" className="admin-btn admin-btn-success admin-btn-sm">
+                            Facturar (Saca Stock)
+                          </button>
+                        </form>
+                      )}
+
+                      {/* PAGAR (REGISTRA PAGO DE LA CUENTA COBRO) */}
+                      {q.estado === "CUENTA_COBRO" && (
+                        <form action={markAsPaid.bind(null, q.id)}>
+                          <button type="submit" className="admin-btn admin-btn-sm" style={{ background: "#8b5cf6" }}>
+                            Marcar Pagada
+                          </button>
+                        </form>
+                      )}
+
+                      {/* RECHAZAR COTIZACION */}
+                      {q.estado === "COTIZACION" && (
+                        <form action={markAsRejected.bind(null, q.id)}>
+                          <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">
+                            Rechazar
+                          </button>
+                        </form>
+                      )}
+
+                      {/* REVERTIR CUENTA COBRO A COTIZACION CON POPUP */}
+                      {(q.estado === "CUENTA_COBRO" || q.estado === "PAGADA") && (
+                        <button 
+                          type="button" 
+                          className="admin-btn admin-btn-danger admin-btn-sm"
+                          onClick={() => setActiveRevertQuoteId(q.id)}
+                        >
+                          Revertir a Cotización
+                        </button>
+                      )}
+
+                      <form action={deleteQuotation.bind(null, q.id)}>
+                        <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm" style={{ border: "none", color: "#f87171" }} onClick={(e) => {
+                          if (!confirm("¿Está seguro de eliminar esta cotización? Esta acción no se puede deshacer.")) {
+                            e.preventDefault();
+                          }
+                        }}>
+                          Eliminar
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredDocs.length === 0 && (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                    No se encontraron documentos en esta categoría.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* 5. MODAL DE DETALLES (CUSTOM MODAL GLASSMORPHIC) */}
+      {activeDetailsQuote && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(15, 23, 42, 0.7)", backdropFilter: "blur(5px)",
+          display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000
+        }}>
+          <div className="glass-container" style={{ maxWidth: "650px", width: "90%", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--admin-glass-border)", paddingBottom: "15px", marginBottom: "15px" }}>
+              <h2 style={{ margin: 0 }}>Detalle de Documento</h2>
+              <button 
+                type="button" 
+                onClick={() => setActiveDetailsQuote(null)}
+                style={{ background: "transparent", border: "none", color: "white", fontSize: "20px", cursor: "pointer" }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
+              <div>
+                <strong>Nº Cotización:</strong> {activeDetailsQuote.numeroCotizacion}
+                {activeDetailsQuote.numeroCuentaCobro && (
+                  <div style={{ marginTop: "5px" }}>
+                    <strong>Nº Cuenta Cobro:</strong> {activeDetailsQuote.numeroCuentaCobro}
+                  </div>
+                )}
+              </div>
+              <div>
+                <strong>Estado:</strong> <span style={getStatusBadgeStyle(activeDetailsQuote.estado)}>{translateStatus(activeDetailsQuote.estado)}</span>
+              </div>
+              <div>
+                <strong>Cliente:</strong> {activeDetailsQuote.client?.nombre}<br/>
+                {activeDetailsQuote.client?.nit && <><strong>NIT:</strong> {activeDetailsQuote.client.nit}<br/></>}
+                {activeDetailsQuote.client?.telefono && <><strong>Teléfono:</strong> {activeDetailsQuote.client.telefono}<br/></>}
+                {activeDetailsQuote.client?.direccion && <><strong>Dirección:</strong> {activeDetailsQuote.client.direccion}</>}
+              </div>
+              <div>
+                <strong>Fecha Cotización:</strong> {formatDate(activeDetailsQuote.fechaCotizacion)}<br/>
+                {activeDetailsQuote.fechaCuentaCobro && <><strong>Fecha Emisión CC:</strong> {formatDate(activeDetailsQuote.fechaCuentaCobro)}<br/></>}
+                {activeDetailsQuote.fechaVencimiento && <><strong>Fecha Vencimiento CC:</strong> {formatDate(activeDetailsQuote.fechaVencimiento)}</>}
+              </div>
+            </div>
+
+            <h3 style={{ fontSize: "16px", marginBottom: "10px" }}>Artículos Cotizados</h3>
+            <div className="admin-table-container" style={{ border: "1px solid var(--admin-glass-border)", marginBottom: "20px" }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Ref</th>
+                    <th>Producto</th>
+                    <th>Cant.</th>
+                    <th>Precio Unit.</th>
+                    <th>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeDetailsQuote.items?.map((item: any) => (
+                    <tr key={item.id}>
+                      <td>{item.product?.codigo}</td>
+                      <td>{item.product?.nombre}</td>
+                      <td>{item.cantidad}</td>
+                      <td>{formatCurrency(item.precioUnitario)}</td>
+                      <td>{formatCurrency(item.cantidad * item.precioUnitario)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", fontSize: "1.2rem", fontWeight: "bold", marginBottom: "15px" }}>
+              Total: {formatCurrency(activeDetailsQuote.total)}
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button 
+                type="button" 
+                className="admin-btn" 
+                onClick={() => setActiveDetailsQuote(null)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. POPUP ESTILIZADO DE CONFIRMACIÓN PARA REVERSIÓN A COTIZACIÓN CON RETORNO DE INVENTARIO */}
+      {activeRevertQuoteId !== null && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)",
+          display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100
+        }}>
+          <div className="glass-container" style={{ maxWidth: "450px", width: "90%", border: "1px solid rgba(239, 68, 68, 0.3)", boxShadow: "0 8px 32px 0 rgba(239, 68, 68, 0.15)" }}>
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <div style={{
+                width: "60px", height: "60px", background: "rgba(239, 68, 68, 0.2)",
+                borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 15px auto", border: "1px solid rgba(239, 68, 68, 0.4)"
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: "1.3rem", margin: "0 0 10px 0", color: "#f87171" }}>¿Revertir a Cotización Pendiente?</h3>
+              <p style={{ color: "var(--admin-text-muted)", fontSize: "14px", lineHeight: "1.5" }}>
+                Estás a punto de anular los datos de facturación de este documento y regresarlo a estado <strong>Cotización</strong>.
+              </p>
+              <p style={{ color: "white", fontSize: "14px", fontWeight: "bold", marginTop: "15px" }}>
+                ¿Deseas ingresar de nuevo las cantidades de los productos de vuelta al inventario (entrada de stock)?
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <button 
+                type="button" 
+                className="admin-btn"
+                style={{ background: "#10b981" }}
+                onClick={async () => {
+                  await revertToQuotation(activeRevertQuoteId, true);
+                  setActiveRevertQuoteId(null);
+                }}
+              >
+                Sí, devolver productos al inventario
+              </button>
+
+              <button 
+                type="button" 
+                className="admin-btn admin-btn-outline"
+                style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}
+                onClick={async () => {
+                  await revertToQuotation(activeRevertQuoteId, false);
+                  setActiveRevertQuoteId(null);
+                }}
+              >
+                No, mantener inventario actual
+              </button>
+
+              <button 
+                type="button" 
+                className="admin-btn admin-btn-outline" 
+                style={{ color: "var(--admin-text-muted)" }}
+                onClick={() => setActiveRevertQuoteId(null)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

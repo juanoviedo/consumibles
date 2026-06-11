@@ -2,8 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { QuotationStatus } from "@prisma/client";
 
-// --- CLIENTS ---
+// --- CLIENTS CRUD ---
 
 export async function getClients() {
   return await prisma.client.findMany({
@@ -31,10 +32,40 @@ export async function createClient(formData: FormData) {
   revalidatePath("/admin/clientes");
 }
 
-// --- QUOTATIONS ---
+export async function updateClient(formData: FormData) {
+  const id = parseInt(formData.get("id") as string, 10);
+  const nit = formData.get("nit") as string;
+  const nombre = formData.get("nombre") as string;
+  const email = formData.get("email") as string;
+  const telefono = formData.get("telefono") as string;
+  const direccion = formData.get("direccion") as string;
+
+  await prisma.client.update({
+    where: { id },
+    data: {
+      nit: nit || null,
+      nombre,
+      email: email || null,
+      telefono: telefono || null,
+      direccion: direccion || null,
+    },
+  });
+
+  revalidatePath("/admin/clientes");
+}
+
+export async function deleteClient(id: number) {
+  await prisma.client.delete({
+    where: { id },
+  });
+
+  revalidatePath("/admin/clientes");
+}
+
+// --- QUOTATIONS & BILLING ---
 
 export async function getQuotations() {
-  return await prisma.quotation.findMany({
+  const quotations = await prisma.quotation.findMany({
     include: {
       client: true,
       items: {
@@ -42,10 +73,23 @@ export async function getQuotations() {
           product: true,
         },
       },
-      billOfCollection: true,
     },
-    orderBy: { fecha: "desc" },
+    orderBy: { createdAt: "desc" },
   });
+
+  // Convert Decimal prices to numbers for easier serializability in Next.js Client Components
+  return quotations.map((q) => ({
+    ...q,
+    total: Number(q.total),
+    items: q.items.map((i) => ({
+      ...i,
+      precioUnitario: Number(i.precioUnitario),
+      product: {
+        ...i.product,
+        precio: Number(i.product.precio),
+      },
+    })),
+  }));
 }
 
 export async function createQuotation(
@@ -53,23 +97,21 @@ export async function createQuotation(
   items: { productId: number; cantidad: number; precioUnitario: number }[]
 ) {
   if (items.length === 0) {
-    throw new Error("La cotización debe tener al menos un producto");
+    throw new Error("El documento debe contener al menos un producto.");
   }
 
-  // 1. Calcular el total
   const total = items.reduce((acc, item) => acc + item.cantidad * item.precioUnitario, 0);
 
-  // 2. Obtener un número secuencial simple para la cotización
+  // Generar número correlativo para la cotización
   const count = await prisma.quotation.count();
   const numeroCotizacion = `COT-${(count + 1).toString().padStart(4, "0")}`;
 
-  // 3. Crear cotización con sus ítems en una transacción
   const quotation = await prisma.quotation.create({
     data: {
       numeroCotizacion,
       clientId,
       total,
-      estado: "PENDIENTE",
+      estado: QuotationStatus.COTIZACION,
       items: {
         create: items.map((item) => ({
           productId: item.productId,
@@ -85,51 +127,48 @@ export async function createQuotation(
 }
 
 /**
- * Aprueba una cotización, genera la cuenta de cobro correspondiente
- * y descuenta las cantidades de productos del stock (inventario).
+ * Convierte una cotización en Cuenta de Cobro (estado CUENTA_COBRO).
+ * Genera el consecutivo de cuenta de cobro y resta los productos del inventario.
  */
-export async function approveQuotation(quotationId: number) {
-  // 1. Obtener la cotización con sus productos e ítems
+export async function convertToBillOfCollection(quotationId: number) {
   const quotation = await prisma.quotation.findUnique({
     where: { id: quotationId },
-    include: {
-      items: true,
-    },
+    include: { items: true },
   });
 
   if (!quotation) {
     throw new Error("Cotización no encontrada");
   }
 
-  if (quotation.estado === "APROBADA") {
-    throw new Error("La cotización ya fue aprobada");
+  if (quotation.estado !== QuotationStatus.COTIZACION && quotation.estado !== QuotationStatus.APROBADA) {
+    throw new Error("El documento no está en estado válido para ser facturado.");
   }
 
-  // 2. Generar número de cuenta de cobro secuencial
-  const billsCount = await prisma.billOfCollection.count();
-  const numeroCuenta = `CC-${(billsCount + 1).toString().padStart(4, "0")}`;
+  // Generar número consecutivo para la cuenta de cobro
+  const countWithBill = await prisma.quotation.count({
+    where: {
+      numeroCuentaCobro: { not: null },
+    },
+  });
+  const numeroCuentaCobro = `CC-${(countWithBill + 1).toString().padStart(4, "0")}`;
 
-  // 3. Ejecutar actualización de estado, creación de cuenta de cobro y descuento de inventario en una transacción
+  const fechaCuentaCobro = new Date();
+  const fechaVencimiento = new Date();
+  fechaVencimiento.setDate(fechaCuentaCobro.getDate() + 30); // 30 días para pagar
+
   await prisma.$transaction(async (tx) => {
-    // A. Actualizar estado de la cotización
+    // 1. Actualizar campos de cotización a cuenta de cobro
     await tx.quotation.update({
       where: { id: quotationId },
-      data: { estado: "APROBADA" },
-    });
-
-    // B. Crear cuenta de cobro asociada
-    await tx.billOfCollection.create({
       data: {
-        numeroCuenta,
-        quotationId,
-        clientId: quotation.clientId,
-        total: quotation.total,
-        estado: "PENDIENTE",
-        fechaVencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Vence en 30 días por defecto
+        estado: QuotationStatus.CUENTA_COBRO,
+        numeroCuentaCobro,
+        fechaCuentaCobro,
+        fechaVencimiento,
       },
     });
 
-    // C. Descontar stock de productos
+    // 2. Descontar del inventario
     for (const item of quotation.items) {
       await tx.product.update({
         where: { id: item.productId },
@@ -143,26 +182,81 @@ export async function approveQuotation(quotationId: number) {
   });
 
   revalidatePath("/admin/cotizaciones");
-  revalidatePath("/admin/cuentas-cobro");
-  revalidatePath("/admin"); // Para actualizar la vista de productos y stock
+  revalidatePath("/admin");
 }
 
-// --- BILLS OF COLLECTION ---
+export async function markAsPaid(quotationId: number) {
+  await prisma.quotation.update({
+    where: { id: quotationId },
+    data: {
+      estado: QuotationStatus.PAGADA,
+    },
+  });
 
-export async function getBillsOfCollection() {
-  return await prisma.billOfCollection.findMany({
-    include: {
-      client: true,
-      quotation: {
-        include: {
-          items: {
-            include: {
-              product: true,
+  revalidatePath("/admin/cotizaciones");
+}
+
+export async function markAsRejected(quotationId: number) {
+  await prisma.quotation.update({
+    where: { id: quotationId },
+    data: {
+      estado: QuotationStatus.RECHAZADA,
+    },
+  });
+
+  revalidatePath("/admin/cotizaciones");
+}
+
+/**
+ * Revierte una Cuenta de Cobro o Cotización Aprobada/Pagada de vuelta a estado COTIZACION.
+ * Limpia los campos de facturación y opcionalmente reabastece el inventario.
+ */
+export async function revertToQuotation(quotationId: number, devolverInventario: boolean) {
+  const quotation = await prisma.quotation.findUnique({
+    where: { id: quotationId },
+    include: { items: true },
+  });
+
+  if (!quotation) {
+    throw new Error("Documento no encontrado");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Si se solicita y estaba facturado, devolver artículos al stock
+    if (devolverInventario && (quotation.estado === QuotationStatus.CUENTA_COBRO || quotation.estado === QuotationStatus.PAGADA)) {
+      for (const item of quotation.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              increment: item.cantidad,
             },
           },
-        },
+        });
+      }
+    }
+
+    // 2. Regresar la cotización al estado inicial PENDIENTE/COTIZACION
+    await tx.quotation.update({
+      where: { id: quotationId },
+      data: {
+        estado: QuotationStatus.COTIZACION,
+        numeroCuentaCobro: null,
+        fechaCuentaCobro: null,
+        fechaVencimiento: null,
       },
-    },
-    orderBy: { fecha: "desc" },
+    });
   });
+
+  revalidatePath("/admin/cotizaciones");
+  revalidatePath("/admin");
+}
+
+export async function deleteQuotation(id: number) {
+  // Nota: Al borrar, la relación onDelete: Cascade en QuotationItem eliminará sus ítems automáticamente.
+  await prisma.quotation.delete({
+    where: { id },
+  });
+
+  revalidatePath("/admin/cotizaciones");
 }
