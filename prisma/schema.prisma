@@ -10,19 +10,35 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Product {
-  id           Int       @id @default(autoincrement())
-  codigo       String    @unique
-  nombre       String
-  precio       Decimal   @db.Decimal(10, 2)
-  imagenUrl    String
-  galeria      String[]  @default([])
-  descripcion1 String
-  descripcion2 String
-  categoryId   Int?
-  category     Category? @relation(fields: [categoryId], references: [id])
-  createdAt    DateTime? @default(now()) @db.Timestamp(6)
-  updatedAt    DateTime? @default(now()) @db.Timestamp(6)
+  id             Int             @id @default(autoincrement())
+  codigo         String          @unique
+  nombre         String
+  precio         Decimal         @db.Decimal(10, 2)
+  imagenUrl      String
+  galeria        String[]        @default([])
+  descripcion1   String
+  descripcion2   String
+  categoryId     Int?
+  category       Category?       @relation(fields: [categoryId], references: [id])
+  stock          Int             @default(0)
+  minStock       Int             @default(0)
+  incomingOrders IncomingOrder[]
+  createdAt      DateTime?       @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime?       @default(now()) @db.Timestamp(6)
 }
+
+model IncomingOrder {
+  id            Int       @id @default(autoincrement())
+  productId     Int
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cantidad      Int       @default(0)
+  fechaPedido   DateTime  @default(now()) @db.Timestamp(6)
+  fechaEstimada DateTime? @db.Timestamp(6)
+  estado        String    @default("EN_CAMINO") // EN_CAMINO, COMPLETADO, CANCELADO
+  createdAt     DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime? @default(now()) @db.Timestamp(6)
+}
+
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Category {

@@ -7,9 +7,9 @@
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+  padding: 15px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -31,13 +31,14 @@
 
 .product-card .img-container {
   width: 100%;
-  height: 250px;
+  height: auto;
+  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fdfdfd;
   border-bottom: 1px solid #eee;
-  padding: 15px;
+  padding: 5px;
   box-sizing: border-box;
 }
 
@@ -48,50 +49,67 @@
 }
 
 .product-card .card-body {
-  padding: 20px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
 
 .product-card h2 {
-  font-size: 1.4em;
+  font-size: 1.1em;
   color: #333;
-  margin: 0 0 10px 0;
+  margin: 0 0 5px 0;
 }
 
 .product-card .codigo-ref {
-  font-size: 0.9em;
+  font-size: 0.8em;
   color: #777;
-  margin: 0 0 10px 0;
+  margin: 0 0 5px 0;
 }
 
 .product-card .precio {
-  font-size: 1.5em;
+  font-size: 1.25em;
   font-weight: bold;
   color: #8b0500;
-  margin: 0 0 15px 0;
+  margin: 0 0 10px 0;
 }
 
 .product-card .desc {
-  font-size: 0.95em;
-  color: #555;
-  line-height: 1.5;
-  flex-grow: 1;
-  margin-bottom: 20px;
+  display: none;
 }
 
 .product-card .control-cantidad {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 5px 0 10px 0;
+}
+
+.product-card .btn-menos, 
+.product-card .btn-mas {
+  padding: 5px 10px;
+  font-size: 1em;
+}
+
+.product-card .indicador-carrito {
+  min-width: 30px;
+  padding: 0 5px;
+}
+
+.product-card .cantidad-producto {
+  font-size: 0.9em;
+}
+
+.product-card .cuadrodentro {
+  padding: 8px 5px;
+  font-size: 0.85em;
 }
 
 .product-card .cuadrolink {
   text-align: center;
   display: block;
 }
+
 
 /* Rediseño responsive extra para asegurar que el resto de la página es fluido */
 @media (max-width: 768px) {

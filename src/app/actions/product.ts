@@ -32,7 +32,12 @@ async function uploadImage(imageFile: File | null): Promise<string | null> {
 export async function getProducts() {
   const products = await prisma.product.findMany({
     orderBy: { nombre: 'asc' },
-    include: { category: true }
+    include: { 
+      category: true,
+      incomingOrders: {
+        where: { estado: "EN_CAMINO" }
+      }
+    }
   });
   return products.map(p => ({
     ...p,
@@ -49,6 +54,8 @@ export async function createProduct(formData: FormData) {
   const descripcion2 = formData.get("descripcion2") as string;
   const categoryIdRaw = formData.get("categoryId") as string;
   const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
+  const stock = parseInt(formData.get("stock") as string || "0", 10);
+  const minStock = parseInt(formData.get("minStock") as string || "0", 10);
   
   const file = formData.get("imagenFile") as File | null;
   try {
@@ -82,7 +89,7 @@ export async function createProduct(formData: FormData) {
   }
 
   await prisma.product.create({
-    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", galeria: galeriaUrls, descripcion1, descripcion2, categoryId },
+    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", galeria: galeriaUrls, descripcion1, descripcion2, categoryId, stock, minStock },
   });
 
   revalidatePath("/");
@@ -99,6 +106,8 @@ export async function updateProduct(formData: FormData) {
   const descripcion2 = formData.get("descripcion2") as string;
   const categoryIdRaw = formData.get("categoryId") as string;
   const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
+  const stock = parseInt(formData.get("stock") as string || "0", 10);
+  const minStock = parseInt(formData.get("minStock") as string || "0", 10);
 
   const file = formData.get("imagenFile") as File | null;
   try {
@@ -132,7 +141,7 @@ export async function updateProduct(formData: FormData) {
 
   await prisma.product.update({
     where: { id },
-    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", galeria: galeriaUrls, descripcion1, descripcion2, categoryId },
+    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", galeria: galeriaUrls, descripcion1, descripcion2, categoryId, stock, minStock },
   });
 
   revalidatePath("/");

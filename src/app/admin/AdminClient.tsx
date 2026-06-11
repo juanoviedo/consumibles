@@ -36,15 +36,25 @@ export default function AdminClient({ products, categories }: { products: any[],
             <input type="text" name="nombre" defaultValue={editingProduct.nombre} required />
           </div>
           <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Precio (COP)</label>
             <input type="number" name="precio" defaultValue={editingProduct.precio} required />
           </div>
           <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Categoría</label>
             <select name="categoryId" defaultValue={editingProduct.categoryId || ""}>
               <option value="">Sin Categoría / Todas</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
             </select>
+          </div>
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Inventario Actual</label>
+            <input type="number" name="stock" defaultValue={editingProduct.stock ?? 0} required min="0" />
+          </div>
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Inventario Mínimo</label>
+            <input type="number" name="minStock" defaultValue={editingProduct.minStock ?? 0} required min="0" />
           </div>
           <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: "250px" }}>
@@ -112,6 +122,12 @@ export default function AdminClient({ products, categories }: { products: any[],
                 <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
             </select>
+          </div>
+          <div className="admin-input-group">
+            <input type="number" name="stock" placeholder="Inventario Inicial (ej. 10)" defaultValue={0} required min="0" />
+          </div>
+          <div className="admin-input-group">
+            <input type="number" name="minStock" placeholder="Inventario Mínimo (ej. 5)" defaultValue={0} required min="0" />
           </div>
           <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: "250px" }}>
@@ -188,32 +204,97 @@ export default function AdminClient({ products, categories }: { products: any[],
                 <th>Nombre</th>
                 <th>Categoría</th>
                 <th>Precio</th>
+                <th>Inventario</th>
                 <th>Acción</th>
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.codigo}</td>
-                  <td>
-                    <img src={p.imagenUrl} alt={p.nombre} width="50" />
-                  </td>
-                  <td>{p.nombre}</td>
-                  <td>{p.category ? p.category.nombre : "-"}</td>
-                  <td>COP {p.precio}</td>
-                  <td>
-                    <div className="admin-table-actions">
-                      <button type="button" onClick={() => startEdit(p)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
-                      <form action={deleteProduct.bind(null, p.id)}>
-                        <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">Borrar</button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filteredProducts.map((p) => {
+                const isUnderMin = p.stock <= p.minStock;
+                const hasIncoming = p.incomingOrders && p.incomingOrders.length > 0;
+                const totalIncomingQty = p.incomingOrders?.reduce((acc: number, order: any) => acc + order.cantidad, 0) || 0;
+                
+                return (
+                  <tr key={p.id}>
+                    <td>{p.codigo}</td>
+                    <td>
+                      <img src={p.imagenUrl} alt={p.nombre} width="50" />
+                    </td>
+                    <td>{p.nombre}</td>
+                    <td>{p.category ? p.category.nombre : "-"}</td>
+                    <td>COP {p.precio}</td>
+                    <td>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span 
+                            className={`badge-stock ${isUnderMin ? "stock-bajo" : "stock-ok"}`}
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              fontSize: "13px",
+                              fontWeight: "bold",
+                              background: isUnderMin ? "rgba(239, 68, 68, 0.2)" : "rgba(16, 185, 129, 0.2)",
+                              color: isUnderMin ? "#f87171" : "#34d399",
+                              border: isUnderMin ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)"
+                            }}
+                          >
+                            {p.stock} / {p.minStock}
+                          </span>
+                        </div>
+                        {isUnderMin && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                            {hasIncoming ? (
+                              <span 
+                                style={{
+                                  fontSize: "11px",
+                                  background: "rgba(59, 130, 246, 0.2)",
+                                  color: "#60a5fa",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "3px"
+                                }}
+                                title="Hay un pedido en camino"
+                              >
+                                🚚 En camino (+{totalIncomingQty})
+                              </span>
+                            ) : (
+                              <span 
+                                style={{
+                                  fontSize: "11px",
+                                  background: "rgba(245, 158, 11, 0.2)",
+                                  color: "#fbbf24",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid rgba(245, 158, 11, 0.3)",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "3px"
+                                }}
+                              >
+                                ⚠️ Reordenar
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="admin-table-actions">
+                        <button type="button" onClick={() => startEdit(p)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
+                        <form action={deleteProduct.bind(null, p.id)}>
+                          <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">Borrar</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {filteredProducts.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     No hay productos en esta categoría.
                   </td>
                 </tr>

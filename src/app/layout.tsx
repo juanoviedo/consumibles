@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: {
     template: "%s | Expertos en Corte Plasma",
-    default: "Consumibles y Asesoría para Corte Plasma | Industria Metalmecánica",
+    default: "Consumibles y Asesoría para Corte Plasma | Industria Metalmecánica | Hypertherm",
   },
   description: "Especialistas en consumibles, repuestos y asesoría técnica para equipos de corte plasma y mesas CNC. Potenciamos la industria metalmecánica.",
   keywords: "consumibles plasma, corte plasma, mesas CNC, industria metalmecánica, Hypertherm, repuestos plasma, Powermax, MaxPro200",
