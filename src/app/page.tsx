@@ -12,12 +12,22 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CatalogoPage() {
-  const products = await getProducts();
-  const categories = await getCategories();
+  const allProducts = await getProducts();
+  const allCategories = await getCategories();
+
+  // Filter categories that should be visible on the web
+  const visibleCategories = allCategories.filter(c => c.mostrarEnWeb !== false);
+
+  // Filter products that either don't have a category or belong to a visible category
+  const visibleProducts = allProducts.filter(p => {
+    if (!p.categoryId) return true;
+    const cat = allCategories.find(c => c.id === p.categoryId);
+    return cat ? cat.mostrarEnWeb !== false : true;
+  });
 
   return (
     <PublicLayout>
-      <StoreFront products={products} categories={categories} />
+      <StoreFront products={visibleProducts} categories={visibleCategories} />
     </PublicLayout>
   );
 }

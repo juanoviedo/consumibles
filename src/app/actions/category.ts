@@ -12,8 +12,9 @@ export async function getCategories() {
 
 export async function createCategory(formData: FormData) {
   const nombre = formData.get("nombre") as string;
+  const mostrarEnWeb = formData.get("mostrarEnWeb") === "true" || formData.get("mostrarEnWeb") === "on";
   await prisma.category.create({
-    data: { nombre },
+    data: { nombre, mostrarEnWeb },
   });
   revalidatePath("/");
   revalidatePath("/admin");
@@ -23,9 +24,10 @@ export async function createCategory(formData: FormData) {
 export async function updateCategory(formData: FormData) {
   const id = parseInt(formData.get("id") as string, 10);
   const nombre = formData.get("nombre") as string;
+  const mostrarEnWeb = formData.get("mostrarEnWeb") === "true" || formData.get("mostrarEnWeb") === "on";
   await prisma.category.update({
     where: { id },
-    data: { nombre },
+    data: { nombre, mostrarEnWeb },
   });
   revalidatePath("/");
   revalidatePath("/admin");

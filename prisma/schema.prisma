@@ -43,11 +43,12 @@ model IncomingOrder {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Category {
-  id        Int       @id @default(autoincrement())
-  nombre    String    @unique
-  products  Product[]
-  createdAt DateTime? @default(now()) @db.Timestamp(6)
-  updatedAt DateTime? @default(now()) @db.Timestamp(6)
+  id           Int       @id @default(autoincrement())
+  nombre       String    @unique
+  mostrarEnWeb Boolean   @default(true)
+  products     Product[]
+  createdAt    DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime? @default(now()) @db.Timestamp(6)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

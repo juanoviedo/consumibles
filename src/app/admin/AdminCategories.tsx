@@ -24,9 +24,22 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
         >
           <input type="hidden" name="id" value={editingCategory.id} />
           <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>Nombre de la Categoría</label>
             <input type="text" name="nombre" defaultValue={editingCategory.nombre} required />
           </div>
-          <div style={{ display: "flex", gap: "10px", marginTop: "10px", gridColumn: "1/-1" }}>
+          <div className="admin-input-group" style={{ display: "flex", alignItems: "center", gap: "10px", gridColumn: "1/-1", marginTop: "10px" }}>
+            <input 
+              type="checkbox" 
+              name="mostrarEnWeb" 
+              id="edit-mostrarEnWeb" 
+              defaultChecked={editingCategory.mostrarEnWeb !== false} 
+              style={{ width: "20px", height: "20px", cursor: "pointer" }}
+            />
+            <label htmlFor="edit-mostrarEnWeb" style={{ fontSize: "14px", cursor: "pointer", userSelect: "none" }}>
+              Mostrar esta categoría en la página web pública
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: "10px", marginTop: "20px", gridColumn: "1/-1" }}>
             <button type="submit" className="admin-btn">Guardar Cambios</button>
             <button type="button" className="admin-btn admin-btn-outline" onClick={cancelEdit}>Cancelar</button>
           </div>
@@ -47,9 +60,22 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
           className="admin-grid-form"
         >
           <div className="admin-input-group">
-            <input type="text" name="nombre" placeholder="Nombre de la Categoría" required />
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>Nombre de la Categoría</label>
+            <input type="text" name="nombre" placeholder="Ej. Envases, Electrodos, etc." required />
           </div>
-          <div style={{ display: "flex", gap: "10px", alignItems: "flex-end", marginBottom: "15px" }}>
+          <div className="admin-input-group" style={{ display: "flex", alignItems: "center", gap: "10px", gridColumn: "1/-1", marginTop: "10px" }}>
+            <input 
+              type="checkbox" 
+              name="mostrarEnWeb" 
+              id="new-mostrarEnWeb" 
+              defaultChecked={true} 
+              style={{ width: "20px", height: "20px", cursor: "pointer" }}
+            />
+            <label htmlFor="new-mostrarEnWeb" style={{ fontSize: "14px", cursor: "pointer", userSelect: "none" }}>
+              Mostrar esta categoría en la página web pública
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: "10px", marginTop: "20px", gridColumn: "1/-1" }}>
             <button type="submit" className="admin-btn">
               Guardar Categoría
             </button>
@@ -81,6 +107,7 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
               <tr>
                 <th>ID</th>
                 <th>Nombre</th>
+                <th>Visible en Web</th>
                 <th>Acción</th>
               </tr>
             </thead>
@@ -90,10 +117,21 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
                   <td>{c.id}</td>
                   <td>{c.nombre}</td>
                   <td>
+                    {c.mostrarEnWeb !== false ? (
+                      <span style={{ background: "rgba(16, 185, 129, 0.2)", color: "#34d399", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}>Sí</span>
+                    ) : (
+                      <span style={{ background: "rgba(148, 163, 184, 0.2)", color: "#cbd5e1", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}>No</span>
+                    )}
+                  </td>
+                  <td>
                     <div className="admin-table-actions">
                       <button type="button" onClick={() => startEdit(c)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
                       <form action={deleteCategory.bind(null, c.id)}>
-                        <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">Borrar</button>
+                        <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm" onClick={(e) => {
+                          if (!confirm("¿Seguro que deseas eliminar esta categoría?")) {
+                            e.preventDefault();
+                          }
+                        }}>Borrar</button>
                       </form>
                     </div>
                   </td>
@@ -101,7 +139,7 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
               ))}
               {categories.length === 0 && (
                 <tr>
-                  <td colSpan={3} style={{ textAlign: "center", padding: "20px", color: "#666" }}>No hay categorías registradas.</td>
+                  <td colSpan={4} style={{ textAlign: "center", padding: "20px", color: "#666" }}>No hay categorías registradas.</td>
                 </tr>
               )}
             </tbody>
