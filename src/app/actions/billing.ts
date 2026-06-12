@@ -138,6 +138,45 @@ export async function createQuotation(
   return quotation;
 }
 
+export async function updateQuotation(
+  id: number,
+  clientId: number,
+  items: { productId: number; cantidad: number; precioUnitario: number }[]
+) {
+  if (items.length === 0) {
+    throw new Error("El documento debe contener al menos un producto.");
+  }
+
+  const total = items.reduce((acc, item) => acc + item.cantidad * item.precioUnitario, 0);
+
+  // Ejecutamos en transacción: eliminar ítems viejos e insertar los nuevos
+  await prisma.$transaction(async (tx) => {
+    // 1. Eliminar items anteriores
+    await tx.quotationItem.deleteMany({
+      where: { quotationId: id },
+    });
+
+    // 2. Actualizar cabecera de la cotización
+    await tx.quotation.update({
+      where: { id },
+      data: {
+        clientId,
+        total,
+        items: {
+          create: items.map((item) => ({
+            productId: item.productId,
+            cantidad: item.cantidad,
+            precioUnitario: item.precioUnitario,
+          })),
+        },
+      },
+    });
+  });
+
+  revalidatePath("/admin/cotizaciones");
+}
+
+
 /**
  * Convierte una cotización en Cuenta de Cobro (estado CUENTA_COBRO).
  * Genera el consecutivo de cuenta de cobro y resta los productos del inventario.

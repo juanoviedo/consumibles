@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { 
   createQuotation, 
+  updateQuotation,
   convertToBillOfCollection, 
   markAsPaid, 
   markAsRejected, 
@@ -30,6 +31,10 @@ export default function QuotationsClient({
   const [showNewForm, setShowNewForm] = useState(false);
   const [filterType, setFilterType] = useState<"TODAS" | "COTIZACIONES" | "CUENTAS_COBRO">("TODAS");
   
+  // Edit States
+  const [editingQuotationId, setEditingQuotationId] = useState<number | null>(null);
+  const [editingQuotationNumber, setEditingQuotationNumber] = useState<string>("");
+
   // Creation States
   const [selectedClientId, setSelectedClientId] = useState<number | "">("");
   const [currentItems, setCurrentItems] = useState<QuotationItemInput[]>([]);
@@ -102,6 +107,78 @@ export default function QuotationsClient({
   // Remove item from draft
   const handleRemoveProduct = (productId: number) => {
     setCurrentItems(currentItems.filter(i => i.productId !== productId));
+  };
+
+  // Update item quantity inline
+  const handleUpdateItemQty = (productId: number, qty: number) => {
+    setCurrentItems(prev => prev.map(item => 
+      item.productId === productId ? { ...item, cantidad: Math.max(1, qty) } : item
+    ));
+  };
+
+  // Update item unit price inline
+  const handleUpdateItemPrice = (productId: number, price: number) => {
+    setCurrentItems(prev => prev.map(item => 
+      item.productId === productId ? { ...item, precioUnitario: Math.max(0, price) } : item
+    ));
+  };
+
+  // Initialize form with existing quotation data for editing
+  const handleStartEdit = (quote: any) => {
+    setEditingQuotationId(quote.id);
+    setEditingQuotationNumber(quote.numeroCotizacion);
+    setSelectedClientId(quote.clientId);
+    
+    const itemsInput: QuotationItemInput[] = quote.items.map((i: any) => ({
+      productId: i.productId,
+      nombre: i.product?.nombre || "",
+      codigo: i.product?.codigo || "",
+      cantidad: i.cantidad,
+      precioUnitario: i.precioUnitario
+    }));
+    setCurrentItems(itemsInput);
+    
+    setShowNewForm(false);
+    setSelectedProductId("");
+    setItemQuantity(1);
+    setItemPriceOverride("");
+    setPriceSource("");
+    setSuggestedPrice(0);
+  };
+
+  // Cancel quotation edit mode
+  const handleCancelEdit = () => {
+    setEditingQuotationId(null);
+    setEditingQuotationNumber("");
+    setSelectedClientId("");
+    setCurrentItems([]);
+    setPriceSource("");
+    setSuggestedPrice(0);
+  };
+
+  // Submit quotation edits
+  const handleEditQuotationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingQuotationId === null) return;
+    if (selectedClientId === "" || currentItems.length === 0) {
+      alert("Por favor, seleccione un cliente y añada al menos un producto.");
+      return;
+    }
+
+    try {
+      await updateQuotation(
+        editingQuotationId,
+        Number(selectedClientId),
+        currentItems.map(i => ({
+          productId: i.productId,
+          cantidad: i.cantidad,
+          precioUnitario: i.precioUnitario
+        }))
+      );
+      handleCancelEdit();
+    } catch (err: any) {
+      alert("Error al guardar: " + err.message);
+    }
   };
 
   // Look up last price for a product/client in previous quotations
@@ -270,11 +347,13 @@ export default function QuotationsClient({
         </button>
       </div>
 
-      {/* 2. FORMULARIO NUEVA COTIZACIÓN */}
-      {showNewForm && (
+      {/* 2. FORMULARIO NUEVA O EDITAR COTIZACIÓN */}
+      {(showNewForm || editingQuotationId !== null) && (
         <section className="glass-container" style={{ marginBottom: "40px" }}>
-          <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Crear Nueva Cotización</h2>
-          <form onSubmit={handleCreateQuotationSubmit} className="admin-grid-form">
+          <h2 style={{ marginTop: 0, marginBottom: "20px" }}>
+            {editingQuotationId !== null ? `Editar Cotización ${editingQuotationNumber}` : "Crear Nueva Cotización"}
+          </h2>
+          <form onSubmit={editingQuotationId !== null ? handleEditQuotationSubmit : handleCreateQuotationSubmit} className="admin-grid-form">
             <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
               <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Cliente</label>
               <select 
@@ -355,15 +434,15 @@ export default function QuotationsClient({
 
             {/* List of items currently added to the quote draft */}
             <div style={{ gridColumn: "1 / -1", marginTop: "15px" }}>
-              <h4 style={{ fontSize: "14px", marginBottom: "10px" }}>Productos Cotizados:</h4>
-              <div className="admin-table-container" style={{ maxHeight: "200px", border: "1px solid var(--admin-glass-border)" }}>
+              <h4 style={{ fontSize: "14px", marginBottom: "10px" }}>Productos Cotizados (Edición en Línea):</h4>
+              <div className="admin-table-container" style={{ maxHeight: "300px", border: "1px solid var(--admin-glass-border)" }}>
                 <table className="admin-table">
                   <thead>
                     <tr>
                       <th>Código</th>
                       <th>Producto</th>
-                      <th>Cantidad</th>
-                      <th>Precio Unit.</th>
+                      <th style={{ width: "120px" }}>Cantidad</th>
+                      <th style={{ width: "160px" }}>Precio Unit.</th>
                       <th>Subtotal</th>
                       <th>Quitar</th>
                     </tr>
@@ -373,8 +452,42 @@ export default function QuotationsClient({
                       <tr key={item.productId}>
                         <td>{item.codigo}</td>
                         <td>{item.nombre}</td>
-                        <td>{item.cantidad}</td>
-                        <td>{formatCurrency(item.precioUnitario)}</td>
+                        <td>
+                          <input 
+                            type="number"
+                            min="1"
+                            value={item.cantidad}
+                            onChange={(e) => handleUpdateItemQty(item.productId, parseInt(e.target.value || "1", 10))}
+                            style={{
+                              width: "100%",
+                              padding: "6px 10px",
+                              background: "rgba(0, 0, 0, 0.3)",
+                              color: "white",
+                              border: "1px solid var(--admin-glass-border)",
+                              borderRadius: "6px",
+                              outline: "none",
+                              fontSize: "14px"
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <input 
+                            type="number"
+                            min="0"
+                            value={item.precioUnitario}
+                            onChange={(e) => handleUpdateItemPrice(item.productId, parseFloat(e.target.value || "0"))}
+                            style={{
+                              width: "100%",
+                              padding: "6px 10px",
+                              background: "rgba(0, 0, 0, 0.3)",
+                              color: "white",
+                              border: "1px solid var(--admin-glass-border)",
+                              borderRadius: "6px",
+                              outline: "none",
+                              fontSize: "14px"
+                            }}
+                          />
+                        </td>
                         <td>{formatCurrency(item.cantidad * item.precioUnitario)}</td>
                         <td>
                           <button 
@@ -413,17 +526,21 @@ export default function QuotationsClient({
                 className="admin-btn"
                 disabled={currentItems.length === 0 || selectedClientId === ""}
               >
-                Registrar Cotización
+                {editingQuotationId !== null ? "Guardar Cambios" : "Registrar Cotización"}
               </button>
               <button 
                 type="button" 
                 className="admin-btn admin-btn-outline" 
                 onClick={() => {
-                  setShowNewForm(false);
-                  setCurrentItems([]);
-                  setSelectedClientId("");
-                  setPriceSource("");
-                  setSuggestedPrice(0);
+                  if (editingQuotationId !== null) {
+                    handleCancelEdit();
+                  } else {
+                    setShowNewForm(false);
+                    setCurrentItems([]);
+                    setSelectedClientId("");
+                    setPriceSource("");
+                    setSuggestedPrice(0);
+                  }
                 }}
               >
                 Cancelar
@@ -504,6 +621,18 @@ export default function QuotationsClient({
                       >
                         Ver Detalle
                       </button>
+
+                      {/* EDITAR COTIZACION */}
+                      {q.estado === "COTIZACION" && (
+                        <button 
+                          type="button" 
+                          className="admin-btn admin-btn-outline admin-btn-sm"
+                          style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
+                          onClick={() => handleStartEdit(q)}
+                        >
+                          Editar
+                        </button>
+                      )}
 
                       {/* APROBAR Y FACTURAR (CONVIERTE A CUENTA COBRO Y DESCUENTA STOCK) */}
                       {(q.estado === "COTIZACION" || q.estado === "APROBADA") && (
