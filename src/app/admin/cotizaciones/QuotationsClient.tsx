@@ -12,11 +12,13 @@ import {
 } from "@/app/actions/billing";
 
 interface QuotationItemInput {
-  productId: number;
+  productId: number | "";
   nombre: string;
   codigo: string;
   cantidad: number;
   precioUnitario: number;
+  priceSource?: "LISTA" | "HISTORIAL" | "";
+  suggestedPrice?: number;
 }
 
 export default function QuotationsClient({
@@ -35,14 +37,9 @@ export default function QuotationsClient({
   const [editingQuotationId, setEditingQuotationId] = useState<number | null>(null);
   const [editingQuotationNumber, setEditingQuotationNumber] = useState<string>("");
 
-  // Creation States
+  // Creation/Edit items State
   const [selectedClientId, setSelectedClientId] = useState<number | "">("");
   const [currentItems, setCurrentItems] = useState<QuotationItemInput[]>([]);
-  const [selectedProductId, setSelectedProductId] = useState<number | "">("");
-  const [itemQuantity, setItemQuantity] = useState<number>(1);
-  const [itemPriceOverride, setItemPriceOverride] = useState<number | "">("");
-  const [priceSource, setPriceSource] = useState<"LISTA" | "HISTORIAL" | "">("");
-  const [suggestedPrice, setSuggestedPrice] = useState<number>(0);
 
   // Details Modal State
   const [activeDetailsQuote, setActiveDetailsQuote] = useState<any | null>(null);
@@ -67,59 +64,83 @@ export default function QuotationsClient({
     });
   };
 
-  // Handle adding product to current quote creation list
-  const handleAddProduct = () => {
-    if (selectedProductId === "") return;
-    const prod = products.find(p => p.id === Number(selectedProductId));
-    if (!prod) return;
-
-    const price = itemPriceOverride !== "" ? Number(itemPriceOverride) : prod.precio;
-
-    // Check if already in list
-    const existingIndex = currentItems.findIndex(i => i.productId === prod.id);
-    if (existingIndex > -1) {
-      const updated = [...currentItems];
-      updated[existingIndex].cantidad += itemQuantity;
-      // Keep the latest price override
-      updated[existingIndex].precioUnitario = price;
-      setCurrentItems(updated);
-    } else {
-      setCurrentItems([
-        ...currentItems,
-        {
-          productId: prod.id,
-          nombre: prod.nombre,
-          codigo: prod.codigo,
-          cantidad: itemQuantity,
-          precioUnitario: price
-        }
-      ]);
-    }
-
-    // Reset items inputs
-    setSelectedProductId("");
-    setItemQuantity(1);
-    setItemPriceOverride("");
-    setPriceSource("");
-    setSuggestedPrice(0);
+  // Open the creation form with one empty row by default
+  const handleOpenNewForm = () => {
+    setEditingQuotationId(null);
+    setEditingQuotationNumber("");
+    setSelectedClientId("");
+    setCurrentItems([
+      { productId: "", nombre: "", codigo: "", cantidad: 1, precioUnitario: 0, priceSource: "", suggestedPrice: 0 }
+    ]);
+    setShowNewForm(true);
   };
 
-  // Remove item from draft
-  const handleRemoveProduct = (productId: number) => {
-    setCurrentItems(currentItems.filter(i => i.productId !== productId));
+  // Add a new empty row to the items list
+  const handleAddRow = () => {
+    setCurrentItems([
+      ...currentItems,
+      { productId: "", nombre: "", codigo: "", cantidad: 1, precioUnitario: 0, priceSource: "", suggestedPrice: 0 }
+    ]);
   };
 
-  // Update item quantity inline
-  const handleUpdateItemQty = (productId: number, qty: number) => {
-    setCurrentItems(prev => prev.map(item => 
-      item.productId === productId ? { ...item, cantidad: Math.max(1, qty) } : item
+  // Remove a row from the items list by index
+  const handleRemoveRow = (index: number) => {
+    setCurrentItems(currentItems.filter((_, i) => i !== index));
+  };
+
+  // Update item quantity inline by index
+  const handleUpdateItemQty = (index: number, qty: number) => {
+    setCurrentItems(prev => prev.map((item, i) => 
+      i === index ? { ...item, cantidad: Math.max(1, qty) } : item
     ));
   };
 
-  // Update item unit price inline
-  const handleUpdateItemPrice = (productId: number, price: number) => {
-    setCurrentItems(prev => prev.map(item => 
-      item.productId === productId ? { ...item, precioUnitario: Math.max(0, price) } : item
+  // Update item unit price inline by index
+  const handleUpdateItemPrice = (index: number, price: number) => {
+    setCurrentItems(prev => prev.map((item, i) => 
+      i === index ? { ...item, precioUnitario: Math.max(0, price) } : item
+    ));
+  };
+
+  // Update product selection for a specific row index
+  const handleUpdateRowProduct = (index: number, val: string) => {
+    if (val === "") {
+      setCurrentItems(prev => prev.map((item, i) => 
+        i === index ? { ...item, productId: "", nombre: "", codigo: "", precioUnitario: 0, priceSource: "", suggestedPrice: 0 } : item
+      ));
+      return;
+    }
+    const prodId = Number(val);
+    const prod = products.find(p => p.id === prodId);
+    if (!prod) return;
+
+    let lastPrice: number | null = null;
+    if (selectedClientId !== "") {
+      const clientId = Number(selectedClientId);
+      for (const quote of quotations) {
+        if (quote.clientId === clientId && (quote.estado === "CUENTA_COBRO" || quote.estado === "PAGADA" || quote.estado === "APROBADA")) {
+          const matchingItem = quote.items?.find((item: any) => item.productId === prodId);
+          if (matchingItem) {
+            lastPrice = matchingItem.precioUnitario;
+            break;
+          }
+        }
+      }
+    }
+
+    const price = lastPrice !== null ? lastPrice : prod.precio;
+    const source = lastPrice !== null ? "HISTORIAL" : "LISTA";
+
+    setCurrentItems(prev => prev.map((item, i) => 
+      i === index ? {
+        ...item,
+        productId: prodId,
+        nombre: prod.nombre,
+        codigo: prod.codigo,
+        precioUnitario: price,
+        priceSource: source,
+        suggestedPrice: prod.precio
+      } : item
     ));
   };
 
@@ -134,16 +155,12 @@ export default function QuotationsClient({
       nombre: i.product?.nombre || "",
       codigo: i.product?.codigo || "",
       cantidad: i.cantidad,
-      precioUnitario: i.precioUnitario
+      precioUnitario: i.precioUnitario,
+      priceSource: "LISTA" as const,
+      suggestedPrice: Number(i.product?.precio || i.precioUnitario)
     }));
     setCurrentItems(itemsInput);
-    
     setShowNewForm(false);
-    setSelectedProductId("");
-    setItemQuantity(1);
-    setItemPriceOverride("");
-    setPriceSource("");
-    setSuggestedPrice(0);
   };
 
   // Cancel quotation edit mode
@@ -152,16 +169,81 @@ export default function QuotationsClient({
     setEditingQuotationNumber("");
     setSelectedClientId("");
     setCurrentItems([]);
-    setPriceSource("");
-    setSuggestedPrice(0);
+  };
+
+  // Re-lookup prices when client changes for all items currently selected
+  const handleClientChange = (clientIdStr: string) => {
+    const clientId = clientIdStr === "" ? "" : Number(clientIdStr);
+    setSelectedClientId(clientId);
+
+    if (clientId !== "") {
+      setCurrentItems(prev => prev.map(item => {
+        if (item.productId === "") return item;
+        const prod = products.find(p => p.id === item.productId);
+        if (!prod) return item;
+
+        let lastPrice: number | null = null;
+        for (const quote of quotations) {
+          if (quote.clientId === clientId && (quote.estado === "CUENTA_COBRO" || quote.estado === "PAGADA" || quote.estado === "APROBADA")) {
+            const matchingItem = quote.items?.find((mi: any) => mi.productId === item.productId);
+            if (matchingItem) {
+              lastPrice = matchingItem.precioUnitario;
+              break;
+            }
+          }
+        }
+
+        const price = lastPrice !== null ? lastPrice : prod.precio;
+        const source = lastPrice !== null ? "HISTORIAL" : "LISTA";
+        return {
+          ...item,
+          precioUnitario: price,
+          priceSource: source,
+          suggestedPrice: prod.precio
+        };
+      }));
+    } else {
+      setCurrentItems(prev => prev.map(item => ({
+        ...item,
+        priceSource: "",
+        suggestedPrice: 0
+      })));
+    }
+  };
+
+  // Submit quotation creation
+  const handleCreateQuotationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const validItems = currentItems.filter(i => i.productId !== "");
+    if (selectedClientId === "" || validItems.length === 0) {
+      alert("Por favor, seleccione un cliente y añada al menos un producto válido.");
+      return;
+    }
+
+    try {
+      await createQuotation(
+        Number(selectedClientId),
+        validItems.map(i => ({
+          productId: Number(i.productId),
+          cantidad: i.cantidad,
+          precioUnitario: i.precioUnitario
+        }))
+      );
+      setSelectedClientId("");
+      setCurrentItems([]);
+      setShowNewForm(false);
+    } catch (err: any) {
+      alert("Error al guardar: " + err.message);
+    }
   };
 
   // Submit quotation edits
   const handleEditQuotationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingQuotationId === null) return;
-    if (selectedClientId === "" || currentItems.length === 0) {
-      alert("Por favor, seleccione un cliente y añada al menos un producto.");
+    const validItems = currentItems.filter(i => i.productId !== "");
+    if (selectedClientId === "" || validItems.length === 0) {
+      alert("Por favor, seleccione un cliente y añada al menos un producto válido.");
       return;
     }
 
@@ -169,8 +251,8 @@ export default function QuotationsClient({
       await updateQuotation(
         editingQuotationId,
         Number(selectedClientId),
-        currentItems.map(i => ({
-          productId: i.productId,
+        validItems.map(i => ({
+          productId: Number(i.productId),
           cantidad: i.cantidad,
           precioUnitario: i.precioUnitario
         }))
@@ -181,97 +263,7 @@ export default function QuotationsClient({
     }
   };
 
-  // Look up last price for a product/client in previous quotations
-  const lookupLastPrice = (clientId: number, prodId: number, basePrice: number) => {
-    let lastPrice: number | null = null;
-    
-    // Las cotizaciones ya vienen ordenadas por fecha descendente
-    for (const quote of quotations) {
-      if (quote.clientId === clientId && (quote.estado === "CUENTA_COBRO" || quote.estado === "PAGADA" || quote.estado === "APROBADA")) {
-        const matchingItem = quote.items?.find((item: any) => item.productId === prodId);
-        if (matchingItem) {
-          lastPrice = matchingItem.precioUnitario;
-          break;
-        }
-      }
-    }
-    
-    if (lastPrice !== null) {
-      setItemPriceOverride(lastPrice);
-      setPriceSource("HISTORIAL");
-      setSuggestedPrice(lastPrice);
-    } else {
-      setItemPriceOverride(basePrice);
-      setPriceSource("LISTA");
-      setSuggestedPrice(basePrice);
-    }
-  };
 
-  // Prefill price when selecting product in dropdown
-  const handleProductChange = (id: string) => {
-    setSelectedProductId(id === "" ? "" : Number(id));
-    if (id !== "") {
-      const prod = products.find(p => p.id === Number(id));
-      if (prod) {
-        if (selectedClientId !== "") {
-          lookupLastPrice(Number(selectedClientId), prod.id, prod.precio);
-        } else {
-          setItemPriceOverride(prod.precio);
-          setPriceSource("LISTA");
-          setSuggestedPrice(prod.precio);
-        }
-      }
-    } else {
-      setItemPriceOverride("");
-      setPriceSource("");
-      setSuggestedPrice(0);
-    }
-  };
-
-  // Re-lookup price when client changes and a product is already selected
-  const handleClientChange = (clientIdStr: string) => {
-    const clientId = clientIdStr === "" ? "" : Number(clientIdStr);
-    setSelectedClientId(clientId);
-
-    if (clientId !== "" && selectedProductId !== "") {
-      const prodId = Number(selectedProductId);
-      const prod = products.find(p => p.id === prodId);
-      if (prod) {
-        lookupLastPrice(clientId, prodId, prod.precio);
-      }
-    } else {
-      setPriceSource("");
-      setSuggestedPrice(0);
-    }
-  };
-
-  // Submit quotation creation
-  const handleCreateQuotationSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedClientId === "" || currentItems.length === 0) {
-      alert("Por favor, seleccione un cliente y añada al menos un producto.");
-      return;
-    }
-
-    try {
-      await createQuotation(
-        Number(selectedClientId),
-        currentItems.map(i => ({
-          productId: i.productId,
-          cantidad: i.cantidad,
-          precioUnitario: i.precioUnitario
-        }))
-      );
-      // Reset forms
-      setSelectedClientId("");
-      setCurrentItems([]);
-      setShowNewForm(false);
-      setPriceSource("");
-      setSuggestedPrice(0);
-    } catch (err: any) {
-      alert("Error al guardar: " + err.message);
-    }
-  };
 
   // Filter logic
   const filteredDocs = quotations.filter(q => {
@@ -342,7 +334,7 @@ export default function QuotationsClient({
             Genera cotizaciones y transfiérelas a cuentas de cobro de forma unificada en la base de datos.
           </p>
         </div>
-        <button className="admin-btn" onClick={() => setShowNewForm(true)}>
+        <button className="admin-btn" onClick={handleOpenNewForm}>
           + Crear Cotización
         </button>
       </div>
@@ -370,94 +362,55 @@ export default function QuotationsClient({
               </select>
             </div>
 
-            {/* Sub-form to add item */}
-            <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--admin-glass-border)", paddingTop: "15px", marginTop: "10px" }}>
-              <h3 style={{ fontSize: "16px", marginTop: 0, marginBottom: "15px" }}>Agregar Productos a la Lista</h3>
-              <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
-                <div className="admin-input-group" style={{ flex: 2, minWidth: "200px", marginBottom: 0 }}>
-                  <label style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Producto</label>
-                  <select 
-                    value={selectedProductId}
-                    onChange={(e) => handleProductChange(e.target.value)}
-                  >
-                    <option value="">-- Seleccionar Producto --</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.nombre} (Ref: {p.codigo}) - Stock: {p.stock}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="admin-input-group" style={{ flex: 1, minWidth: "100px", marginBottom: 0 }}>
-                  <label style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Cantidad</label>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    value={itemQuantity}
-                    onChange={(e) => setItemQuantity(parseInt(e.target.value || "1", 10))}
-                  />
-                </div>
-
-                <div className="admin-input-group" style={{ flex: 1, minWidth: "120px", marginBottom: 0 }}>
-                  <label style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Precio Unitario</label>
-                  <input 
-                    type="number" 
-                    placeholder="Prefijado" 
-                    value={itemPriceOverride}
-                    onChange={(e) => setItemPriceOverride(e.target.value === "" ? "" : Number(e.target.value))}
-                  />
-                  {priceSource === "HISTORIAL" && (
-                    <span style={{ fontSize: "11px", color: "#60a5fa", marginTop: "4px", display: "block" }}>
-                      ℹ️ Último precio facturado: {formatCurrency(suggestedPrice)}
-                    </span>
-                  )}
-                  {priceSource === "LISTA" && (
-                    <span style={{ fontSize: "11px", color: "var(--admin-text-muted)", marginTop: "4px", display: "block" }}>
-                      ℹ️ Precio de lista: {formatCurrency(suggestedPrice)}
-                    </span>
-                  )}
-                </div>
-
-                <div style={{ display: "flex", alignItems: "flex-end" }}>
-                  <button 
-                    type="button" 
-                    className="admin-btn admin-btn-outline" 
-                    style={{ height: "45px", padding: "0 20px" }}
-                    onClick={handleAddProduct}
-                  >
-                    Añadir
-                  </button>
-                </div>
-              </div>
-            </div>
-
             {/* List of items currently added to the quote draft */}
             <div style={{ gridColumn: "1 / -1", marginTop: "15px" }}>
               <h4 style={{ fontSize: "14px", marginBottom: "10px" }}>Productos Cotizados (Edición en Línea):</h4>
-              <div className="admin-table-container" style={{ maxHeight: "300px", border: "1px solid var(--admin-glass-border)" }}>
+              <div className="admin-table-container" style={{ maxHeight: "350px", border: "1px solid var(--admin-glass-border)" }}>
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Código</th>
+                      <th style={{ width: "150px" }}>Código</th>
                       <th>Producto</th>
                       <th style={{ width: "120px" }}>Cantidad</th>
-                      <th style={{ width: "160px" }}>Precio Unit.</th>
+                      <th style={{ width: "180px" }}>Precio Unit.</th>
                       <th>Subtotal</th>
-                      <th>Quitar</th>
+                      <th style={{ width: "100px" }}>Acción</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {currentItems.map((item) => (
-                      <tr key={item.productId}>
-                        <td>{item.codigo}</td>
-                        <td>{item.nombre}</td>
+                    {currentItems.map((item, index) => (
+                      <tr key={index}>
+                        <td><strong>{item.codigo || "-"}</strong></td>
+                        <td>
+                          <select
+                            value={item.productId}
+                            onChange={(e) => handleUpdateRowProduct(index, e.target.value)}
+                            required
+                            style={{
+                              width: "100%",
+                              padding: "6px 10px",
+                              background: "rgba(0, 0, 0, 0.3)",
+                              color: "white",
+                              border: "1px solid var(--admin-glass-border)",
+                              borderRadius: "6px",
+                              outline: "none",
+                              fontSize: "14px"
+                            }}
+                          >
+                            <option value="">-- Seleccionar Producto --</option>
+                            {products.map(p => (
+                              <option key={p.id} value={p.id}>
+                                {p.nombre} (Stock: {p.stock})
+                              </option>
+                            ))}
+                          </select>
+                        </td>
                         <td>
                           <input 
                             type="number"
                             min="1"
                             value={item.cantidad}
-                            onChange={(e) => handleUpdateItemQty(item.productId, parseInt(e.target.value || "1", 10))}
+                            onChange={(e) => handleUpdateItemQty(index, parseInt(e.target.value || "1", 10))}
                             style={{
                               width: "100%",
                               padding: "6px 10px",
@@ -471,30 +424,42 @@ export default function QuotationsClient({
                           />
                         </td>
                         <td>
-                          <input 
-                            type="number"
-                            min="0"
-                            value={item.precioUnitario}
-                            onChange={(e) => handleUpdateItemPrice(item.productId, parseFloat(e.target.value || "0"))}
-                            style={{
-                              width: "100%",
-                              padding: "6px 10px",
-                              background: "rgba(0, 0, 0, 0.3)",
-                              color: "white",
-                              border: "1px solid var(--admin-glass-border)",
-                              borderRadius: "6px",
-                              outline: "none",
-                              fontSize: "14px"
-                            }}
-                          />
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <input 
+                              type="number"
+                              min="0"
+                              value={item.precioUnitario}
+                              onChange={(e) => handleUpdateItemPrice(index, parseFloat(e.target.value || "0"))}
+                              style={{
+                                width: "100%",
+                                padding: "6px 10px",
+                                background: "rgba(0, 0, 0, 0.3)",
+                                color: "white",
+                                border: "1px solid var(--admin-glass-border)",
+                                borderRadius: "6px",
+                                outline: "none",
+                                fontSize: "14px"
+                              }}
+                            />
+                            {item.priceSource === "HISTORIAL" && item.suggestedPrice && (
+                              <span style={{ fontSize: "10px", color: "#60a5fa" }}>
+                                ℹ️ Historial: {formatCurrency(item.suggestedPrice)}
+                              </span>
+                            )}
+                            {item.priceSource === "LISTA" && item.suggestedPrice && (
+                              <span style={{ fontSize: "10px", color: "var(--admin-text-muted)" }}>
+                                ℹ️ Lista: {formatCurrency(item.suggestedPrice)}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td>{formatCurrency(item.cantidad * item.precioUnitario)}</td>
                         <td>
                           <button 
                             type="button" 
                             className="admin-btn admin-btn-danger admin-btn-sm"
-                            style={{ padding: "4px 8px" }}
-                            onClick={() => handleRemoveProduct(item.productId)}
+                            style={{ padding: "6px 12px" }}
+                            onClick={() => handleRemoveRow(index)}
                           >
                             Eliminar
                           </button>
@@ -504,7 +469,7 @@ export default function QuotationsClient({
                     {currentItems.length === 0 && (
                       <tr>
                         <td colSpan={6} style={{ textAlign: "center", color: "var(--admin-text-muted)", padding: "15px" }}>
-                          No has añadido productos a la lista todavía.
+                          No hay productos en la lista todavía.
                         </td>
                       </tr>
                     )}
@@ -512,12 +477,20 @@ export default function QuotationsClient({
                 </table>
               </div>
 
-              {/* Total draft sum */}
-              {currentItems.length > 0 && (
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "15px", fontSize: "1.1rem" }}>
-                  <strong>Total: {formatCurrency(currentItems.reduce((acc, i) => acc + (i.cantidad * i.precioUnitario), 0))}</strong>
-                </div>
-              )}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "15px" }}>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-outline admin-btn-sm"
+                  onClick={handleAddRow}
+                >
+                  + Agregar Producto
+                </button>
+                {currentItems.length > 0 && (
+                  <div style={{ fontSize: "1.1rem" }}>
+                    <strong>Total: {formatCurrency(currentItems.reduce((acc, i) => acc + (i.cantidad * i.precioUnitario), 0))}</strong>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", gridColumn: "1 / -1" }}>
@@ -538,8 +511,6 @@ export default function QuotationsClient({
                     setShowNewForm(false);
                     setCurrentItems([]);
                     setSelectedClientId("");
-                    setPriceSource("");
-                    setSuggestedPrice(0);
                   }
                 }}
               >
