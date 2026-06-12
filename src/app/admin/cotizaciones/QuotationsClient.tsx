@@ -36,6 +36,8 @@ export default function QuotationsClient({
   const [selectedProductId, setSelectedProductId] = useState<number | "">("");
   const [itemQuantity, setItemQuantity] = useState<number>(1);
   const [itemPriceOverride, setItemPriceOverride] = useState<number | "">("");
+  const [priceSource, setPriceSource] = useState<"LISTA" | "HISTORIAL" | "">("");
+  const [suggestedPrice, setSuggestedPrice] = useState<number>(0);
 
   // Details Modal State
   const [activeDetailsQuote, setActiveDetailsQuote] = useState<any | null>(null);
@@ -93,11 +95,39 @@ export default function QuotationsClient({
     setSelectedProductId("");
     setItemQuantity(1);
     setItemPriceOverride("");
+    setPriceSource("");
+    setSuggestedPrice(0);
   };
 
   // Remove item from draft
   const handleRemoveProduct = (productId: number) => {
     setCurrentItems(currentItems.filter(i => i.productId !== productId));
+  };
+
+  // Look up last price for a product/client in previous quotations
+  const lookupLastPrice = (clientId: number, prodId: number, basePrice: number) => {
+    let lastPrice: number | null = null;
+    
+    // Las cotizaciones ya vienen ordenadas por fecha descendente
+    for (const quote of quotations) {
+      if (quote.clientId === clientId && (quote.estado === "CUENTA_COBRO" || quote.estado === "PAGADA" || quote.estado === "APROBADA")) {
+        const matchingItem = quote.items?.find((item: any) => item.productId === prodId);
+        if (matchingItem) {
+          lastPrice = matchingItem.precioUnitario;
+          break;
+        }
+      }
+    }
+    
+    if (lastPrice !== null) {
+      setItemPriceOverride(lastPrice);
+      setPriceSource("HISTORIAL");
+      setSuggestedPrice(lastPrice);
+    } else {
+      setItemPriceOverride(basePrice);
+      setPriceSource("LISTA");
+      setSuggestedPrice(basePrice);
+    }
   };
 
   // Prefill price when selecting product in dropdown
@@ -106,10 +136,35 @@ export default function QuotationsClient({
     if (id !== "") {
       const prod = products.find(p => p.id === Number(id));
       if (prod) {
-        setItemPriceOverride(prod.precio);
+        if (selectedClientId !== "") {
+          lookupLastPrice(Number(selectedClientId), prod.id, prod.precio);
+        } else {
+          setItemPriceOverride(prod.precio);
+          setPriceSource("LISTA");
+          setSuggestedPrice(prod.precio);
+        }
       }
     } else {
       setItemPriceOverride("");
+      setPriceSource("");
+      setSuggestedPrice(0);
+    }
+  };
+
+  // Re-lookup price when client changes and a product is already selected
+  const handleClientChange = (clientIdStr: string) => {
+    const clientId = clientIdStr === "" ? "" : Number(clientIdStr);
+    setSelectedClientId(clientId);
+
+    if (clientId !== "" && selectedProductId !== "") {
+      const prodId = Number(selectedProductId);
+      const prod = products.find(p => p.id === prodId);
+      if (prod) {
+        lookupLastPrice(clientId, prodId, prod.precio);
+      }
+    } else {
+      setPriceSource("");
+      setSuggestedPrice(0);
     }
   };
 
@@ -134,6 +189,8 @@ export default function QuotationsClient({
       setSelectedClientId("");
       setCurrentItems([]);
       setShowNewForm(false);
+      setPriceSource("");
+      setSuggestedPrice(0);
     } catch (err: any) {
       alert("Error al guardar: " + err.message);
     }
@@ -222,7 +279,7 @@ export default function QuotationsClient({
               <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Cliente</label>
               <select 
                 value={selectedClientId} 
-                onChange={(e) => setSelectedClientId(e.target.value === "" ? "" : Number(e.target.value))}
+                onChange={(e) => handleClientChange(e.target.value)}
                 required
               >
                 <option value="">-- Seleccionar Cliente --</option>
@@ -271,6 +328,16 @@ export default function QuotationsClient({
                     value={itemPriceOverride}
                     onChange={(e) => setItemPriceOverride(e.target.value === "" ? "" : Number(e.target.value))}
                   />
+                  {priceSource === "HISTORIAL" && (
+                    <span style={{ fontSize: "11px", color: "#60a5fa", marginTop: "4px", display: "block" }}>
+                      ℹ️ Último precio facturado: {formatCurrency(suggestedPrice)}
+                    </span>
+                  )}
+                  {priceSource === "LISTA" && (
+                    <span style={{ fontSize: "11px", color: "var(--admin-text-muted)", marginTop: "4px", display: "block" }}>
+                      ℹ️ Precio de lista: {formatCurrency(suggestedPrice)}
+                    </span>
+                  )}
                 </div>
 
                 <div style={{ display: "flex", alignItems: "flex-end" }}>
@@ -355,6 +422,8 @@ export default function QuotationsClient({
                   setShowNewForm(false);
                   setCurrentItems([]);
                   setSelectedClientId("");
+                  setPriceSource("");
+                  setSuggestedPrice(0);
                 }}
               >
                 Cancelar
