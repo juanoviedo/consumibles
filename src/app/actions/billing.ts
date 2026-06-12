@@ -115,8 +115,21 @@ export async function createQuotation(
   const total = items.reduce((acc, item) => acc + item.cantidad * item.precioUnitario, 0);
 
   // Generar número correlativo para la cotización
-  const count = await prisma.quotation.count();
-  const numeroCotizacion = `COT-${(count + 1).toString().padStart(4, "0")}`;
+  const settings = await getSettings();
+  const quotationsList = await prisma.quotation.findMany({
+    select: { numeroCotizacion: true }
+  });
+  let nextNum = settings.startQuotationNumber;
+  quotationsList.forEach(q => {
+    const match = q.numeroCotizacion.match(/\d+/);
+    if (match) {
+      const num = parseInt(match[0], 10);
+      if (num >= nextNum) {
+        nextNum = num + 1;
+      }
+    }
+  });
+  const numeroCotizacion = `COT-${nextNum.toString().padStart(4, "0")}`;
 
   const quotation = await prisma.quotation.create({
     data: {
@@ -196,12 +209,24 @@ export async function convertToBillOfCollection(quotationId: number) {
   }
 
   // Generar número consecutivo para la cuenta de cobro
-  const countWithBill = await prisma.quotation.count({
-    where: {
-      numeroCuentaCobro: { not: null },
-    },
+  const settings = await getSettings();
+  const quotationsWithBills = await prisma.quotation.findMany({
+    where: { numeroCuentaCobro: { not: null } },
+    select: { numeroCuentaCobro: true }
   });
-  const numeroCuentaCobro = `CC-${(countWithBill + 1).toString().padStart(4, "0")}`;
+  let nextNum = settings.startBillNumber;
+  quotationsWithBills.forEach(q => {
+    if (q.numeroCuentaCobro) {
+      const match = q.numeroCuentaCobro.match(/\d+/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (num >= nextNum) {
+          nextNum = num + 1;
+        }
+      }
+    }
+  });
+  const numeroCuentaCobro = `CC-${nextNum.toString().padStart(4, "0")}`;
 
   const fechaCuentaCobro = new Date();
   const fechaVencimiento = new Date();
@@ -310,4 +335,47 @@ export async function deleteQuotation(id: number) {
   });
 
   revalidatePath("/admin/cotizaciones");
+}
+
+// --- SYSTEM SETTINGS ---
+
+export async function getSettings() {
+  let settings = await prisma.systemSettings.findFirst({
+    where: { id: 1 },
+  });
+  if (!settings) {
+    settings = await prisma.systemSettings.create({
+      data: {
+        id: 1,
+        startQuotationNumber: 1,
+        startBillNumber: 1,
+      },
+    });
+  }
+  return {
+    ...settings,
+    startQuotationNumber: Number(settings.startQuotationNumber),
+    startBillNumber: Number(settings.startBillNumber),
+  };
+}
+
+export async function updateSettings(formData: FormData) {
+  const startQuotationNumber = parseInt(formData.get("startQuotationNumber") as string || "1", 10);
+  const startBillNumber = parseInt(formData.get("startBillNumber") as string || "1", 10);
+
+  await prisma.systemSettings.upsert({
+    where: { id: 1 },
+    update: {
+      startQuotationNumber,
+      startBillNumber,
+    },
+    create: {
+      id: 1,
+      startQuotationNumber,
+      startBillNumber,
+    },
+  });
+
+  revalidatePath("/admin/cotizaciones");
+  revalidatePath("/admin/configuracion");
 }

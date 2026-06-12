@@ -114,3 +114,9 @@ model QuotationItem {
   updatedAt      DateTime? @default(now()) @db.Timestamp(6)
 }
 
+model SystemSettings {
+  id                   Int     @id @default(1)
+  startQuotationNumber Int     @default(1)
+  startBillNumber      Int     @default(1)
+}
+

@@ -41,6 +41,12 @@ export default function QuotationsClient({
   const [selectedClientId, setSelectedClientId] = useState<number | "">("");
   const [currentItems, setCurrentItems] = useState<QuotationItemInput[]>([]);
 
+  // Derived state to check if form is read-only
+  const isFormBlocked = editingQuotationId !== null && (() => {
+    const quote = quotations.find(q => q.id === editingQuotationId);
+    return quote ? quote.estado !== "COTIZACION" : false;
+  })();
+
   // Details Modal State
   const [activeDetailsQuote, setActiveDetailsQuote] = useState<any | null>(null);
 
@@ -352,6 +358,7 @@ export default function QuotationsClient({
                 value={selectedClientId} 
                 onChange={(e) => handleClientChange(e.target.value)}
                 required
+                disabled={isFormBlocked}
               >
                 <option value="">-- Seleccionar Cliente --</option>
                 {clients.map(c => (
@@ -386,6 +393,7 @@ export default function QuotationsClient({
                             value={item.productId}
                             onChange={(e) => handleUpdateRowProduct(index, e.target.value)}
                             required
+                            disabled={isFormBlocked}
                             style={{
                               width: "100%",
                               padding: "6px 10px",
@@ -411,6 +419,7 @@ export default function QuotationsClient({
                             min="1"
                             value={item.cantidad}
                             onChange={(e) => handleUpdateItemQty(index, parseInt(e.target.value || "1", 10))}
+                            disabled={isFormBlocked}
                             style={{
                               width: "100%",
                               padding: "6px 10px",
@@ -430,6 +439,7 @@ export default function QuotationsClient({
                               min="0"
                               value={item.precioUnitario}
                               onChange={(e) => handleUpdateItemPrice(index, parseFloat(e.target.value || "0"))}
+                              disabled={isFormBlocked}
                               style={{
                                 width: "100%",
                                 padding: "6px 10px",
@@ -460,6 +470,7 @@ export default function QuotationsClient({
                             className="admin-btn admin-btn-danger admin-btn-sm"
                             style={{ padding: "6px 12px" }}
                             onClick={() => handleRemoveRow(index)}
+                            disabled={isFormBlocked}
                           >
                             Eliminar
                           </button>
@@ -482,6 +493,7 @@ export default function QuotationsClient({
                   type="button"
                   className="admin-btn admin-btn-outline admin-btn-sm"
                   onClick={handleAddRow}
+                  disabled={isFormBlocked}
                 >
                   + Agregar Producto
                 </button>
@@ -494,13 +506,24 @@ export default function QuotationsClient({
             </div>
 
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", gridColumn: "1 / -1" }}>
-              <button 
-                type="submit" 
-                className="admin-btn"
-                disabled={currentItems.length === 0 || selectedClientId === ""}
-              >
-                {editingQuotationId !== null ? "Guardar Cambios" : "Registrar Cotización"}
-              </button>
+              {editingQuotationId !== null && isFormBlocked ? (
+                <button 
+                  type="button" 
+                  className="admin-btn"
+                  disabled
+                  style={{ opacity: 0.6, cursor: "not-allowed", background: "rgba(148, 163, 184, 0.2)", color: "#94a3b8", border: "1px solid rgba(148, 163, 184, 0.3)" }}
+                >
+                  Solo Lectura (Bloqueado)
+                </button>
+              ) : (
+                <button 
+                  type="submit" 
+                  className="admin-btn"
+                  disabled={currentItems.length === 0 || selectedClientId === ""}
+                >
+                  {editingQuotationId !== null ? "Guardar Cambios" : "Registrar Cotización"}
+                </button>
+              )}
               <button 
                 type="button" 
                 className="admin-btn admin-btn-outline" 
@@ -593,17 +616,15 @@ export default function QuotationsClient({
                         Ver Detalle
                       </button>
 
-                      {/* EDITAR COTIZACION */}
-                      {q.estado === "COTIZACION" && (
-                        <button 
-                          type="button" 
-                          className="admin-btn admin-btn-outline admin-btn-sm"
-                          style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
-                          onClick={() => handleStartEdit(q)}
-                        >
-                          Editar
-                        </button>
-                      )}
+                      {/* EDITAR COTIZACION O VER DETALLES EN FORMULARIO */}
+                      <button 
+                        type="button" 
+                        className="admin-btn admin-btn-outline admin-btn-sm"
+                        style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
+                        onClick={() => handleStartEdit(q)}
+                      >
+                        {q.estado === "COTIZACION" ? "Editar" : "Ver Form. (Bloqueado)"}
+                      </button>
 
                       {/* APROBAR Y FACTURAR (CONVIERTE A CUENTA COBRO Y DESCUENTA STOCK) */}
                       {(q.estado === "COTIZACION" || q.estado === "APROBADA") && (
