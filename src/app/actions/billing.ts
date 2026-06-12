@@ -18,6 +18,9 @@ export async function createClient(formData: FormData) {
   const email = formData.get("email") as string;
   const telefono = formData.get("telefono") as string;
   const direccion = formData.get("direccion") as string;
+  const ciudad = formData.get("ciudad") as string;
+  const departamento = formData.get("departamento") as string;
+  const pais = formData.get("pais") as string;
 
   await prisma.client.create({
     data: {
@@ -26,6 +29,9 @@ export async function createClient(formData: FormData) {
       email: email || null,
       telefono: telefono || null,
       direccion: direccion || null,
+      ciudad: ciudad || null,
+      departamento: departamento || null,
+      pais: pais || "Colombia",
     },
   });
 
@@ -39,6 +45,9 @@ export async function updateClient(formData: FormData) {
   const email = formData.get("email") as string;
   const telefono = formData.get("telefono") as string;
   const direccion = formData.get("direccion") as string;
+  const ciudad = formData.get("ciudad") as string;
+  const departamento = formData.get("departamento") as string;
+  const pais = formData.get("pais") as string;
 
   await prisma.client.update({
     where: { id },
@@ -48,6 +57,9 @@ export async function updateClient(formData: FormData) {
       email: email || null,
       telefono: telefono || null,
       direccion: direccion || null,
+      ciudad: ciudad || null,
+      departamento: departamento || null,
+      pais: pais || "Colombia",
     },
   });
 

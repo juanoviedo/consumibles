@@ -50,6 +50,21 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
             <input type="text" name="direccion" defaultValue={editingClient.direccion || ""} placeholder="Dirección de Facturación" />
           </div>
 
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Ciudad</label>
+            <input type="text" name="ciudad" defaultValue={editingClient.ciudad || ""} placeholder="Ej. Cali" />
+          </div>
+
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Departamento</label>
+            <input type="text" name="departamento" defaultValue={editingClient.departamento || ""} placeholder="Ej. Valle del Cauca" />
+          </div>
+
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>País</label>
+            <input type="text" name="pais" defaultValue={editingClient.pais || "Colombia"} required placeholder="Colombia" />
+          </div>
+
           <div style={{ display: "flex", gap: "10px", marginTop: "15px", gridColumn: "1 / -1" }}>
             <button type="submit" className="admin-btn">
               Guardar Cambios
@@ -94,6 +109,18 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
             <input type="text" name="direccion" placeholder="Dirección física" />
           </div>
 
+          <div className="admin-input-group">
+            <input type="text" name="ciudad" placeholder="Ciudad (ej. Cali)" />
+          </div>
+
+          <div className="admin-input-group">
+            <input type="text" name="departamento" placeholder="Departamento (ej. Valle del Cauca)" />
+          </div>
+
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+            <input type="text" name="pais" placeholder="País" defaultValue="Colombia" required />
+          </div>
+
           <div style={{ display: "flex", gap: "10px", marginTop: "15px", gridColumn: "1 / -1" }}>
             <button type="submit" className="admin-btn">
               Registrar Cliente
@@ -134,7 +161,7 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
                 <th>Nombre</th>
                 <th>Email</th>
                 <th>Teléfono</th>
-                <th>Dirección</th>
+                <th>Dirección / Ubicación</th>
                 <th>Acción</th>
               </tr>
             </thead>
@@ -145,7 +172,15 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
                   <td><strong>{c.nombre}</strong></td>
                   <td>{c.email || "-"}</td>
                   <td>{c.telefono || "-"}</td>
-                  <td>{c.direccion || "-"}</td>
+                  <td>
+                    {c.direccion || ""}
+                    {(c.ciudad || c.departamento || c.pais) && (
+                      <div style={{ fontSize: "12px", color: "var(--admin-text-muted)", marginTop: "4px" }}>
+                        {[c.ciudad, c.departamento, c.pais].filter(Boolean).join(", ")}
+                      </div>
+                    )}
+                    {!c.direccion && !c.ciudad && !c.departamento && !c.pais && "-"}
+                  </td>
                   <td>
                     <div className="admin-table-actions">
                       <button type="button" onClick={() => startEdit(c)} className="admin-btn admin-btn-outline admin-btn-sm">

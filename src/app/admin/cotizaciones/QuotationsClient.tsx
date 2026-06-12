@@ -534,7 +534,10 @@ export default function QuotationsClient({
                 <strong>Cliente:</strong> {activeDetailsQuote.client?.nombre}<br/>
                 {activeDetailsQuote.client?.nit && <><strong>NIT:</strong> {activeDetailsQuote.client.nit}<br/></>}
                 {activeDetailsQuote.client?.telefono && <><strong>Teléfono:</strong> {activeDetailsQuote.client.telefono}<br/></>}
-                {activeDetailsQuote.client?.direccion && <><strong>Dirección:</strong> {activeDetailsQuote.client.direccion}</>}
+                <strong>Dirección:</strong> {activeDetailsQuote.client?.direccion || "-"}
+                {(activeDetailsQuote.client?.ciudad || activeDetailsQuote.client?.departamento || activeDetailsQuote.client?.pais) && (
+                  <><br/><strong>Ubicación:</strong> {[activeDetailsQuote.client.ciudad, activeDetailsQuote.client.departamento, activeDetailsQuote.client.pais || "Colombia"].filter(Boolean).join(", ")}</>
+                )}
               </div>
               <div>
                 <strong>Fecha Cotización:</strong> {formatDate(activeDetailsQuote.fechaCotizacion)}<br/>
