@@ -13,6 +13,47 @@ export default function IncomingOrdersClient({
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  // States to calculate unit cost and total cost dynamically
+  const [newQty, setNewQty] = useState<number>(1);
+  const [newUnitCost, setNewUnitCost] = useState<number>(0);
+  const [newTotalCost, setNewTotalCost] = useState<number>(0);
+
+  const [editQty, setEditQty] = useState<number>(1);
+  const [editUnitCost, setEditUnitCost] = useState<number>(0);
+  const [editTotalCost, setEditTotalCost] = useState<number>(0);
+
+  // Bidirectional sync for New Form
+  const handleNewQtyChange = (qty: number) => {
+    setNewQty(qty);
+    setNewTotalCost(qty * newUnitCost);
+  };
+
+  const handleNewUnitCostChange = (unitCost: number) => {
+    setNewUnitCost(unitCost);
+    setNewTotalCost(newQty * unitCost);
+  };
+
+  const handleNewTotalCostChange = (totalCost: number) => {
+    setNewTotalCost(totalCost);
+    setNewUnitCost(newQty > 0 ? totalCost / newQty : 0);
+  };
+
+  // Bidirectional sync for Edit Form
+  const handleEditQtyChange = (qty: number) => {
+    setEditQty(qty);
+    setEditTotalCost(qty * editUnitCost);
+  };
+
+  const handleEditUnitCostChange = (unitCost: number) => {
+    setEditUnitCost(unitCost);
+    setEditTotalCost(editQty * unitCost);
+  };
+
+  const handleEditTotalCostChange = (totalCost: number) => {
+    setEditTotalCost(totalCost);
+    setEditUnitCost(editQty > 0 ? totalCost / editQty : 0);
+  };
+
   const formatDate = (dateString: string | Date | null) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
@@ -55,12 +96,43 @@ export default function IncomingOrdersClient({
 
           <div className="admin-input-group">
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Cantidad de Unidades</label>
-            <input type="number" name="cantidad" required min="1" defaultValue={editingOrder.cantidad} placeholder="Ej. 50" />
+            <input 
+              type="number" 
+              name="cantidad" 
+              required 
+              min="1" 
+              value={editQty}
+              onChange={(e) => handleEditQtyChange(parseInt(e.target.value, 10) || 1)}
+              placeholder="Ej. 50" 
+            />
           </div>
 
           <div className="admin-input-group">
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Unitario (COP)</label>
-            <input type="number" name="costoUnitario" required min="0" defaultValue={Number(editingOrder.costoUnitario || 0)} placeholder="Ej. 15000" />
+            <input 
+              type="number" 
+              name="costoUnitario" 
+              required 
+              min="0" 
+              step="any"
+              value={editUnitCost}
+              onChange={(e) => handleEditUnitCostChange(parseFloat(e.target.value) || 0)}
+              placeholder="Ej. 15000" 
+            />
+          </div>
+
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Total del Pedido (COP)</label>
+            <input 
+              type="number" 
+              name="costoTotal" 
+              required 
+              min="0" 
+              step="any"
+              value={editTotalCost}
+              onChange={(e) => handleEditTotalCostChange(parseFloat(e.target.value) || 0)}
+              placeholder="Ej. 750000" 
+            />
           </div>
 
           <div className="admin-input-group">
@@ -106,12 +178,43 @@ export default function IncomingOrdersClient({
 
           <div className="admin-input-group">
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Cantidad de Unidades</label>
-            <input type="number" name="cantidad" required min="1" placeholder="Ej. 50" />
+            <input 
+              type="number" 
+              name="cantidad" 
+              required 
+              min="1" 
+              value={newQty}
+              onChange={(e) => handleNewQtyChange(parseInt(e.target.value, 10) || 1)}
+              placeholder="Ej. 50" 
+            />
           </div>
 
           <div className="admin-input-group">
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Unitario (COP)</label>
-            <input type="number" name="costoUnitario" required min="0" defaultValue={0} placeholder="Ej. 15000" />
+            <input 
+              type="number" 
+              name="costoUnitario" 
+              required 
+              min="0" 
+              step="any"
+              value={newUnitCost}
+              onChange={(e) => handleNewUnitCostChange(parseFloat(e.target.value) || 0)}
+              placeholder="Ej. 15000" 
+            />
+          </div>
+
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Total del Pedido (COP)</label>
+            <input 
+              type="number" 
+              name="costoTotal" 
+              required 
+              min="0" 
+              step="any"
+              value={newTotalCost}
+              onChange={(e) => handleNewTotalCostChange(parseFloat(e.target.value) || 0)}
+              placeholder="Ej. 750000" 
+            />
           </div>
 
           <div className="admin-input-group">
@@ -141,7 +244,15 @@ export default function IncomingOrdersClient({
             Gestiona los pedidos de abastecimiento de inventario en tránsito.
           </p>
         </div>
-        <button className="admin-btn" onClick={() => setShowNewForm(true)}>
+        <button 
+          className="admin-btn" 
+          onClick={() => {
+            setShowNewForm(true);
+            setNewQty(1);
+            setNewUnitCost(0);
+            setNewTotalCost(0);
+          }}
+        >
           + Registrar Pedido en Camino
         </button>
       </div>
@@ -207,7 +318,13 @@ export default function IncomingOrdersClient({
                         type="button" 
                         className="admin-btn admin-btn-outline admin-btn-sm"
                         style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
-                        onClick={() => setEditingId(o.id)}
+                        onClick={() => {
+                          setEditingId(o.id);
+                          setEditQty(o.cantidad);
+                          const unitCost = Number(o.costoUnitario || 0);
+                          setEditUnitCost(unitCost);
+                          setEditTotalCost(o.cantidad * unitCost);
+                        }}
                       >
                         Editar
                       </button>

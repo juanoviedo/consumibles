@@ -17,7 +17,16 @@ export async function getIncomingOrders() {
 export async function createIncomingOrder(formData: FormData) {
   const productId = parseInt(formData.get("productId") as string, 10);
   const cantidad = parseInt(formData.get("cantidad") as string, 10);
-  const costoUnitario = parseFloat(formData.get("costoUnitario") as string || "0");
+  const costoUnitarioInput = formData.get("costoUnitario");
+  const costoTotalInput = formData.get("costoTotal");
+  let costoUnitario = 0;
+
+  if (costoUnitarioInput !== null && costoUnitarioInput !== "") {
+    costoUnitario = parseFloat(costoUnitarioInput as string || "0");
+  } else if (costoTotalInput !== null && costoTotalInput !== "") {
+    const costoTotal = parseFloat(costoTotalInput as string || "0");
+    costoUnitario = cantidad > 0 ? (costoTotal / cantidad) : 0;
+  }
   const fechaEstimadaRaw = formData.get("fechaEstimada") as string;
   
   const fechaEstimada = fechaEstimadaRaw ? new Date(fechaEstimadaRaw) : null;
@@ -117,7 +126,16 @@ export async function updateIncomingOrder(formData: FormData) {
   const id = parseInt(formData.get("id") as string, 10);
   const productId = parseInt(formData.get("productId") as string, 10);
   const cantidad = parseInt(formData.get("cantidad") as string, 10);
-  const costoUnitario = parseFloat(formData.get("costoUnitario") as string || "0");
+  const costoUnitarioInput = formData.get("costoUnitario");
+  const costoTotalInput = formData.get("costoTotal");
+  let costoUnitario = 0;
+
+  if (costoUnitarioInput !== null && costoUnitarioInput !== "") {
+    costoUnitario = parseFloat(costoUnitarioInput as string || "0");
+  } else if (costoTotalInput !== null && costoTotalInput !== "") {
+    const costoTotal = parseFloat(costoTotalInput as string || "0");
+    costoUnitario = cantidad > 0 ? (costoTotal / cantidad) : 0;
+  }
   const fechaEstimadaRaw = formData.get("fechaEstimada") as string;
   
   const fechaEstimada = fechaEstimadaRaw ? new Date(fechaEstimadaRaw) : null;
