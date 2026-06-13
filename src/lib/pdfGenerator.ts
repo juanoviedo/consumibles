@@ -20,7 +20,7 @@ export function downloadDocumentPDF(quotation: any, settings: any) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.text("Equipos de Corte Plasma y Soldadura Industrial", 15, 22);
-    doc.text("Contacto: +57 333 278 2483 | ventas@consumibles.com", 15, 27);
+    doc.text("Contacto: +57 316 831 4501", 15, 27);
 
     // Document Type & Number (aligned right)
     doc.setFont("helvetica", "bold");

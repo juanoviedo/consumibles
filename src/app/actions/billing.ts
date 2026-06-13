@@ -349,7 +349,7 @@ export async function getSettings() {
         id: 1,
         startQuotationNumber: 1,
         startBillNumber: 1,
-        bankDetails: "Transferencias a:\nNequi: 333 278 2483\nBancolombia Ahorros: 123-456789-01",
+        bankDetails: "Transferencias a:\nNequi: 316 831 4501\nBancolombia Ahorros: 123-456789-01",
       },
     });
   }
