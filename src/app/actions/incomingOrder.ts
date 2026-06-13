@@ -112,3 +112,26 @@ export async function cancelIncomingOrder(id: number) {
   revalidatePath("/admin");
   revalidatePath("/admin/pedidos-camino");
 }
+
+export async function updateIncomingOrder(formData: FormData) {
+  const id = parseInt(formData.get("id") as string, 10);
+  const productId = parseInt(formData.get("productId") as string, 10);
+  const cantidad = parseInt(formData.get("cantidad") as string, 10);
+  const costoUnitario = parseFloat(formData.get("costoUnitario") as string || "0");
+  const fechaEstimadaRaw = formData.get("fechaEstimada") as string;
+  
+  const fechaEstimada = fechaEstimadaRaw ? new Date(fechaEstimadaRaw) : null;
+
+  await prisma.incomingOrder.update({
+    where: { id },
+    data: {
+      productId,
+      cantidad,
+      costoUnitario,
+      fechaEstimada,
+    },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/pedidos-camino");
+}

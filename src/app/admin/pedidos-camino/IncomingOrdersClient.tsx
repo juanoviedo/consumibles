@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createIncomingOrder, completeIncomingOrder, cancelIncomingOrder } from "@/app/actions/incomingOrder";
+import { createIncomingOrder, completeIncomingOrder, cancelIncomingOrder, updateIncomingOrder } from "@/app/actions/incomingOrder";
 
 export default function IncomingOrdersClient({ 
   orders, 
@@ -11,6 +11,7 @@ export default function IncomingOrdersClient({
   products: any[] 
 }) {
   const [showNewForm, setShowNewForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const formatDate = (dateString: string | Date | null) => {
     if (!dateString) return "-";
@@ -21,6 +22,64 @@ export default function IncomingOrdersClient({
       day: "numeric",
     });
   };
+
+  const editingOrder = orders.find((o) => o.id === editingId);
+
+  if (editingOrder) {
+    const formattedFechaEstimada = editingOrder.fechaEstimada
+      ? new Date(editingOrder.fechaEstimada).toISOString().split("T")[0]
+      : "";
+
+    return (
+      <section className="glass-container" style={{ marginBottom: "40px" }}>
+        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Editar Pedido</h2>
+        <form
+          action={async (formData) => {
+            await updateIncomingOrder(formData);
+            setEditingId(null);
+          }}
+          className="admin-grid-form"
+        >
+          <input type="hidden" name="id" value={editingOrder.id} />
+
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Seleccionar Producto</label>
+            <select name="productId" required defaultValue={editingOrder.productId}>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre} (Ref: {p.codigo})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Cantidad de Unidades</label>
+            <input type="number" name="cantidad" required min="1" defaultValue={editingOrder.cantidad} placeholder="Ej. 50" />
+          </div>
+
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Unitario (COP)</label>
+            <input type="number" name="costoUnitario" required min="0" defaultValue={Number(editingOrder.costoUnitario || 0)} placeholder="Ej. 15000" />
+          </div>
+
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha Estimada de Llegada</label>
+            <input type="date" name="fechaEstimada" defaultValue={formattedFechaEstimada} />
+          </div>
+
+          <div style={{ display: "flex", gap: "10px", marginTop: "15px", gridColumn: "1 / -1" }}>
+            <button type="submit" className="admin-btn">
+              Guardar Cambios
+            </button>
+            <button type="button" className="admin-btn admin-btn-outline" onClick={() => setEditingId(null)}>
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </section>
+    );
+  }
 
   if (showNewForm) {
     return (
@@ -144,6 +203,14 @@ export default function IncomingOrdersClient({
                   </td>
                   <td>
                     <div className="admin-table-actions">
+                      <button 
+                        type="button" 
+                        className="admin-btn admin-btn-outline admin-btn-sm"
+                        style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
+                        onClick={() => setEditingId(o.id)}
+                      >
+                        Editar
+                      </button>
                       <form action={completeIncomingOrder.bind(null, o.id)}>
                         <button type="submit" className="admin-btn admin-btn-success admin-btn-sm">
                           Recibido (Suma Stock)
