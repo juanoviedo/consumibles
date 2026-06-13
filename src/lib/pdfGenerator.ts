@@ -1,180 +1,180 @@
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
-
-// Extend jsPDF class to include autoTable property from jspdf-autotable plugin
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: any) => jsPDF;
-}
+import autoTable from "jspdf-autotable";
 
 export function downloadDocumentPDF(quotation: any, settings: any) {
-  const doc = new jsPDF() as jsPDFWithAutoTable;
-  const isCC = quotation.estado === "CUENTA_COBRO" || quotation.estado === "PAGADA";
-  const title = isCC ? "CUENTA DE COBRO" : "COTIZACIÓN";
-  const docNumber = isCC ? quotation.numeroCuentaCobro : quotation.numeroCotizacion;
+  try {
+    const doc = new jsPDF();
+    const isCC = quotation.estado === "CUENTA_COBRO" || quotation.estado === "PAGADA";
+    const title = isCC ? "CUENTA DE COBRO" : "COTIZACIÓN";
+    const docNumber = isCC ? quotation.numeroCuentaCobro : quotation.numeroCotizacion;
 
-  // 1. Header Section (Dark theme banner)
-  doc.setFillColor(15, 23, 42); // slate-900
-  doc.rect(0, 0, 210, 35, "F");
+    // 1. Header Section (Dark theme banner)
+    doc.setFillColor(15, 23, 42); // slate-900
+    doc.rect(0, 0, 210, 35, "F");
 
-  // Company Branding inside Header
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("CONSUMIBLES & REPUESTOS", 15, 16);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("Equipos de Corte Plasma y Soldadura Industrial", 15, 22);
-  doc.text("Contacto: +57 333 278 2483 | ventas@consumibles.com", 15, 27);
-
-  // Document Type & Number (aligned right)
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.text(title, 195, 16, { align: "right" });
-  doc.setFontSize(13);
-  doc.setTextColor(239, 68, 68); // light red accent
-  doc.text(`No. ${docNumber}`, 195, 24, { align: "right" });
-
-  // 2. Information Section
-  doc.setTextColor(15, 23, 42);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-
-  // Column Left: Client Details
-  doc.text("DATOS DEL CLIENTE:", 15, 48);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Nombre: ${quotation.client?.nombre || "N/A"}`, 15, 54);
-  if (quotation.client?.nit) {
-    doc.text(`NIT / CC: ${quotation.client.nit}`, 15, 60);
-  }
-  doc.text(`Dirección: ${quotation.client?.direccion || "N/A"}`, 15, 66);
-  const locationParts = [quotation.client?.ciudad, quotation.client?.departamento, quotation.client?.pais || "Colombia"].filter(Boolean);
-  doc.text(`Ubicación: ${locationParts.join(", ")}`, 15, 72);
-  if (quotation.client?.telefono) {
-    doc.text(`Teléfono: ${quotation.client.telefono}`, 15, 78);
-  }
-
-  // Column Right: Document Details
-  doc.setFont("helvetica", "bold");
-  doc.text("DETALLES DEL DOCUMENTO:", 120, 48);
-  doc.setFont("helvetica", "normal");
-  
-  const formatDate = (d: any) => d ? new Date(d).toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" }) : "-";
-  doc.text(`Fecha Emisión: ${formatDate(isCC ? quotation.fechaCuentaCobro : quotation.fechaCotizacion)}`, 120, 54);
-  
-  if (isCC) {
-    doc.text(`Fecha Vencimiento: ${formatDate(quotation.fechaVencimiento)}`, 120, 60);
-    doc.text("Estado: ACEPTADA / FACTURADA", 120, 66);
-  } else {
-    doc.text("Estado: PENDIENTE / COTIZACIÓN", 120, 60);
-    doc.text("Validez: 15 Días Calendario", 120, 66);
-  }
-
-  // Divider Line
-  doc.setDrawColor(226, 232, 240); // slate 200
-  doc.setLineWidth(0.5);
-  doc.line(15, 84, 195, 84);
-
-  // 3. Items Table
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-    }).format(val);
-  };
-
-  const tableRows = quotation.items.map((item: any) => [
-    item.product?.codigo || "N/A",
-    item.product?.nombre || item.nombre || "N/A",
-    item.cantidad,
-    formatCurrency(Number(item.precioUnitario)),
-    formatCurrency(Number(item.cantidad * item.precioUnitario))
-  ]);
-
-  doc.autoTable({
-    startY: 90,
-    head: [["Ref / Código", "Descripción", "Cant.", "Valor Unitario", "Valor Total"]],
-    body: tableRows,
-    theme: "striped",
-    headStyles: {
-      fillColor: [15, 23, 42],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-      fontSize: 9
-    },
-    bodyStyles: {
-      fontSize: 9
-    },
-    columnStyles: {
-      0: { cellWidth: 30 },
-      1: { cellWidth: 75 },
-      2: { cellWidth: 15, halign: "center" },
-      3: { cellWidth: 30, halign: "right" },
-      4: { cellWidth: 30, halign: "right" }
-    },
-    styles: {
-      valign: "middle"
-    },
-    margin: { left: 15, right: 15 }
-  });
-
-  // Get final Y position after table
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
-
-  // 4. Totals and Summary Block
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(15, 23, 42);
-  doc.text("RESUMEN DE PAGO:", 120, finalY);
-  doc.line(120, finalY + 2, 195, finalY + 2);
-  
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text("Subtotal:", 120, finalY + 8);
-  doc.text(formatCurrency(quotation.total), 195, finalY + 8, { align: "right" });
-  
-  doc.text("Retenciones / Impuestos:", 120, finalY + 13);
-  doc.text(formatCurrency(0), 195, finalY + 13, { align: "right" });
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("TOTAL NETO A PAGAR:", 120, finalY + 19);
-  doc.text(formatCurrency(quotation.total), 195, finalY + 19, { align: "right" });
-
-  // 5. Payment details (Only for CC)
-  if (isCC) {
-    const paymentY = finalY + 27;
-    doc.setFillColor(248, 250, 252); // Slate 50
-    doc.setDrawColor(226, 232, 240); // Slate 200
-    doc.rect(15, paymentY, 180, 28, "FD");
-
+    // Company Branding inside Header
+    doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("CONSUMIBLES & REPUESTOS", 15, 16);
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.setTextColor(71, 85, 105);
-    doc.text("INSTRUCCIONES DE PAGO / CONSIGNACIÓN:", 20, paymentY + 6);
+    doc.text("Equipos de Corte Plasma y Soldadura Industrial", 15, 22);
+    doc.text("Contacto: +57 333 278 2483 | ventas@consumibles.com", 15, 27);
+
+    // Document Type & Number (aligned right)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.text(title, 195, 16, { align: "right" });
+    doc.setFontSize(13);
+    doc.setTextColor(239, 68, 68); // light red accent
+    doc.text(`No. ${docNumber}`, 195, 24, { align: "right" });
+
+    // 2. Information Section
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+
+    // Column Left: Client Details
+    doc.text("DATOS DEL CLIENTE:", 15, 48);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nombre: ${quotation.client?.nombre || "N/A"}`, 15, 54);
+    if (quotation.client?.nit) {
+      doc.text(`NIT / CC: ${quotation.client.nit}`, 15, 60);
+    }
+    doc.text(`Dirección: ${quotation.client?.direccion || "N/A"}`, 15, 66);
+    const locationParts = [quotation.client?.ciudad, quotation.client?.departamento, quotation.client?.pais || "Colombia"].filter(Boolean);
+    doc.text(`Ubicación: ${locationParts.join(", ")}`, 15, 72);
+    if (quotation.client?.telefono) {
+      doc.text(`Teléfono: ${quotation.client.telefono}`, 15, 78);
+    }
+
+    // Column Right: Document Details
+    doc.setFont("helvetica", "bold");
+    doc.text("DETALLES DEL DOCUMENTO:", 120, 48);
+    doc.setFont("helvetica", "normal");
+    
+    const formatDate = (d: any) => d ? new Date(d).toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" }) : "-";
+    doc.text(`Fecha Emisión: ${formatDate(isCC ? quotation.fechaCuentaCobro : quotation.fechaCotizacion)}`, 120, 54);
+    
+    if (isCC) {
+      doc.text(`Fecha Vencimiento: ${formatDate(quotation.fechaVencimiento)}`, 120, 60);
+      doc.text("Estado: ACEPTADA / FACTURADA", 120, 66);
+    } else {
+      doc.text("Estado: PENDIENTE / COTIZACIÓN", 120, 60);
+      doc.text("Validez: 15 Días Calendario", 120, 66);
+    }
+
+    // Divider Line
+    doc.setDrawColor(226, 232, 240); // slate 200
+    doc.setLineWidth(0.5);
+    doc.line(15, 84, 195, 84);
+
+    // 3. Items Table
+    const formatCurrency = (val: number) => {
+      return new Intl.NumberFormat("es-CO", {
+        style: "currency",
+        currency: "COP",
+        minimumFractionDigits: 0,
+      }).format(val);
+    };
+
+    const tableRows = quotation.items.map((item: any) => [
+      item.product?.codigo || "N/A",
+      item.product?.nombre || item.nombre || "N/A",
+      item.cantidad,
+      formatCurrency(Number(item.precioUnitario)),
+      formatCurrency(Number(item.cantidad * item.precioUnitario))
+    ]);
+
+    autoTable(doc, {
+      startY: 90,
+      head: [["Ref / Código", "Descripción", "Cant.", "Valor Unitario", "Valor Total"]],
+      body: tableRows,
+      theme: "striped",
+      headStyles: {
+        fillColor: [15, 23, 42],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 9
+      },
+      bodyStyles: {
+        fontSize: 9
+      },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 75 },
+        2: { cellWidth: 15, halign: "center" },
+        3: { cellWidth: 30, halign: "right" },
+        4: { cellWidth: 30, halign: "right" }
+      },
+      styles: {
+        valign: "middle"
+      },
+      margin: { left: 15, right: 15 }
+    });
+
+    // Get final Y position after table
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+    // 4. Totals and Summary Block
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(15, 23, 42);
+    doc.text("RESUMEN DE PAGO:", 120, finalY);
+    doc.line(120, finalY + 2, 195, finalY + 2);
     
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.setTextColor(15, 23, 42);
+    doc.text("Subtotal:", 120, finalY + 8);
+    doc.text(formatCurrency(quotation.total), 195, finalY + 8, { align: "right" });
     
-    // Split bankDetails string by newline and print
-    const lines = (settings.bankDetails || "").split("\n");
-    lines.forEach((line: string, i: number) => {
-      if (i < 3) { // limit lines to fit box
-        doc.text(line, 20, paymentY + 12 + (i * 5));
-      }
-    });
+    doc.text("Retenciones / Impuestos:", 120, finalY + 13);
+    doc.text(formatCurrency(0), 195, finalY + 13, { align: "right" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("TOTAL NETO A PAGAR:", 120, finalY + 19);
+    doc.text(formatCurrency(quotation.total), 195, finalY + 19, { align: "right" });
+
+    // 5. Payment details (Only for CC)
+    if (isCC) {
+      const paymentY = finalY + 27;
+      doc.setFillColor(248, 250, 252); // Slate 50
+      doc.setDrawColor(226, 232, 240); // Slate 200
+      doc.rect(15, paymentY, 180, 28, "FD");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(71, 85, 105);
+      doc.text("INSTRUCCIONES DE PAGO / CONSIGNACIÓN:", 20, paymentY + 6);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42);
+      
+      // Split bankDetails string by newline and print
+      const lines = (settings.bankDetails || "").split("\n");
+      lines.forEach((line: string, i: number) => {
+        if (i < 3) { // limit lines to fit box
+          doc.text(line, 20, paymentY + 12 + (i * 5));
+        }
+      });
+    }
+
+    // Footer Branding info
+    const pageHeight = doc.internal.pageSize.getHeight();
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184); // slate 400
+    doc.text("Este documento digital no constituye factura electrónica bajo el régimen común. Es soporte de cobro equivalente.", 105, pageHeight - 15, { align: "center" });
+    doc.text("Generado de forma automática por Consumibles y Repuestos.", 105, pageHeight - 10, { align: "center" });
+
+    // Save the PDF
+    const filename = isCC ? `CuentaCobro_${docNumber}.pdf` : `Cotizacion_${docNumber}.pdf`;
+    doc.save(filename);
+  } catch (err: any) {
+    alert("Error al generar PDF: " + err.message);
+    console.error("PDF Generation error:", err);
   }
-
-  // Footer Branding info
-  const pageHeight = doc.internal.pageSize.getHeight();
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(148, 163, 184); // slate 400
-  doc.text("Este documento digital no constituye factura electrónica bajo el régimen común. Es soporte de cobro equivalente.", 105, pageHeight - 15, { align: "center" });
-  doc.text("Generado de forma automática por Consumibles y Repuestos.", 105, pageHeight - 10, { align: "center" });
-
-  // Save the PDF
-  const filename = isCC ? `CuentaCobro_${docNumber}.pdf` : `Cotizacion_${docNumber}.pdf`;
-  doc.save(filename);
 }
