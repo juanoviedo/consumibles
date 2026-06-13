@@ -128,23 +128,23 @@ export async function downloadDocumentPDF(quotation: any, settings: any) {
         fillColor: [15, 23, 42],
         textColor: [255, 255, 255],
         fontStyle: "bold",
-        fontSize: 9,
-        halign: "center"
+        fontSize: 9
       },
       bodyStyles: {
         fontSize: 9,
         minCellHeight: 16 // Increase height to fit the product image
       },
       columnStyles: {
-        0: { cellWidth: 15, halign: "center" },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 65 },
-        3: { cellWidth: 15, halign: "center" },
-        4: { cellWidth: 30, halign: "right" },
-        5: { cellWidth: 30, halign: "right" }
+        0: { cellWidth: 16, halign: "center" }, // Imagen
+        1: { cellWidth: 20 },                  // Ref / Código
+        2: { cellWidth: 80 },                  // Descripción
+        3: { cellWidth: 12, halign: "center" }, // Cant.
+        4: { cellWidth: 26, halign: "right" },  // Valor Unitario
+        5: { cellWidth: 26, halign: "right" }   // Valor Total
       },
       styles: {
-        valign: "middle"
+        valign: "middle",
+        overflow: "linebreak"
       },
       margin: { left: 15, right: 15 },
       didDrawCell: (data) => {
