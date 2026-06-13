@@ -221,7 +221,7 @@ export default function AdminClient({ products, categories }: { products: any[],
                     <td>
                       <img src={p.imagenUrl} alt={p.nombre} width="50" />
                     </td>
-                    <td>{p.nombre}</td>
+                    <td className="wrap-text">{p.nombre}</td>
                     <td>{p.category ? p.category.nombre : "-"}</td>
                     <td>
                       {p.costoPromedio > 0 

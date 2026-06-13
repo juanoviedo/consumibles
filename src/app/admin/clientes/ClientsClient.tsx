@@ -178,7 +178,7 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
               {clients.map((c) => (
                 <tr key={c.id}>
                   <td>{c.nit || "-"}</td>
-                  <td><strong>{c.nombre}</strong></td>
+                  <td className="wrap-text"><strong>{c.nombre}</strong></td>
                   <td>{c.email || "-"}</td>
                   <td>
                     {c.telefono || "-"}

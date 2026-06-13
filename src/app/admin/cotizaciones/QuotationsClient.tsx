@@ -600,7 +600,7 @@ export default function QuotationsClient({
                 <tr key={q.id}>
                   <td><strong>{q.numeroCotizacion}</strong></td>
                   <td>{q.numeroCuentaCobro ? <strong style={{ color: "#60a5fa" }}>{q.numeroCuentaCobro}</strong> : "-"}</td>
-                  <td>{q.client?.nombre}</td>
+                  <td className="wrap-text">{q.client?.nombre}</td>
                   <td>{formatDate(q.fechaCotizacion)}</td>
                   <td>{formatDate(q.fechaCuentaCobro)}</td>
                   <td>
@@ -763,7 +763,7 @@ export default function QuotationsClient({
                   {activeDetailsQuote.items?.map((item: any) => (
                     <tr key={item.id}>
                       <td>{item.product?.codigo}</td>
-                      <td>{item.product?.nombre}</td>
+                      <td className="wrap-text">{item.product?.nombre}</td>
                       <td>{item.cantidad}</td>
                       <td>{formatCurrency(item.precioUnitario)}</td>
                       <td>{formatCurrency(item.cantidad * item.precioUnitario)}</td>

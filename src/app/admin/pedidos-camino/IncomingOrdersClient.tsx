@@ -315,7 +315,7 @@ export default function IncomingOrdersClient({
             <tbody>
               {orders.map((o) => (
                 <tr key={o.id}>
-                  <td>
+                  <td className="wrap-text">
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       {o.product?.imagenUrl && (
                         <img src={o.product.imagenUrl} alt={o.product.nombre} width="40" />
