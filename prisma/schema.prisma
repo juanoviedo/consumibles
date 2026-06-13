@@ -118,5 +118,6 @@ model SystemSettings {
   id                   Int     @id @default(1)
   startQuotationNumber Int     @default(1)
   startBillNumber      Int     @default(1)
+  bankDetails          String  @default("Transferencias a:\nNequi: 333 278 2483\nBancolombia Ahorros: 123-456789-01")
 }
 

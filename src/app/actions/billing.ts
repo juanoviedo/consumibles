@@ -349,6 +349,7 @@ export async function getSettings() {
         id: 1,
         startQuotationNumber: 1,
         startBillNumber: 1,
+        bankDetails: "Transferencias a:\nNequi: 333 278 2483\nBancolombia Ahorros: 123-456789-01",
       },
     });
   }
@@ -356,23 +357,27 @@ export async function getSettings() {
     ...settings,
     startQuotationNumber: Number(settings.startQuotationNumber),
     startBillNumber: Number(settings.startBillNumber),
+    bankDetails: settings.bankDetails,
   };
 }
 
 export async function updateSettings(formData: FormData) {
   const startQuotationNumber = parseInt(formData.get("startQuotationNumber") as string || "1", 10);
   const startBillNumber = parseInt(formData.get("startBillNumber") as string || "1", 10);
+  const bankDetails = formData.get("bankDetails") as string || "";
 
   await prisma.systemSettings.upsert({
     where: { id: 1 },
     update: {
       startQuotationNumber,
       startBillNumber,
+      bankDetails,
     },
     create: {
       id: 1,
       startQuotationNumber,
       startBillNumber,
+      bankDetails,
     },
   });
 

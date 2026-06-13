@@ -10,6 +10,7 @@ import {
   revertToQuotation, 
   deleteQuotation 
 } from "@/app/actions/billing";
+import { downloadDocumentPDF } from "@/lib/pdfGenerator";
 
 interface QuotationItemInput {
   productId: number | "";
@@ -24,11 +25,13 @@ interface QuotationItemInput {
 export default function QuotationsClient({
   quotations,
   clients,
-  products
+  products,
+  settings
 }: {
   quotations: any[];
   clients: any[];
   products: any[];
+  settings: any;
 }) {
   const [showNewForm, setShowNewForm] = useState(false);
   const [filterType, setFilterType] = useState<"TODAS" | "COTIZACIONES" | "CUENTAS_COBRO">("TODAS");
@@ -616,6 +619,14 @@ export default function QuotationsClient({
                         Ver Detalle
                       </button>
 
+                      <button 
+                        type="button" 
+                        className="admin-btn admin-btn-success admin-btn-sm"
+                        onClick={() => downloadDocumentPDF(q, settings)}
+                      >
+                        PDF
+                      </button>
+
                       {/* EDITAR COTIZACION O VER DETALLES EN FORMULARIO */}
                       <button 
                         type="button" 
@@ -766,15 +777,22 @@ export default function QuotationsClient({
               Total: {formatCurrency(activeDetailsQuote.total)}
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button 
-                type="button" 
-                className="admin-btn" 
-                onClick={() => setActiveDetailsQuote(null)}
-              >
-                Cerrar
-              </button>
-            </div>
+             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+               <button 
+                 type="button" 
+                 className="admin-btn admin-btn-success" 
+                 onClick={() => downloadDocumentPDF(activeDetailsQuote, settings)}
+               >
+                 Descargar PDF
+               </button>
+               <button 
+                 type="button" 
+                 className="admin-btn admin-btn-outline" 
+                 onClick={() => setActiveDetailsQuote(null)}
+               >
+                 Cerrar
+               </button>
+             </div>
           </div>
         </div>
       )}
