@@ -1,8 +1,35 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
-export function downloadDocumentPDF(quotation: any, settings: any) {
+export async function downloadDocumentPDF(quotation: any, settings: any) {
   try {
+    // Preload all unique product images
+    const imageMap = new Map<string, HTMLImageElement>();
+    const imageUrls: string[] = quotation.items
+      .map((item: any) => item.product?.imagenUrl)
+      .filter((url: any): url is string => typeof url === "string" && url.length > 0);
+
+    const uniqueUrls = Array.from(new Set(imageUrls));
+
+    await Promise.all(
+      uniqueUrls.map(async (url: string) => {
+        try {
+          const img = await new Promise<HTMLImageElement | null>((resolve) => {
+            const tempImg = new Image();
+            tempImg.crossOrigin = "anonymous";
+            tempImg.onload = () => resolve(tempImg);
+            tempImg.onerror = () => resolve(null);
+            tempImg.src = url;
+          });
+          if (img) {
+            imageMap.set(url, img);
+          }
+        } catch (e) {
+          console.error("Error preloading image: " + url, e);
+        }
+      })
+    );
+
     const doc = new jsPDF();
     const isCC = quotation.estado === "CUENTA_COBRO" || quotation.estado === "PAGADA";
     const title = isCC ? "CUENTA DE COBRO" : "COTIZACIÓN";
@@ -84,6 +111,7 @@ export function downloadDocumentPDF(quotation: any, settings: any) {
     };
 
     const tableRows = quotation.items.map((item: any) => [
+      "", // Column 0: Empty for image drawing
       item.product?.codigo || "N/A",
       item.product?.nombre || item.nombre || "N/A",
       item.cantidad,
@@ -93,29 +121,54 @@ export function downloadDocumentPDF(quotation: any, settings: any) {
 
     autoTable(doc, {
       startY: 90,
-      head: [["Ref / Código", "Descripción", "Cant.", "Valor Unitario", "Valor Total"]],
+      head: [["Imagen", "Ref / Código", "Descripción", "Cant.", "Valor Unitario", "Valor Total"]],
       body: tableRows,
       theme: "striped",
       headStyles: {
         fillColor: [15, 23, 42],
         textColor: [255, 255, 255],
         fontStyle: "bold",
-        fontSize: 9
+        fontSize: 9,
+        halign: "center"
       },
       bodyStyles: {
-        fontSize: 9
+        fontSize: 9,
+        minCellHeight: 16 // Increase height to fit the product image
       },
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 75 },
-        2: { cellWidth: 15, halign: "center" },
-        3: { cellWidth: 30, halign: "right" },
-        4: { cellWidth: 30, halign: "right" }
+        0: { cellWidth: 15, halign: "center" },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 65 },
+        3: { cellWidth: 15, halign: "center" },
+        4: { cellWidth: 30, halign: "right" },
+        5: { cellWidth: 30, halign: "right" }
       },
       styles: {
         valign: "middle"
       },
-      margin: { left: 15, right: 15 }
+      margin: { left: 15, right: 15 },
+      didDrawCell: (data) => {
+        if (data.section === "body" && data.column.index === 0) {
+          const item = quotation.items[data.row.index];
+          const imgUrl = item?.product?.imagenUrl;
+          if (imgUrl && imageMap.has(imgUrl)) {
+            const imgEl = imageMap.get(imgUrl);
+            if (imgEl) {
+              const size = 12; // 12x12 mm
+              const xOffset = (data.cell.width - size) / 2;
+              const yOffset = (data.cell.height - size) / 2;
+              doc.addImage(
+                imgEl,
+                "PNG",
+                data.cell.x + xOffset,
+                data.cell.y + yOffset,
+                size,
+                size
+              );
+            }
+          }
+        }
+      }
     });
 
     // Get final Y position after table
