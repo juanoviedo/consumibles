@@ -16,8 +16,8 @@ interface QuotationItemInput {
   productId: number | "";
   nombre: string;
   codigo: string;
-  cantidad: number | "";
-  precioUnitario: number | "";
+  cantidad: string;
+  precioUnitario: string;
   priceSource?: "LISTA" | "HISTORIAL" | "";
   suggestedPrice?: number;
 }
@@ -79,7 +79,7 @@ export default function QuotationsClient({
     setEditingQuotationNumber("");
     setSelectedClientId("");
     setCurrentItems([
-      { productId: "", nombre: "", codigo: "", cantidad: 1, precioUnitario: "", priceSource: "", suggestedPrice: 0 }
+      { productId: "", nombre: "", codigo: "", cantidad: "1", precioUnitario: "", priceSource: "", suggestedPrice: 0 }
     ]);
     setShowNewForm(true);
   };
@@ -88,7 +88,7 @@ export default function QuotationsClient({
   const handleAddRow = () => {
     setCurrentItems([
       ...currentItems,
-      { productId: "", nombre: "", codigo: "", cantidad: 1, precioUnitario: "", priceSource: "", suggestedPrice: 0 }
+      { productId: "", nombre: "", codigo: "", cantidad: "1", precioUnitario: "", priceSource: "", suggestedPrice: 0 }
     ]);
   };
 
@@ -100,14 +100,14 @@ export default function QuotationsClient({
   // Update item quantity inline by index
   const handleUpdateItemQty = (index: number, val: string) => {
     setCurrentItems(prev => prev.map((item, i) => 
-      i === index ? { ...item, cantidad: val === "" ? "" : Math.max(1, parseInt(val, 10) || 1) } : item
+      i === index ? { ...item, cantidad: val } : item
     ));
   };
 
   // Update item unit price inline by index
   const handleUpdateItemPrice = (index: number, val: string) => {
     setCurrentItems(prev => prev.map((item, i) => 
-      i === index ? { ...item, precioUnitario: val === "" ? "" : Math.max(0, parseFloat(val) || 0) } : item
+      i === index ? { ...item, precioUnitario: val } : item
     ));
   };
 
@@ -163,8 +163,8 @@ export default function QuotationsClient({
       productId: i.productId,
       nombre: i.product?.nombre || "",
       codigo: i.product?.codigo || "",
-      cantidad: i.cantidad,
-      precioUnitario: i.precioUnitario,
+      cantidad: i.cantidad.toString(),
+      precioUnitario: i.precioUnitario.toString(),
       priceSource: "LISTA" as const,
       suggestedPrice: Number(i.product?.precio || i.precioUnitario)
     }));

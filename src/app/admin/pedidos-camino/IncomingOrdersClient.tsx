@@ -14,86 +14,80 @@ export default function IncomingOrdersClient({
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // States to calculate unit cost and total cost dynamically
-  const [newQty, setNewQty] = useState<number | "">(1);
-  const [newUnitCost, setNewUnitCost] = useState<number | "">("");
-  const [newTotalCost, setNewTotalCost] = useState<number | "">("");
+  const [newQty, setNewQty] = useState<string>("1");
+  const [newUnitCost, setNewUnitCost] = useState<string>("");
+  const [newTotalCost, setNewTotalCost] = useState<string>("");
 
-  const [editQty, setEditQty] = useState<number | "">("");
-  const [editUnitCost, setEditUnitCost] = useState<number | "">("");
-  const [editTotalCost, setEditTotalCost] = useState<number | "">("");
+  const [editQty, setEditQty] = useState<string>("");
+  const [editUnitCost, setEditUnitCost] = useState<string>("");
+  const [editTotalCost, setEditTotalCost] = useState<string>("");
 
   // Bidirectional sync for New Form
   const handleNewQtyChange = (val: string) => {
+    setNewQty(val);
     if (val === "") {
-      setNewQty("");
       setNewTotalCost("");
       return;
     }
     const qty = parseInt(val, 10) || 0;
-    setNewQty(qty);
-    const unitCost = typeof newUnitCost === "number" ? newUnitCost : 0;
-    setNewTotalCost(qty * unitCost);
+    const unitCost = parseFloat(newUnitCost) || 0;
+    setNewTotalCost((qty * unitCost).toString());
   };
 
   const handleNewUnitCostChange = (val: string) => {
+    setNewUnitCost(val);
     if (val === "") {
-      setNewUnitCost("");
       setNewTotalCost("");
       return;
     }
     const unitCost = parseFloat(val) || 0;
-    setNewUnitCost(unitCost);
-    const qty = typeof newQty === "number" ? newQty : 0;
-    setNewTotalCost(qty * unitCost);
+    const qty = parseInt(newQty, 10) || 0;
+    setNewTotalCost((qty * unitCost).toString());
   };
 
   const handleNewTotalCostChange = (val: string) => {
+    setNewTotalCost(val);
     if (val === "") {
-      setNewTotalCost("");
       setNewUnitCost("");
       return;
     }
     const totalCost = parseFloat(val) || 0;
-    setNewTotalCost(totalCost);
-    const qty = typeof newQty === "number" ? newQty : 0;
-    setNewUnitCost(qty > 0 ? totalCost / qty : 0);
+    const qty = parseInt(newQty, 10) || 0;
+    setNewUnitCost(qty > 0 ? (totalCost / qty).toString() : "0");
   };
 
   // Bidirectional sync for Edit Form
   const handleEditQtyChange = (val: string) => {
+    setEditQty(val);
     if (val === "") {
-      setEditQty("");
       setEditTotalCost("");
       return;
     }
     const qty = parseInt(val, 10) || 0;
-    setEditQty(qty);
-    const unitCost = typeof editUnitCost === "number" ? editUnitCost : 0;
-    setEditTotalCost(qty * unitCost);
+    const unitCost = parseFloat(editUnitCost) || 0;
+    setEditTotalCost((qty * unitCost).toString());
   };
 
   const handleEditUnitCostChange = (val: string) => {
+    setEditUnitCost(val);
     if (val === "") {
-      setEditUnitCost("");
       setEditTotalCost("");
       return;
     }
     const unitCost = parseFloat(val) || 0;
-    setEditUnitCost(unitCost);
-    const qty = typeof editQty === "number" ? editQty : 0;
-    setEditTotalCost(qty * unitCost);
+    const qty = parseInt(editQty, 10) || 0;
+    setEditTotalCost((qty * unitCost).toString());
   };
 
   const handleEditTotalCostChange = (val: string) => {
+    setEditTotalCost(val);
     if (val === "") {
-      setEditTotalCost("");
       setEditUnitCost("");
       return;
     }
     const totalCost = parseFloat(val) || 0;
-    setEditTotalCost(totalCost);
-    const qty = typeof editQty === "number" ? editQty : 0;
-    setEditUnitCost(qty > 0 ? totalCost / qty : 0);
+    const qty = parseInt(editQty, 10) || 0;
+    setEditUnitCost(qty > 0 ? (totalCost / qty).toString() : "0");
   };
 
   const formatDate = (dateString: string | Date | null) => {
@@ -290,7 +284,7 @@ export default function IncomingOrdersClient({
           className="admin-btn" 
           onClick={() => {
             setShowNewForm(true);
-            setNewQty(1);
+            setNewQty("1");
             setNewUnitCost("");
             setNewTotalCost("");
           }}
@@ -362,10 +356,10 @@ export default function IncomingOrdersClient({
                         style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
                         onClick={() => {
                           setEditingId(o.id);
-                          setEditQty(o.cantidad);
+                          setEditQty(o.cantidad.toString());
                           const unitCost = Number(o.costoUnitario || 0);
-                          setEditUnitCost(unitCost || "");
-                          setEditTotalCost(o.cantidad * unitCost || "");
+                          setEditUnitCost(unitCost ? unitCost.toString() : "");
+                          setEditTotalCost(unitCost ? (o.cantidad * unitCost).toString() : "");
                         }}
                       >
                         Editar
