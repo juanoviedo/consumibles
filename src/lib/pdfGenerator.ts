@@ -135,9 +135,9 @@ export async function downloadDocumentPDF(quotation: any, settings: any) {
         minCellHeight: 16 // Increase height to fit the product image
       },
       columnStyles: {
-        0: { cellWidth: 16, halign: "center" }, // Imagen
+        0: { cellWidth: 20, halign: "center" }, // Imagen
         1: { cellWidth: 20 },                  // Ref / Código
-        2: { cellWidth: 80 },                  // Descripción
+        2: { cellWidth: 76 },                  // Descripción
         3: { cellWidth: 12, halign: "center" }, // Cant.
         4: { cellWidth: 26, halign: "right" },  // Valor Unitario
         5: { cellWidth: 26, halign: "right" }   // Valor Total
@@ -154,16 +154,41 @@ export async function downloadDocumentPDF(quotation: any, settings: any) {
           if (imgUrl && imageMap.has(imgUrl)) {
             const imgEl = imageMap.get(imgUrl);
             if (imgEl) {
-              const size = 12; // 12x12 mm
-              const xOffset = (data.cell.width - size) / 2;
-              const yOffset = (data.cell.height - size) / 2;
+              const maxWidth = 18;
+              const maxHeight = 12;
+              let imgWidth = 12;
+              let imgHeight = 12;
+
+              if (imgEl.width && imgEl.height) {
+                const ratio = imgEl.width / imgEl.height;
+                if (ratio > 1) {
+                  // Wide image (landscape)
+                  imgWidth = maxWidth;
+                  imgHeight = imgWidth / ratio;
+                  if (imgHeight > maxHeight) {
+                    imgHeight = maxHeight;
+                    imgWidth = imgHeight * ratio;
+                  }
+                } else {
+                  // Tall or square image (portrait)
+                  imgHeight = maxHeight;
+                  imgWidth = imgHeight * ratio;
+                  if (imgWidth > maxWidth) {
+                    imgWidth = maxWidth;
+                    imgHeight = imgWidth / ratio;
+                  }
+                }
+              }
+
+              const xOffset = (data.cell.width - imgWidth) / 2;
+              const yOffset = (data.cell.height - imgHeight) / 2;
               doc.addImage(
                 imgEl,
                 "PNG",
                 data.cell.x + xOffset,
                 data.cell.y + yOffset,
-                size,
-                size
+                imgWidth,
+                imgHeight
               );
             }
           }
