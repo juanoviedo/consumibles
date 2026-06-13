@@ -263,6 +263,8 @@
 .admin-table-container {
   width: 100%;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.15);
   border: 1px solid var(--admin-glass-border);
@@ -281,6 +283,10 @@
   font-weight: 600;
   border-bottom: 1px solid var(--admin-glass-border);
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #131b2e;
 }
 
 .admin-table td {
