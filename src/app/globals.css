@@ -1,3 +1,14 @@
 @import "./css/estilos.css";
 @import "./css/fontello.css";
 @import "./css/cards.css";
+
+/* Hide number input spinners (up/down arrows) */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}

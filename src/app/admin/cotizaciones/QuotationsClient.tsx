@@ -16,8 +16,8 @@ interface QuotationItemInput {
   productId: number | "";
   nombre: string;
   codigo: string;
-  cantidad: number;
-  precioUnitario: number;
+  cantidad: number | "";
+  precioUnitario: number | "";
   priceSource?: "LISTA" | "HISTORIAL" | "";
   suggestedPrice?: number;
 }
@@ -79,7 +79,7 @@ export default function QuotationsClient({
     setEditingQuotationNumber("");
     setSelectedClientId("");
     setCurrentItems([
-      { productId: "", nombre: "", codigo: "", cantidad: 1, precioUnitario: 0, priceSource: "", suggestedPrice: 0 }
+      { productId: "", nombre: "", codigo: "", cantidad: 1, precioUnitario: "", priceSource: "", suggestedPrice: 0 }
     ]);
     setShowNewForm(true);
   };
@@ -88,7 +88,7 @@ export default function QuotationsClient({
   const handleAddRow = () => {
     setCurrentItems([
       ...currentItems,
-      { productId: "", nombre: "", codigo: "", cantidad: 1, precioUnitario: 0, priceSource: "", suggestedPrice: 0 }
+      { productId: "", nombre: "", codigo: "", cantidad: 1, precioUnitario: "", priceSource: "", suggestedPrice: 0 }
     ]);
   };
 
@@ -98,16 +98,16 @@ export default function QuotationsClient({
   };
 
   // Update item quantity inline by index
-  const handleUpdateItemQty = (index: number, qty: number) => {
+  const handleUpdateItemQty = (index: number, val: string) => {
     setCurrentItems(prev => prev.map((item, i) => 
-      i === index ? { ...item, cantidad: Math.max(1, qty) } : item
+      i === index ? { ...item, cantidad: val === "" ? "" : Math.max(1, parseInt(val, 10) || 1) } : item
     ));
   };
 
   // Update item unit price inline by index
-  const handleUpdateItemPrice = (index: number, price: number) => {
+  const handleUpdateItemPrice = (index: number, val: string) => {
     setCurrentItems(prev => prev.map((item, i) => 
-      i === index ? { ...item, precioUnitario: Math.max(0, price) } : item
+      i === index ? { ...item, precioUnitario: val === "" ? "" : Math.max(0, parseFloat(val) || 0) } : item
     ));
   };
 
@@ -115,7 +115,7 @@ export default function QuotationsClient({
   const handleUpdateRowProduct = (index: number, val: string) => {
     if (val === "") {
       setCurrentItems(prev => prev.map((item, i) => 
-        i === index ? { ...item, productId: "", nombre: "", codigo: "", precioUnitario: 0, priceSource: "", suggestedPrice: 0 } : item
+        i === index ? { ...item, productId: "", nombre: "", codigo: "", precioUnitario: "", priceSource: "", suggestedPrice: 0 } : item
       ));
       return;
     }
@@ -234,8 +234,8 @@ export default function QuotationsClient({
         Number(selectedClientId),
         validItems.map(i => ({
           productId: Number(i.productId),
-          cantidad: i.cantidad,
-          precioUnitario: i.precioUnitario
+          cantidad: Number(i.cantidad) || 1,
+          precioUnitario: Number(i.precioUnitario) || 0
         }))
       );
       setSelectedClientId("");
@@ -262,8 +262,8 @@ export default function QuotationsClient({
         Number(selectedClientId),
         validItems.map(i => ({
           productId: Number(i.productId),
-          cantidad: i.cantidad,
-          precioUnitario: i.precioUnitario
+          cantidad: Number(i.cantidad) || 1,
+          precioUnitario: Number(i.precioUnitario) || 0
         }))
       );
       handleCancelEdit();
@@ -421,7 +421,7 @@ export default function QuotationsClient({
                             type="number"
                             min="1"
                             value={item.cantidad}
-                            onChange={(e) => handleUpdateItemQty(index, parseInt(e.target.value || "1", 10))}
+                            onChange={(e) => handleUpdateItemQty(index, e.target.value)}
                             disabled={isFormBlocked}
                             style={{
                               width: "100%",
@@ -441,7 +441,7 @@ export default function QuotationsClient({
                               type="number"
                               min="0"
                               value={item.precioUnitario}
-                              onChange={(e) => handleUpdateItemPrice(index, parseFloat(e.target.value || "0"))}
+                              onChange={(e) => handleUpdateItemPrice(index, e.target.value)}
                               disabled={isFormBlocked}
                               style={{
                                 width: "100%",
@@ -466,7 +466,7 @@ export default function QuotationsClient({
                             )}
                           </div>
                         </td>
-                        <td>{formatCurrency(item.cantidad * item.precioUnitario)}</td>
+                        <td>{formatCurrency((Number(item.cantidad) || 0) * (Number(item.precioUnitario) || 0))}</td>
                         <td>
                           <button 
                             type="button" 
@@ -501,8 +501,8 @@ export default function QuotationsClient({
                   + Agregar Producto
                 </button>
                 {currentItems.length > 0 && (
-                  <div style={{ fontSize: "1.1rem" }}>
-                    <strong>Total: {formatCurrency(currentItems.reduce((acc, i) => acc + (i.cantidad * i.precioUnitario), 0))}</strong>
+                  <div style={{ textAlign: "right", padding: "10px 0" }}>
+                    <strong>Total: {formatCurrency(currentItems.reduce((acc, i) => acc + ((Number(i.cantidad) || 0) * (Number(i.precioUnitario) || 0)), 0))}</strong>
                   </div>
                 )}
               </div>

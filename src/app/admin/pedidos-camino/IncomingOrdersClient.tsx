@@ -14,44 +14,86 @@ export default function IncomingOrdersClient({
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // States to calculate unit cost and total cost dynamically
-  const [newQty, setNewQty] = useState<number>(1);
-  const [newUnitCost, setNewUnitCost] = useState<number>(0);
-  const [newTotalCost, setNewTotalCost] = useState<number>(0);
+  const [newQty, setNewQty] = useState<number | "">(1);
+  const [newUnitCost, setNewUnitCost] = useState<number | "">("");
+  const [newTotalCost, setNewTotalCost] = useState<number | "">("");
 
-  const [editQty, setEditQty] = useState<number>(1);
-  const [editUnitCost, setEditUnitCost] = useState<number>(0);
-  const [editTotalCost, setEditTotalCost] = useState<number>(0);
+  const [editQty, setEditQty] = useState<number | "">("");
+  const [editUnitCost, setEditUnitCost] = useState<number | "">("");
+  const [editTotalCost, setEditTotalCost] = useState<number | "">("");
 
   // Bidirectional sync for New Form
-  const handleNewQtyChange = (qty: number) => {
+  const handleNewQtyChange = (val: string) => {
+    if (val === "") {
+      setNewQty("");
+      setNewTotalCost("");
+      return;
+    }
+    const qty = parseInt(val, 10) || 0;
     setNewQty(qty);
-    setNewTotalCost(qty * newUnitCost);
+    const unitCost = typeof newUnitCost === "number" ? newUnitCost : 0;
+    setNewTotalCost(qty * unitCost);
   };
 
-  const handleNewUnitCostChange = (unitCost: number) => {
+  const handleNewUnitCostChange = (val: string) => {
+    if (val === "") {
+      setNewUnitCost("");
+      setNewTotalCost("");
+      return;
+    }
+    const unitCost = parseFloat(val) || 0;
     setNewUnitCost(unitCost);
-    setNewTotalCost(newQty * unitCost);
+    const qty = typeof newQty === "number" ? newQty : 0;
+    setNewTotalCost(qty * unitCost);
   };
 
-  const handleNewTotalCostChange = (totalCost: number) => {
+  const handleNewTotalCostChange = (val: string) => {
+    if (val === "") {
+      setNewTotalCost("");
+      setNewUnitCost("");
+      return;
+    }
+    const totalCost = parseFloat(val) || 0;
     setNewTotalCost(totalCost);
-    setNewUnitCost(newQty > 0 ? totalCost / newQty : 0);
+    const qty = typeof newQty === "number" ? newQty : 0;
+    setNewUnitCost(qty > 0 ? totalCost / qty : 0);
   };
 
   // Bidirectional sync for Edit Form
-  const handleEditQtyChange = (qty: number) => {
+  const handleEditQtyChange = (val: string) => {
+    if (val === "") {
+      setEditQty("");
+      setEditTotalCost("");
+      return;
+    }
+    const qty = parseInt(val, 10) || 0;
     setEditQty(qty);
-    setEditTotalCost(qty * editUnitCost);
+    const unitCost = typeof editUnitCost === "number" ? editUnitCost : 0;
+    setEditTotalCost(qty * unitCost);
   };
 
-  const handleEditUnitCostChange = (unitCost: number) => {
+  const handleEditUnitCostChange = (val: string) => {
+    if (val === "") {
+      setEditUnitCost("");
+      setEditTotalCost("");
+      return;
+    }
+    const unitCost = parseFloat(val) || 0;
     setEditUnitCost(unitCost);
-    setEditTotalCost(editQty * unitCost);
+    const qty = typeof editQty === "number" ? editQty : 0;
+    setEditTotalCost(qty * unitCost);
   };
 
-  const handleEditTotalCostChange = (totalCost: number) => {
+  const handleEditTotalCostChange = (val: string) => {
+    if (val === "") {
+      setEditTotalCost("");
+      setEditUnitCost("");
+      return;
+    }
+    const totalCost = parseFloat(val) || 0;
     setEditTotalCost(totalCost);
-    setEditUnitCost(editQty > 0 ? totalCost / editQty : 0);
+    const qty = typeof editQty === "number" ? editQty : 0;
+    setEditUnitCost(qty > 0 ? totalCost / qty : 0);
   };
 
   const formatDate = (dateString: string | Date | null) => {
@@ -102,7 +144,7 @@ export default function IncomingOrdersClient({
               required 
               min="1" 
               value={editQty}
-              onChange={(e) => handleEditQtyChange(parseInt(e.target.value, 10) || 1)}
+              onChange={(e) => handleEditQtyChange(e.target.value)}
               placeholder="Ej. 50" 
             />
           </div>
@@ -116,7 +158,7 @@ export default function IncomingOrdersClient({
               min="0" 
               step="any"
               value={editUnitCost}
-              onChange={(e) => handleEditUnitCostChange(parseFloat(e.target.value) || 0)}
+              onChange={(e) => handleEditUnitCostChange(e.target.value)}
               placeholder="Ej. 15000" 
             />
           </div>
@@ -130,7 +172,7 @@ export default function IncomingOrdersClient({
               min="0" 
               step="any"
               value={editTotalCost}
-              onChange={(e) => handleEditTotalCostChange(parseFloat(e.target.value) || 0)}
+              onChange={(e) => handleEditTotalCostChange(e.target.value)}
               placeholder="Ej. 750000" 
             />
           </div>
@@ -184,7 +226,7 @@ export default function IncomingOrdersClient({
               required 
               min="1" 
               value={newQty}
-              onChange={(e) => handleNewQtyChange(parseInt(e.target.value, 10) || 1)}
+              onChange={(e) => handleNewQtyChange(e.target.value)}
               placeholder="Ej. 50" 
             />
           </div>
@@ -198,7 +240,7 @@ export default function IncomingOrdersClient({
               min="0" 
               step="any"
               value={newUnitCost}
-              onChange={(e) => handleNewUnitCostChange(parseFloat(e.target.value) || 0)}
+              onChange={(e) => handleNewUnitCostChange(e.target.value)}
               placeholder="Ej. 15000" 
             />
           </div>
@@ -212,7 +254,7 @@ export default function IncomingOrdersClient({
               min="0" 
               step="any"
               value={newTotalCost}
-              onChange={(e) => handleNewTotalCostChange(parseFloat(e.target.value) || 0)}
+              onChange={(e) => handleNewTotalCostChange(e.target.value)}
               placeholder="Ej. 750000" 
             />
           </div>
@@ -249,8 +291,8 @@ export default function IncomingOrdersClient({
           onClick={() => {
             setShowNewForm(true);
             setNewQty(1);
-            setNewUnitCost(0);
-            setNewTotalCost(0);
+            setNewUnitCost("");
+            setNewTotalCost("");
           }}
         >
           + Registrar Pedido en Camino
@@ -322,8 +364,8 @@ export default function IncomingOrdersClient({
                           setEditingId(o.id);
                           setEditQty(o.cantidad);
                           const unitCost = Number(o.costoUnitario || 0);
-                          setEditUnitCost(unitCost);
-                          setEditTotalCost(o.cantidad * unitCost);
+                          setEditUnitCost(unitCost || "");
+                          setEditTotalCost(o.cantidad * unitCost || "");
                         }}
                       >
                         Editar
