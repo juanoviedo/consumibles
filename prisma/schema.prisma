@@ -69,6 +69,7 @@ model Client {
   nombre          String
   email           String?
   telefono        String?
+  contacto        String?
   direccion       String?
   ciudad          String?
   departamento    String?

@@ -45,6 +45,11 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
             <input type="text" name="telefono" defaultValue={editingClient.telefono || ""} placeholder="3333333333" />
           </div>
 
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Contacto Principal</label>
+            <input type="text" name="contacto" defaultValue={editingClient.contacto || ""} placeholder="Nombre del Contacto" />
+          </div>
+
           <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Dirección</label>
             <input type="text" name="direccion" defaultValue={editingClient.direccion || ""} placeholder="Dirección de Facturación" />
@@ -103,6 +108,10 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
 
           <div className="admin-input-group">
             <input type="text" name="telefono" placeholder="Teléfono" />
+          </div>
+
+          <div className="admin-input-group">
+            <input type="text" name="contacto" placeholder="Contacto Principal" />
           </div>
 
           <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
@@ -171,7 +180,14 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
                   <td>{c.nit || "-"}</td>
                   <td><strong>{c.nombre}</strong></td>
                   <td>{c.email || "-"}</td>
-                  <td>{c.telefono || "-"}</td>
+                  <td>
+                    {c.telefono || "-"}
+                    {c.contacto && (
+                      <div style={{ fontSize: "12px", color: "var(--admin-text-muted)", marginTop: "2px" }}>
+                        Contacto: {c.contacto}
+                      </div>
+                    )}
+                  </td>
                   <td>
                     {c.direccion || ""}
                     {(c.ciudad || c.departamento || c.pais) && (

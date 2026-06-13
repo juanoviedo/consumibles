@@ -17,6 +17,7 @@ export async function createClient(formData: FormData) {
   const nombre = formData.get("nombre") as string;
   const email = formData.get("email") as string;
   const telefono = formData.get("telefono") as string;
+  const contacto = formData.get("contacto") as string;
   const direccion = formData.get("direccion") as string;
   const ciudad = formData.get("ciudad") as string;
   const departamento = formData.get("departamento") as string;
@@ -28,6 +29,7 @@ export async function createClient(formData: FormData) {
       nombre,
       email: email || null,
       telefono: telefono || null,
+      contacto: contacto || null,
       direccion: direccion || null,
       ciudad: ciudad || null,
       departamento: departamento || null,
@@ -44,6 +46,7 @@ export async function updateClient(formData: FormData) {
   const nombre = formData.get("nombre") as string;
   const email = formData.get("email") as string;
   const telefono = formData.get("telefono") as string;
+  const contacto = formData.get("contacto") as string;
   const direccion = formData.get("direccion") as string;
   const ciudad = formData.get("ciudad") as string;
   const departamento = formData.get("departamento") as string;
@@ -56,6 +59,7 @@ export async function updateClient(formData: FormData) {
       nombre,
       email: email || null,
       telefono: telefono || null,
+      contacto: contacto || null,
       direccion: direccion || null,
       ciudad: ciudad || null,
       departamento: departamento || null,
