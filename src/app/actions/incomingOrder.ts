@@ -17,6 +17,7 @@ export async function getIncomingOrders() {
 export async function createIncomingOrder(formData: FormData) {
   const productId = parseInt(formData.get("productId") as string, 10);
   const cantidad = parseInt(formData.get("cantidad") as string, 10);
+  const costoUnitario = parseFloat(formData.get("costoUnitario") as string || "0");
   const fechaEstimadaRaw = formData.get("fechaEstimada") as string;
   
   const fechaEstimada = fechaEstimadaRaw ? new Date(fechaEstimadaRaw) : null;
@@ -25,6 +26,7 @@ export async function createIncomingOrder(formData: FormData) {
     data: {
       productId,
       cantidad,
+      costoUnitario,
       fechaEstimada,
       estado: "EN_CAMINO",
     },
@@ -48,23 +50,52 @@ export async function completeIncomingOrder(id: number) {
     throw new Error("El pedido ya no está en camino");
   }
 
-  // 2. Incrementar el stock del producto e indicar que el pedido está completado en una transacción
-  await prisma.$transaction([
-    prisma.product.update({
+  // 2. Ejecutar la actualización en una transacción interactiva
+  await prisma.$transaction(async (tx) => {
+    // A. Incrementar el stock del producto
+    await tx.product.update({
       where: { id: order.productId },
       data: {
         stock: {
           increment: order.cantidad,
         },
       },
-    }),
-    prisma.incomingOrder.update({
+    });
+
+    // B. Marcar el pedido como completado
+    await tx.incomingOrder.update({
       where: { id },
       data: {
         estado: "COMPLETADO",
       },
-    }),
-  ]);
+    });
+
+    // C. Calcular el costo promedio ponderado basado en todos los pedidos completados
+    const completedOrders = await tx.incomingOrder.findMany({
+      where: {
+        productId: order.productId,
+        estado: "COMPLETADO",
+      },
+    });
+
+    let totalCost = 0;
+    let totalQuantity = 0;
+
+    for (const o of completedOrders) {
+      totalCost += o.cantidad * Number(o.costoUnitario);
+      totalQuantity += o.cantidad;
+    }
+
+    const costoPromedio = totalQuantity > 0 ? (totalCost / totalQuantity) : 0;
+
+    // D. Actualizar el costo promedio en el producto
+    await tx.product.update({
+      where: { id: order.productId },
+      data: {
+        costoPromedio,
+      },
+    });
+  });
 
   revalidatePath("/admin");
   revalidatePath("/admin/pedidos-camino");

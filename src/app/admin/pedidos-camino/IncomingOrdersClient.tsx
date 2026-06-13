@@ -51,6 +51,11 @@ export default function IncomingOrdersClient({
           </div>
 
           <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Unitario (COP)</label>
+            <input type="number" name="costoUnitario" required min="0" defaultValue={0} placeholder="Ej. 15000" />
+          </div>
+
+          <div className="admin-input-group">
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha Estimada de Llegada</label>
             <input type="date" name="fechaEstimada" />
           </div>
@@ -94,6 +99,7 @@ export default function IncomingOrdersClient({
                 <th>Producto</th>
                 <th>Código/Ref</th>
                 <th>Cantidad</th>
+                <th>Costo (U. / Total)</th>
                 <th>Fecha Pedido</th>
                 <th>Llegada Estimada</th>
                 <th>Estado</th>
@@ -113,6 +119,12 @@ export default function IncomingOrdersClient({
                   </td>
                   <td>{o.product?.codigo}</td>
                   <td><strong>{o.cantidad} uds</strong></td>
+                  <td>
+                    <div>COP {o.costoUnitario ? Number(o.costoUnitario).toLocaleString("es-CO", { minimumFractionDigits: 0 }) : "0"}</div>
+                    <div style={{ fontSize: "11px", color: "var(--admin-text-muted)", marginTop: "2px" }}>
+                      Total: COP {(o.cantidad * Number(o.costoUnitario || 0)).toLocaleString("es-CO", { minimumFractionDigits: 0 })}
+                    </div>
+                  </td>
                   <td>{formatDate(o.fechaPedido)}</td>
                   <td>{formatDate(o.fechaEstimada)}</td>
                   <td>
@@ -148,7 +160,7 @@ export default function IncomingOrdersClient({
               ))}
               {orders.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     No hay pedidos en tránsito registrados actualmente.
                   </td>
                 </tr>

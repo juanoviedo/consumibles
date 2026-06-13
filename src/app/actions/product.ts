@@ -41,7 +41,8 @@ export async function getProducts() {
   });
   return products.map(p => ({
     ...p,
-    precio: Number(p.precio)
+    precio: Number(p.precio),
+    costoPromedio: Number(p.costoPromedio ?? 0)
   }));
 }
 

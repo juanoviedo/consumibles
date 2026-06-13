@@ -203,6 +203,7 @@ export default function AdminClient({ products, categories }: { products: any[],
                 <th>Imagen</th>
                 <th>Nombre</th>
                 <th>Categoría</th>
+                <th>Costo Prom.</th>
                 <th>Precio</th>
                 <th>Inventario</th>
                 <th>Acción</th>
@@ -222,7 +223,12 @@ export default function AdminClient({ products, categories }: { products: any[],
                     </td>
                     <td>{p.nombre}</td>
                     <td>{p.category ? p.category.nombre : "-"}</td>
-                    <td>COP {p.precio}</td>
+                    <td>
+                      {p.costoPromedio > 0 
+                        ? `COP ${Number(p.costoPromedio).toLocaleString("es-CO", { minimumFractionDigits: 0 })}` 
+                        : "-"}
+                    </td>
+                    <td>COP {Number(p.precio).toLocaleString("es-CO", { minimumFractionDigits: 0 })}</td>
                     <td>
                       <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -294,7 +300,7 @@ export default function AdminClient({ products, categories }: { products: any[],
               })}
               {filteredProducts.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     No hay productos en esta categoría.
                   </td>
                 </tr>

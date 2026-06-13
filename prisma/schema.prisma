@@ -22,6 +22,7 @@ model Product {
   category       Category?       @relation(fields: [categoryId], references: [id])
   stock          Int             @default(0)
   minStock       Int             @default(0)
+  costoPromedio  Decimal         @default(0) @db.Decimal(10, 2)
   incomingOrders IncomingOrder[]
   quotationItems QuotationItem[]
   createdAt      DateTime?       @default(now()) @db.Timestamp(6)
@@ -33,6 +34,7 @@ model IncomingOrder {
   productId     Int
   product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   cantidad      Int       @default(0)
+  costoUnitario Decimal   @default(0) @db.Decimal(10, 2)
   fechaPedido   DateTime  @default(now()) @db.Timestamp(6)
   fechaEstimada DateTime? @db.Timestamp(6)
   estado        String    @default("EN_CAMINO") // EN_CAMINO, COMPLETADO, CANCELADO
