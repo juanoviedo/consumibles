@@ -119,5 +119,8 @@ model SystemSettings {
   startQuotationNumber Int     @default(1)
   startBillNumber      Int     @default(1)
   bankDetails          String  @default("Transferencias a:\nNequi: 316 831 4501\nBancolombia Ahorros: 123-456789-01")
+  companyName          String  @default("CONSUMIBLES & REPUESTOS")
+  companySlogan        String  @default("Equipos de Corte Plasma y Soldadura Industrial")
+  companyPhone         String  @default("+57 316 831 4501")
 }
 

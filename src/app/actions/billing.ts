@@ -350,6 +350,9 @@ export async function getSettings() {
         startQuotationNumber: 1,
         startBillNumber: 1,
         bankDetails: "Transferencias a:\nNequi: 316 831 4501\nBancolombia Ahorros: 123-456789-01",
+        companyName: "CONSUMIBLES & REPUESTOS",
+        companySlogan: "Equipos de Corte Plasma y Soldadura Industrial",
+        companyPhone: "+57 316 831 4501",
       },
     });
   }
@@ -358,6 +361,9 @@ export async function getSettings() {
     startQuotationNumber: Number(settings.startQuotationNumber),
     startBillNumber: Number(settings.startBillNumber),
     bankDetails: settings.bankDetails,
+    companyName: settings.companyName || "CONSUMIBLES & REPUESTOS",
+    companySlogan: settings.companySlogan || "Equipos de Corte Plasma y Soldadura Industrial",
+    companyPhone: settings.companyPhone || "+57 316 831 4501",
   };
 }
 
@@ -365,6 +371,9 @@ export async function updateSettings(formData: FormData) {
   const startQuotationNumber = parseInt(formData.get("startQuotationNumber") as string || "1", 10);
   const startBillNumber = parseInt(formData.get("startBillNumber") as string || "1", 10);
   const bankDetails = formData.get("bankDetails") as string || "";
+  const companyName = formData.get("companyName") as string || "CONSUMIBLES & REPUESTOS";
+  const companySlogan = formData.get("companySlogan") as string || "Equipos de Corte Plasma y Soldadura Industrial";
+  const companyPhone = formData.get("companyPhone") as string || "+57 316 831 4501";
 
   await prisma.systemSettings.upsert({
     where: { id: 1 },
@@ -372,12 +381,18 @@ export async function updateSettings(formData: FormData) {
       startQuotationNumber,
       startBillNumber,
       bankDetails,
+      companyName,
+      companySlogan,
+      companyPhone,
     },
     create: {
       id: 1,
       startQuotationNumber,
       startBillNumber,
       bankDetails,
+      companyName,
+      companySlogan,
+      companyPhone,
     },
   });
 

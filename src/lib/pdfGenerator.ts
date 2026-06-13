@@ -15,12 +15,16 @@ export function downloadDocumentPDF(quotation: any, settings: any) {
     // Company Branding inside Header
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
+    const companyName = settings?.companyName || "CONSUMIBLES & REPUESTOS";
+    const companySlogan = settings?.companySlogan || "Equipos de Corte Plasma y Soldadura Industrial";
+    const companyPhone = settings?.companyPhone || "+57 316 831 4501";
+
     doc.setFontSize(18);
-    doc.text("CONSUMIBLES & REPUESTOS", 15, 16);
+    doc.text(companyName, 15, 16);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text("Equipos de Corte Plasma y Soldadura Industrial", 15, 22);
-    doc.text("Contacto: +57 316 831 4501", 15, 27);
+    doc.text(companySlogan, 15, 22);
+    doc.text(`Contacto: ${companyPhone}`, 15, 27);
 
     // Document Type & Number (aligned right)
     doc.setFont("helvetica", "bold");
@@ -168,7 +172,7 @@ export function downloadDocumentPDF(quotation: any, settings: any) {
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184); // slate 400
     doc.text("Este documento digital no constituye factura electrónica bajo el régimen común. Es soporte de cobro equivalente.", 105, pageHeight - 15, { align: "center" });
-    doc.text("Generado de forma automática por Consumibles y Repuestos.", 105, pageHeight - 10, { align: "center" });
+    doc.text(`Generado de forma automática por ${companyName}.`, 105, pageHeight - 10, { align: "center" });
 
     // Save the PDF
     const filename = isCC ? `CuentaCobro_${docNumber}.pdf` : `Cotizacion_${docNumber}.pdf`;

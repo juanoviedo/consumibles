@@ -17,8 +17,75 @@ export default async function SettingsPage() {
       </div>
 
       <section className="glass-container" style={{ maxWidth: "600px" }}>
-        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Consecutivos de Documentos</h2>
+        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Datos de la Empresa e Impresión</h2>
         <form action={updateSettings} className="admin-grid-form">
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>
+              Nombre de la Empresa (se muestra en PDF)
+            </label>
+            <input 
+              type="text" 
+              name="companyName" 
+              defaultValue={settings.companyName} 
+              required 
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(0,0,0,0.2)",
+                color: "white",
+                border: "1px solid var(--admin-glass-border)",
+                borderRadius: "6px",
+                fontSize: "14px"
+              }}
+            />
+          </div>
+
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1", marginTop: "15px" }}>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>
+              Slogan de la Empresa (se muestra en PDF)
+            </label>
+            <input 
+              type="text" 
+              name="companySlogan" 
+              defaultValue={settings.companySlogan} 
+              required 
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(0,0,0,0.2)",
+                color: "white",
+                border: "1px solid var(--admin-glass-border)",
+                borderRadius: "6px",
+                fontSize: "14px"
+              }}
+            />
+          </div>
+
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1", marginTop: "15px" }}>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>
+              Celular / Teléfono de Contacto (se muestra en PDF)
+            </label>
+            <input 
+              type="text" 
+              name="companyPhone" 
+              defaultValue={settings.companyPhone} 
+              required 
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(0,0,0,0.2)",
+                color: "white",
+                border: "1px solid var(--admin-glass-border)",
+                borderRadius: "6px",
+                fontSize: "14px"
+              }}
+            />
+          </div>
+
+          <div style={{ gridColumn: "1 / -1", margin: "20px 0", borderTop: "1px solid var(--admin-glass-border)" }}></div>
+
+          <h3 style={{ gridColumn: "1 / -1", margin: "0 0 10px 0", fontSize: "16px", fontWeight: "600" }}>Consecutivos de Documentos</h3>
+
           <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>
               Número Inicial para Primera Cotización (ej: 1, 100, 1000)
