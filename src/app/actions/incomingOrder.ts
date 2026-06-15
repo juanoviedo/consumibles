@@ -37,14 +37,17 @@ export async function createIncomingOrder(formData: FormData) {
     costoUnitario = cantidad > 0 ? (costoTotal / cantidad) : 0;
   }
   const fechaEstimadaRaw = formData.get("fechaEstimada") as string;
-  
   const fechaEstimada = fechaEstimadaRaw ? new Date(fechaEstimadaRaw) : null;
+
+  const fechaPedidoRaw = formData.get("fechaPedido") as string;
+  const fechaPedido = fechaPedidoRaw ? new Date(fechaPedidoRaw) : new Date();
 
   await prisma.incomingOrder.create({
     data: {
       productId,
       cantidad,
       costoUnitario,
+      fechaPedido,
       fechaEstimada,
       estado: "EN_CAMINO",
     },
@@ -167,8 +170,10 @@ export async function updateIncomingOrder(formData: FormData) {
     costoUnitario = cantidad > 0 ? (costoTotal / cantidad) : 0;
   }
   const fechaEstimadaRaw = formData.get("fechaEstimada") as string;
-  
   const fechaEstimada = fechaEstimadaRaw ? new Date(fechaEstimadaRaw) : null;
+
+  const fechaPedidoRaw = formData.get("fechaPedido") as string;
+  const fechaPedido = fechaPedidoRaw ? new Date(fechaPedidoRaw) : undefined;
 
   await prisma.incomingOrder.update({
     where: { id },
@@ -176,6 +181,7 @@ export async function updateIncomingOrder(formData: FormData) {
       productId,
       cantidad,
       costoUnitario,
+      fechaPedido,
       fechaEstimada,
     },
   });

@@ -172,6 +172,16 @@ export default function IncomingOrdersClient({
           </div>
 
           <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha del Pedido (Compra)</label>
+            <input 
+              type="date" 
+              name="fechaPedido" 
+              defaultValue={editingOrder.fechaPedido ? new Date(editingOrder.fechaPedido).toISOString().split("T")[0] : ""} 
+              required
+            />
+          </div>
+
+          <div className="admin-input-group">
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha Estimada de Llegada</label>
             <input type="date" name="fechaEstimada" defaultValue={formattedFechaEstimada} />
           </div>
@@ -250,6 +260,16 @@ export default function IncomingOrdersClient({
               value={newTotalCost}
               onChange={(e) => handleNewTotalCostChange(e.target.value)}
               placeholder="Ej. 750000" 
+            />
+          </div>
+
+          <div className="admin-input-group">
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha del Pedido (Compra)</label>
+            <input 
+              type="date" 
+              name="fechaPedido" 
+              defaultValue={new Date().toLocaleDateString("en-CA")} 
+              required
             />
           </div>
 
