@@ -403,9 +403,9 @@ export default function AdminClient({
                                 {p.stockActual} / {p.minStock}
                               </span>
                             </div>
-                            {isUnderMin && (
+                            {(hasIncoming || isUnderMin) && (
                               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                                {hasIncoming ? (
+                                {hasIncoming && (
                                   <span 
                                     style={{
                                       fontSize: "11px",
@@ -422,7 +422,8 @@ export default function AdminClient({
                                   >
                                     🚚 En camino (+{totalIncomingQty})
                                   </span>
-                                ) : (
+                                )}
+                                {!hasIncoming && isUnderMin && (
                                   <span 
                                     style={{
                                       fontSize: "11px",
