@@ -72,7 +72,8 @@ export default function QuotationsClient({
     return new Date(dateVal).toLocaleDateString("es-CO", {
       year: "numeric",
       month: "short",
-      day: "numeric"
+      day: "numeric",
+      timeZone: "UTC"
     });
   };
 

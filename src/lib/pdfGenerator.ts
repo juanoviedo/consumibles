@@ -85,7 +85,7 @@ export async function downloadDocumentPDF(quotation: any, settings: any) {
     doc.text("DETALLES DEL DOCUMENTO:", 120, 48);
     doc.setFont("helvetica", "normal");
     
-    const formatDate = (d: any) => d ? new Date(d).toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" }) : "-";
+    const formatDate = (d: any) => d ? new Date(d).toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }) : "-";
     doc.text(`Fecha Emisión: ${formatDate(isCC ? quotation.fechaCuentaCobro : quotation.fechaCotizacion)}`, 120, 54);
     
     if (isCC) {

@@ -86,7 +86,7 @@ export default function AdminClient({
                 type="text" 
                 readOnly 
                 value={editingProduct.fechaPromedioCompra 
-                  ? new Date(editingProduct.fechaPromedioCompra).toLocaleDateString("es-CO") 
+                  ? new Date(editingProduct.fechaPromedioCompra).toLocaleDateString("es-CO", { timeZone: "UTC" }) 
                   : "-"
                 } 
                 style={{ background: "rgba(255, 255, 255, 0.05)", cursor: "not-allowed", border: "1px solid var(--admin-glass-border)", color: "var(--admin-text-muted)", width: "100%", padding: "10px", borderRadius: "5px" }}
@@ -351,7 +351,7 @@ export default function AdminClient({
                               </span>
                               {p.fechaPromedioCompra && (
                                 <span style={{ fontSize: "10px", color: "var(--admin-text-muted)" }}>
-                                  Ponderado: {new Date(p.fechaPromedioCompra).toLocaleDateString()}
+                                  Ponderado: {new Date(p.fechaPromedioCompra).toLocaleDateString("es-CO", { timeZone: "UTC" })}
                                 </span>
                               )}
                             </div>

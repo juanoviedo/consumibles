@@ -97,6 +97,7 @@ export default function IncomingOrdersClient({
       year: "numeric",
       month: "short",
       day: "numeric",
+      timeZone: "UTC"
     });
   };
 

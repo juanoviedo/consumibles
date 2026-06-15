@@ -214,7 +214,7 @@ export async function initializeProductCost(
         costoUnit: precioPromedioInicial,
         stockPrevio: stockActual,
         stockNuevo: stockActual,
-        detalle: `Inicialización de costo a $${precioPromedioInicial.toLocaleString()} con fecha ${new Date(fechaPromedioInicial).toLocaleDateString()}`
+        detalle: `Inicialización de costo a $${precioPromedioInicial.toLocaleString()} con fecha ${new Date(fechaPromedioInicial).toLocaleDateString("es-CO", { timeZone: "UTC" })}`
       }
     })
   ]);
