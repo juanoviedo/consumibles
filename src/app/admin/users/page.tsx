@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { createUserAction, deleteUserAction } from "@/app/actions/user";
+import UsersClient from "./UsersClient";
 
 export default async function UsersPage() {
   const cookieStore = await cookies();
@@ -29,68 +29,7 @@ export default async function UsersPage() {
         </div>
       </div>
 
-      <section className="glass-container" style={{ marginBottom: "40px" }}>
-        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Agregar Nuevo Admin</h2>
-        <form action={createUserAction as any} className="admin-grid-form">
-          <div className="admin-input-group">
-            <input type="email" name="email" placeholder="Correo electrónico" required />
-          </div>
-          <div className="admin-input-group">
-            <input type="password" name="password" placeholder="Contraseña inicial" required />
-          </div>
-          <div className="admin-input-group" style={{ gridColumn: "1/-1", display: "flex", flexDirection: "row", alignItems: "center", gap: "10px" }}>
-            <input type="checkbox" name="isSuperAdmin" id="isSuperAdmin" value="true" style={{ width: "auto" }} />
-            <label htmlFor="isSuperAdmin" style={{ cursor: "pointer", color: "var(--admin-text-main)" }}>Este usuario será Super Admin (podrá gestionar a otros administradores)</label>
-          </div>
-          <div style={{ gridColumn: "1/-1", display: "flex", justifyContent: "flex-end" }}>
-            <button type="submit" className="admin-btn">Crear Administrador</button>
-          </div>
-        </form>
-      </section>
-
-      <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
-        <div style={{ padding: "30px 30px 15px 30px" }}>
-          <h2 style={{ margin: 0 }}>Usuarios Actuales</h2>
-        </div>
-        
-        <div className="admin-table-container">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u: any) => (
-                <tr key={u.id}>
-                  <td>{u.email}</td>
-                  <td>
-                    <span style={{ 
-                      background: u.isSuperAdmin ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.1)", 
-                      color: u.isSuperAdmin ? "#10b981" : "#fff",
-                      padding: "4px 8px", 
-                      borderRadius: "4px", 
-                      fontSize: "12px", 
-                      fontWeight: "bold" 
-                    }}>
-                      {u.isSuperAdmin ? "Super Admin" : "Admin"}
-                    </span>
-                  </td>
-                  <td>
-                    {u.email !== sessionData.email && (
-                      <form action={async () => { "use server"; await deleteUserAction(u.id); }}>
-                        <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">Revocar Acceso</button>
-                      </form>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <UsersClient users={users} sessionData={sessionData} />
     </>
   );
 }

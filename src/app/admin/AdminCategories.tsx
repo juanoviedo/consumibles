@@ -5,9 +5,14 @@ import { createCategory, updateCategory, deleteCategory } from "@/app/actions/ca
 export default function AdminCategories({ categories }: { categories: any[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const startEdit = (c: any) => setEditingId(c.id);
   const cancelEdit = () => setEditingId(null);
+
+  const handleConfirmDelete = async (id: number) => {
+    await deleteCategory(id);
+  };
 
   const editingCategory = categories.find(c => c.id === editingId);
 
@@ -126,13 +131,13 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
                   <td>
                     <div className="admin-table-actions">
                       <button type="button" onClick={() => startEdit(c)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
-                      <form action={deleteCategory.bind(null, c.id)}>
-                        <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm" onClick={(e) => {
-                          if (!confirm("¿Seguro que deseas eliminar esta categoría?")) {
-                            e.preventDefault();
-                          }
-                        }}>Borrar</button>
-                      </form>
+                      <button 
+                        type="button" 
+                        onClick={() => setDeleteConfirmId(c.id)} 
+                        className="admin-btn admin-btn-danger admin-btn-sm"
+                      >
+                        Borrar
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -146,6 +151,56 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
           </table>
         </div>
       </section>
+      {deleteConfirmId !== null && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)",
+          display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100
+        }}>
+          <div className="glass-container" style={{ maxWidth: "400px", width: "90%", border: "1px solid rgba(239, 68, 68, 0.3)", boxShadow: "0 8px 32px 0 rgba(239, 68, 68, 0.15)", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
+            <div style={{ textAlign: "center", marginBottom: "25px" }}>
+              <div style={{
+                width: "60px", height: "60px", background: "rgba(239, 68, 68, 0.2)",
+                borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 15px auto", border: "1px solid rgba(239, 68, 68, 0.4)"
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: "1.25rem", margin: "0 0 10px 0", color: "#f87171" }}>¿Confirmar Eliminación?</h3>
+              <p style={{ color: "var(--admin-text-muted)", fontSize: "14px", lineHeight: "1.5", margin: 0 }}>
+                Esta acción es permanente y eliminará la categoría. Los productos vinculados se desvincularán automáticamente. ¿Deseas continuar?
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <button 
+                type="button" 
+                className="admin-btn admin-btn-danger"
+                onClick={async () => {
+                  await handleConfirmDelete(deleteConfirmId);
+                  setDeleteConfirmId(null);
+                }}
+                style={{ flex: 1 }}
+              >
+                Sí, Eliminar
+              </button>
+              <button 
+                type="button" 
+                className="admin-btn admin-btn-outline" 
+                style={{ color: "white", borderColor: "rgba(255,255,255,0.4)", flex: 1 }}
+                onClick={() => setDeleteConfirmId(null)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
