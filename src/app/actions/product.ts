@@ -56,7 +56,6 @@ export async function createProduct(formData: FormData) {
   const descripcion2 = formData.get("descripcion2") as string;
   const categoryIdRaw = formData.get("categoryId") as string;
   const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
-  const stockActual = parseInt(formData.get("stock") as string || "0", 10);
   const minStock = parseInt(formData.get("minStock") as string || "0", 10);
   
   const file = formData.get("imagenFile") as File | null;
@@ -100,7 +99,7 @@ export async function createProduct(formData: FormData) {
       descripcion1, 
       descripcion2, 
       categoryId, 
-      stockActual, 
+      stockActual: 0, 
       minStock,
       precioPromedioCompra: 0,
       valorInventarioActual: 0,
@@ -122,7 +121,6 @@ export async function updateProduct(formData: FormData) {
   const descripcion2 = formData.get("descripcion2") as string;
   const categoryIdRaw = formData.get("categoryId") as string;
   const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
-  const stockActual = parseInt(formData.get("stock") as string || "0", 10);
   const minStock = parseInt(formData.get("minStock") as string || "0", 10);
 
   const file = formData.get("imagenFile") as File | null;
@@ -155,13 +153,6 @@ export async function updateProduct(formData: FormData) {
     galeriaUrls.push(...splitUrls);
   }
 
-  const existingProduct = await prisma.product.findUnique({
-    where: { id },
-    select: { precioPromedioCompra: true }
-  });
-  const precioPromedio = existingProduct ? Number(existingProduct.precioPromedioCompra) : 0;
-  const valorInventario = stockActual * precioPromedio;
-
   await prisma.product.update({
     where: { id },
     data: { 
@@ -173,9 +164,7 @@ export async function updateProduct(formData: FormData) {
       descripcion1, 
       descripcion2, 
       categoryId, 
-      stockActual, 
-      minStock,
-      valorInventarioActual: valorInventario
+      minStock
     },
   });
 
@@ -251,4 +240,65 @@ export async function getInventoryLogs() {
       valorInventarioActual: Number(l.product.valorInventarioActual)
     }
   }));
+}
+
+export async function adjustProductStock(
+  productId: number,
+  tipo: "INGRESO" | "SALIDA",
+  cantidad: number,
+  detalle: string
+) {
+  if (cantidad <= 0) {
+    throw new Error("La cantidad debe ser mayor a cero");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id: productId }
+    });
+
+    if (!product) {
+      throw new Error("Producto no encontrado");
+    }
+
+    const stockActual = product.stockActual;
+    let newStock = stockActual;
+
+    if (tipo === "INGRESO") {
+      newStock = stockActual + cantidad;
+    } else if (tipo === "SALIDA") {
+      newStock = stockActual - cantidad;
+      if (newStock < 0) {
+        throw new Error("El inventario resultante no puede ser menor a cero");
+      }
+    } else {
+      throw new Error("Tipo de ajuste no válido");
+    }
+
+    const precioPromedio = Number(product.precioPromedioCompra || 0);
+    const newValor = newStock * precioPromedio;
+
+    await tx.product.update({
+      where: { id: productId },
+      data: {
+        stockActual: newStock,
+        valorInventarioActual: newValor
+      }
+    });
+
+    await tx.inventoryLog.create({
+      data: {
+        productId,
+        tipo: tipo === "INGRESO" ? "AJUSTE_INGRESO" : "AJUSTE_SALIDA",
+        cantidad,
+        costoUnit: precioPromedio,
+        stockPrevio: stockActual,
+        stockNuevo: newStock,
+        detalle: detalle || `Ajuste manual de tipo ${tipo}`
+      }
+    });
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin");
 }
