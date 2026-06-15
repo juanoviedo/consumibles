@@ -97,12 +97,27 @@ export async function getQuotations() {
   return quotations.map((q) => ({
     ...q,
     total: Number(q.total),
+    subtotalVenta: Number(q.subtotalVenta),
+    subtotalCosto: Number(q.subtotalCosto),
+    utilidadTotal: Number(q.utilidadTotal),
+    rentabilidadPorcentual: Number(q.rentabilidadPorcentual),
+    rentabilidadMensual: Number(q.rentabilidadMensual),
+    rentabilidadEfectivaAnual: Number(q.rentabilidadEfectivaAnual),
+    diasPromedioInventario: Number(q.diasPromedioInventario),
     items: q.items.map((i) => ({
       ...i,
       precioUnitario: Number(i.precioUnitario),
+      costoPromedioUnitario: Number(i.costoPromedioUnitario),
+      utilidadUnitaria: Number(i.utilidadUnitaria),
+      utilidadTotal: Number(i.utilidadTotal),
+      rentabilidadPorcentual: Number(i.rentabilidadPorcentual),
+      rentabilidadMensual: Number(i.rentabilidadMensual),
+      rentabilidadEfectivaAnual: Number(i.rentabilidadEfectivaAnual),
       product: {
         ...i.product,
         precio: Number(i.product.precio),
+        precioPromedioCompra: Number(i.product.precioPromedioCompra),
+        valorInventarioActual: Number(i.product.valorInventarioActual)
       },
     })),
   }));
@@ -237,7 +252,118 @@ export async function convertToBillOfCollection(quotationId: number) {
   fechaVencimiento.setDate(fechaCuentaCobro.getDate() + 30); // 30 días para pagar
 
   await prisma.$transaction(async (tx) => {
-    // 1. Actualizar campos de cotización a cuenta de cobro
+    let subtotalVenta = 0;
+    let subtotalCosto = 0;
+    let weightedDaysSum = 0;
+
+    // 1. Validar y descontar del inventario, y registrar snapshots
+    for (const item of quotation.items) {
+      const product = await tx.product.findUnique({
+        where: { id: item.productId }
+      });
+
+      if (!product) {
+        throw new Error(`Producto con ID ${item.productId} no encontrado`);
+      }
+
+      if (product.stockActual < item.cantidad) {
+        throw new Error(`Stock insuficiente para el producto "${product.nombre}". Disponible: ${product.stockActual}, requerido: ${item.cantidad}`);
+      }
+
+      const stockPrevio = product.stockActual;
+      const stockNuevo = stockPrevio - item.cantidad;
+
+      const costoPromedioUnitario = Number(product.precioPromedioCompra);
+      const fechaPromedioCompra = product.fechaPromedioCompra;
+
+      const precioUnit = Number(item.precioUnitario);
+      const utilidadUnitaria = precioUnit - costoPromedioUnitario;
+      const utilidadTotal = utilidadUnitaria * item.cantidad;
+
+      // Calcular días en inventario (mínimo 1)
+      let diasInventario = 1;
+      if (fechaPromedioCompra) {
+        const diffTime = fechaCuentaCobro.getTime() - new Date(fechaPromedioCompra).getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        diasInventario = diffDays < 1 ? 1 : diffDays;
+      }
+
+      // Rentabilidad del ítem
+      let rentabilidadPorcentual = 0;
+      let rentabilidadMensual = 0;
+      let rentabilidadEfectivaAnual = 0;
+      if (costoPromedioUnitario > 0) {
+        const r = utilidadUnitaria / costoPromedioUnitario;
+        rentabilidadPorcentual = r * 100;
+        rentabilidadMensual = (Math.pow(1 + r, 30 / diasInventario) - 1) * 100;
+        rentabilidadEfectivaAnual = (Math.pow(1 + r, 365 / diasInventario) - 1) * 100;
+      }
+
+      // Snapshot financiero a nivel de item
+      await tx.quotationItem.update({
+        where: { id: item.id },
+        data: {
+          costoPromedioUnitario,
+          fechaPromedioCompra,
+          utilidadUnitaria,
+          utilidadTotal,
+          diasInventario,
+          rentabilidadPorcentual,
+          rentabilidadMensual,
+          rentabilidadEfectivaAnual
+        }
+      });
+
+      // Descontar del inventario y valorizar
+      const valorInventarioActual = stockNuevo * costoPromedioUnitario;
+      await tx.product.update({
+        where: { id: item.productId },
+        data: {
+          stockActual: stockNuevo,
+          valorInventarioActual
+        }
+      });
+
+      // Crear log de inventario
+      await tx.inventoryLog.create({
+        data: {
+          productId: item.productId,
+          tipo: "VENTA",
+          cantidad: item.cantidad,
+          costoUnit: costoPromedioUnitario,
+          stockPrevio,
+          stockNuevo,
+          detalle: `Venta facturada en Cuenta de Cobro ${numeroCuentaCobro}. Cantidad: ${item.cantidad}. Costo Unitario: $${costoPromedioUnitario.toLocaleString()}`
+        }
+      });
+
+      // Acumuladores de cabecera
+      subtotalVenta += precioUnit * item.cantidad;
+      subtotalCosto += costoPromedioUnitario * item.cantidad;
+      weightedDaysSum += diasInventario * (costoPromedioUnitario * item.cantidad);
+    }
+
+    // 2. Calcular consolidados de cabecera
+    const utilidadTotalConsolidada = subtotalVenta - subtotalCosto;
+    let diasPromedioInventario = 1;
+    if (subtotalCosto > 0) {
+      diasPromedioInventario = weightedDaysSum / subtotalCosto;
+    }
+    if (diasPromedioInventario < 1) {
+      diasPromedioInventario = 1;
+    }
+
+    let rentabilidadPorcentualConsolidada = 0;
+    let rentabilidadMensualConsolidada = 0;
+    let rentabilidadEfectivaAnualConsolidada = 0;
+    if (subtotalCosto > 0) {
+      const r_consolidado = utilidadTotalConsolidada / subtotalCosto;
+      rentabilidadPorcentualConsolidada = r_consolidado * 100;
+      rentabilidadMensualConsolidada = (Math.pow(1 + r_consolidado, 30 / diasPromedioInventario) - 1) * 100;
+      rentabilidadEfectivaAnualConsolidada = (Math.pow(1 + r_consolidado, 365 / diasPromedioInventario) - 1) * 100;
+    }
+
+    // 3. Actualizar la cabecera de la cotización a Cuenta de Cobro
     await tx.quotation.update({
       where: { id: quotationId },
       data: {
@@ -245,20 +371,15 @@ export async function convertToBillOfCollection(quotationId: number) {
         numeroCuentaCobro,
         fechaCuentaCobro,
         fechaVencimiento,
+        subtotalVenta,
+        subtotalCosto,
+        utilidadTotal: utilidadTotalConsolidada,
+        rentabilidadPorcentual: rentabilidadPorcentualConsolidada,
+        rentabilidadMensual: rentabilidadMensualConsolidada,
+        rentabilidadEfectivaAnual: rentabilidadEfectivaAnualConsolidada,
+        diasPromedioInventario
       },
     });
-
-    // 2. Descontar del inventario
-    for (const item of quotation.items) {
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          stock: {
-            decrement: item.cantidad,
-          },
-        },
-      });
-    }
   });
 
   revalidatePath("/admin/cotizaciones");
@@ -305,18 +426,58 @@ export async function revertToQuotation(quotationId: number, devolverInventario:
     // 1. Si se solicita y estaba facturado, devolver artículos al stock
     if (devolverInventario && (quotation.estado === QuotationStatus.CUENTA_COBRO || quotation.estado === QuotationStatus.PAGADA)) {
       for (const item of quotation.items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId }
+        });
+        if (!product) {
+          throw new Error(`Producto con ID ${item.productId} no encontrado`);
+        }
+
+        const stockPrevio = product.stockActual;
+        const stockNuevo = stockPrevio + item.cantidad;
+        const costoPromedio = Number(product.precioPromedioCompra);
+        const valorInventarioActual = stockNuevo * costoPromedio;
+
+        // Devolver al stock del producto
         await tx.product.update({
           where: { id: item.productId },
           data: {
-            stock: {
-              increment: item.cantidad,
-            },
+            stockActual: stockNuevo,
+            valorInventarioActual
           },
+        });
+
+        // Registrar log de reversión
+        await tx.inventoryLog.create({
+          data: {
+            productId: item.productId,
+            tipo: "REVERSION",
+            cantidad: item.cantidad,
+            costoUnit: costoPromedio,
+            stockPrevio,
+            stockNuevo,
+            detalle: `Reversión de venta: Cuenta de Cobro ${quotation.numeroCuentaCobro || ""}. Cantidad devuelta: ${item.cantidad}`
+          }
+        });
+
+        // Limpiar snapshots de item
+        await tx.quotationItem.update({
+          where: { id: item.id },
+          data: {
+            costoPromedioUnitario: 0,
+            fechaPromedioCompra: null,
+            utilidadUnitaria: 0,
+            utilidadTotal: 0,
+            diasInventario: 0,
+            rentabilidadPorcentual: 0,
+            rentabilidadMensual: 0,
+            rentabilidadEfectivaAnual: 0
+          }
         });
       }
     }
 
-    // 2. Regresar la cotización al estado inicial PENDIENTE/COTIZACION
+    // 2. Regresar la cotización al estado inicial PENDIENTE/COTIZACION y limpiar campos financieros de cabecera
     await tx.quotation.update({
       where: { id: quotationId },
       data: {
@@ -324,6 +485,13 @@ export async function revertToQuotation(quotationId: number, devolverInventario:
         numeroCuentaCobro: null,
         fechaCuentaCobro: null,
         fechaVencimiento: null,
+        subtotalVenta: 0,
+        subtotalCosto: 0,
+        utilidadTotal: 0,
+        rentabilidadPorcentual: 0,
+        rentabilidadMensual: 0,
+        rentabilidadEfectivaAnual: 0,
+        diasPromedioInventario: 0
       },
     });
   });

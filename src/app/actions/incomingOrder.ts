@@ -11,7 +11,16 @@ export async function getIncomingOrders() {
     },
     orderBy: { fechaPedido: "desc" },
   });
-  return orders;
+  return orders.map(o => ({
+    ...o,
+    costoUnitario: Number(o.costoUnitario),
+    product: {
+      ...o.product,
+      precio: Number(o.product.precio),
+      precioPromedioCompra: Number(o.product.precioPromedioCompra),
+      valorInventarioActual: Number(o.product.valorInventarioActual)
+    }
+  }));
 }
 
 export async function createIncomingOrder(formData: FormData) {
@@ -61,17 +70,51 @@ export async function completeIncomingOrder(id: number) {
 
   // 2. Ejecutar la actualización en una transacción interactiva
   await prisma.$transaction(async (tx) => {
-    // A. Incrementar el stock del producto
+    // A. Obtener el producto
+    const product = await tx.product.findUnique({
+      where: { id: order.productId }
+    });
+
+    if (!product) {
+      throw new Error("Producto no encontrado");
+    }
+
+    const stockPrevio = product.stockActual;
+    const stockNuevo = stockPrevio + order.cantidad;
+
+    let precioPromedioNuevo = 0;
+    let fechaPromedioNuevo: Date | null = null;
+
+    if (stockPrevio <= 0) {
+      precioPromedioNuevo = Number(order.costoUnitario);
+      fechaPromedioNuevo = new Date(order.fechaPedido);
+    } else {
+      const pPrevio = Number(product.precioPromedioCompra);
+      const pCompra = Number(order.costoUnitario);
+      precioPromedioNuevo = ((stockPrevio * pPrevio) + (order.cantidad * pCompra)) / stockNuevo;
+
+      const tPrevio = product.fechaPromedioCompra 
+        ? new Date(product.fechaPromedioCompra).getTime() 
+        : new Date(order.fechaPedido).getTime();
+      const tCompra = new Date(order.fechaPedido).getTime();
+      const tNuevo = ((stockPrevio * tPrevio) + (order.cantidad * tCompra)) / stockNuevo;
+      fechaPromedioNuevo = new Date(tNuevo);
+    }
+
+    const valorInventarioNuevo = stockNuevo * precioPromedioNuevo;
+
+    // B. Actualizar el producto con nuevos stocks y costos
     await tx.product.update({
       where: { id: order.productId },
       data: {
-        stock: {
-          increment: order.cantidad,
-        },
-      },
+        stockActual: stockNuevo,
+        precioPromedioCompra: precioPromedioNuevo,
+        fechaPromedioCompra: fechaPromedioNuevo,
+        valorInventarioActual: valorInventarioNuevo
+      }
     });
 
-    // B. Marcar el pedido como completado
+    // C. Marcar el pedido como completado
     await tx.incomingOrder.update({
       where: { id },
       data: {
@@ -79,30 +122,17 @@ export async function completeIncomingOrder(id: number) {
       },
     });
 
-    // C. Calcular el costo promedio ponderado basado en todos los pedidos completados
-    const completedOrders = await tx.incomingOrder.findMany({
-      where: {
-        productId: order.productId,
-        estado: "COMPLETADO",
-      },
-    });
-
-    let totalCost = 0;
-    let totalQuantity = 0;
-
-    for (const o of completedOrders) {
-      totalCost += o.cantidad * Number(o.costoUnitario);
-      totalQuantity += o.cantidad;
-    }
-
-    const costoPromedio = totalQuantity > 0 ? (totalCost / totalQuantity) : 0;
-
-    // D. Actualizar el costo promedio en el producto
-    await tx.product.update({
-      where: { id: order.productId },
+    // D. Registrar en el historial de inventario (InventoryLog)
+    await tx.inventoryLog.create({
       data: {
-        costoPromedio,
-      },
+        productId: order.productId,
+        tipo: "COMPRA",
+        cantidad: order.cantidad,
+        costoUnit: order.costoUnitario,
+        stockPrevio,
+        stockNuevo,
+        detalle: `Pedido completado #${order.id}. Compra de ${order.cantidad} unidades a $${Number(order.costoUnitario).toLocaleString()}/u`
+      }
     });
   });
 

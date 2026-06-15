@@ -42,7 +42,8 @@ export async function getProducts() {
   return products.map(p => ({
     ...p,
     precio: Number(p.precio),
-    costoPromedio: Number(p.costoPromedio ?? 0)
+    precioPromedioCompra: Number(p.precioPromedioCompra),
+    valorInventarioActual: Number(p.valorInventarioActual)
   }));
 }
 
@@ -55,7 +56,7 @@ export async function createProduct(formData: FormData) {
   const descripcion2 = formData.get("descripcion2") as string;
   const categoryIdRaw = formData.get("categoryId") as string;
   const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
-  const stock = parseInt(formData.get("stock") as string || "0", 10);
+  const stockActual = parseInt(formData.get("stock") as string || "0", 10);
   const minStock = parseInt(formData.get("minStock") as string || "0", 10);
   
   const file = formData.get("imagenFile") as File | null;
@@ -90,7 +91,21 @@ export async function createProduct(formData: FormData) {
   }
 
   await prisma.product.create({
-    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", galeria: galeriaUrls, descripcion1, descripcion2, categoryId, stock, minStock },
+    data: { 
+      codigo, 
+      nombre, 
+      precio, 
+      imagenUrl: imagenUrl || "", 
+      galeria: galeriaUrls, 
+      descripcion1, 
+      descripcion2, 
+      categoryId, 
+      stockActual, 
+      minStock,
+      precioPromedioCompra: 0,
+      valorInventarioActual: 0,
+      costoInicialConfigurado: false
+    },
   });
 
   revalidatePath("/");
@@ -107,7 +122,7 @@ export async function updateProduct(formData: FormData) {
   const descripcion2 = formData.get("descripcion2") as string;
   const categoryIdRaw = formData.get("categoryId") as string;
   const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
-  const stock = parseInt(formData.get("stock") as string || "0", 10);
+  const stockActual = parseInt(formData.get("stock") as string || "0", 10);
   const minStock = parseInt(formData.get("minStock") as string || "0", 10);
 
   const file = formData.get("imagenFile") as File | null;
@@ -140,9 +155,28 @@ export async function updateProduct(formData: FormData) {
     galeriaUrls.push(...splitUrls);
   }
 
+  const existingProduct = await prisma.product.findUnique({
+    where: { id },
+    select: { precioPromedioCompra: true }
+  });
+  const precioPromedio = existingProduct ? Number(existingProduct.precioPromedioCompra) : 0;
+  const valorInventario = stockActual * precioPromedio;
+
   await prisma.product.update({
     where: { id },
-    data: { codigo, nombre, precio, imagenUrl: imagenUrl || "", galeria: galeriaUrls, descripcion1, descripcion2, categoryId, stock, minStock },
+    data: { 
+      codigo, 
+      nombre, 
+      precio, 
+      imagenUrl: imagenUrl || "", 
+      galeria: galeriaUrls, 
+      descripcion1, 
+      descripcion2, 
+      categoryId, 
+      stockActual, 
+      minStock,
+      valorInventarioActual: valorInventario
+    },
   });
 
   revalidatePath("/");
@@ -150,12 +184,71 @@ export async function updateProduct(formData: FormData) {
 }
 
 export async function deleteProduct(id: number) {
-  // Opcional: Para una versión futura, buscar la imagenUrl en la DB, extraer el nombre del archivo al final de la URL
-  // y usar supabase.storage.from('consumables-pics').remove([fileName]) para no dejar huérfanos.
-  
   await prisma.product.delete({
     where: { id },
   });
   revalidatePath("/");
   revalidatePath("/admin");
+}
+
+export async function initializeProductCost(
+  productId: number,
+  precioPromedioInicial: number,
+  fechaPromedioInicial: string | Date
+) {
+  const product = await prisma.product.findUnique({
+    where: { id: productId }
+  });
+
+  if (!product) {
+    throw new Error("Producto no encontrado");
+  }
+
+  const stockActual = product.stockActual;
+  const valorInventarioActual = stockActual * precioPromedioInicial;
+
+  await prisma.$transaction([
+    prisma.product.update({
+      where: { id: productId },
+      data: {
+        precioPromedioCompra: precioPromedioInicial,
+        fechaPromedioCompra: new Date(fechaPromedioInicial),
+        valorInventarioActual,
+        costoInicialConfigurado: true
+      }
+    }),
+    prisma.inventoryLog.create({
+      data: {
+        productId,
+        tipo: "INICIALIZACION",
+        cantidad: stockActual,
+        costoUnit: precioPromedioInicial,
+        stockPrevio: stockActual,
+        stockNuevo: stockActual,
+        detalle: `Inicialización de costo a $${precioPromedioInicial.toLocaleString()} con fecha ${new Date(fechaPromedioInicial).toLocaleDateString()}`
+      }
+    })
+  ]);
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+export async function getInventoryLogs() {
+  const logs = await prisma.inventoryLog.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      product: true
+    }
+  });
+  return logs.map(l => ({
+    ...l,
+    costoUnit: Number(l.costoUnit),
+    product: {
+      ...l.product,
+      precio: Number(l.product.precio),
+      precioPromedioCompra: Number(l.product.precioPromedioCompra),
+      valorInventarioActual: Number(l.product.valorInventarioActual)
+    }
+  }));
 }

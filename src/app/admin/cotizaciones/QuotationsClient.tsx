@@ -411,7 +411,7 @@ export default function QuotationsClient({
                             <option value="">-- Seleccionar Producto --</option>
                             {products.map(p => (
                               <option key={p.id} value={p.id}>
-                                {p.nombre} (Stock: {p.stock})
+                                {p.nombre} (Stock: {p.stockActual})
                               </option>
                             ))}
                           </select>
@@ -747,6 +747,45 @@ export default function QuotationsClient({
               </div>
             </div>
 
+            {["CUENTA_COBRO", "PAGADA"].includes(activeDetailsQuote.estado) && (
+              <div style={{
+                background: "rgba(16, 185, 129, 0.05)",
+                border: "1px solid rgba(16, 185, 129, 0.2)",
+                borderRadius: "8px",
+                padding: "15px",
+                marginBottom: "20px",
+                fontSize: "14px"
+              }}>
+                <h4 style={{ margin: "0 0 10px 0", color: "#34d399" }}>📈 Indicadores de Rentabilidad</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: "15px" }}>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Costo Total Inventario</span>
+                    <strong style={{ fontSize: "14px" }}>{formatCurrency(activeDetailsQuote.subtotalCosto)}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Utilidad Total Venta</span>
+                    <strong style={{ fontSize: "14px", color: "#34d399" }}>{formatCurrency(activeDetailsQuote.utilidadTotal)}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Rentabilidad</span>
+                    <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.rentabilidadPorcentual || 0).toFixed(2)}%</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Días Prom. Rotación</span>
+                    <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.diasPromedioInventario || 0).toFixed(1)} días</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Rentabilidad Mensual</span>
+                    <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.rentabilidadMensual || 0).toFixed(2)}%</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Efectiva Anual (REA)</span>
+                    <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.rentabilidadEfectivaAnual || 0).toFixed(2)}%</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <h3 style={{ fontSize: "16px", marginBottom: "10px" }}>Artículos Cotizados</h3>
             <div className="admin-table-container" style={{ border: "1px solid var(--admin-glass-border)", marginBottom: "20px" }}>
               <table className="admin-table">
@@ -763,7 +802,17 @@ export default function QuotationsClient({
                   {activeDetailsQuote.items?.map((item: any) => (
                     <tr key={item.id}>
                       <td>{item.product?.codigo}</td>
-                      <td className="wrap-text">{item.product?.nombre}</td>
+                      <td className="wrap-text">
+                        <div>{item.product?.nombre}</div>
+                        {["CUENTA_COBRO", "PAGADA"].includes(activeDetailsQuote.estado) && item.costoPromedioUnitario > 0 && (
+                          <div style={{ fontSize: "11px", color: "var(--admin-text-muted)", marginTop: "4px" }}>
+                            Costo: {formatCurrency(item.costoPromedioUnitario)} | 
+                            Utilidad: <span style={{ color: "#34d399" }}>{formatCurrency(item.utilidadTotal)}</span> | 
+                            Rentabilidad: {Number(item.rentabilidadPorcentual).toFixed(1)}% | 
+                            Rotación: {item.diasInventario} d
+                          </div>
+                        )}
+                      </td>
                       <td>{item.cantidad}</td>
                       <td>{formatCurrency(item.precioUnitario)}</td>
                       <td>{formatCurrency(item.cantidad * item.precioUnitario)}</td>

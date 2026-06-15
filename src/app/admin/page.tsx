@@ -1,10 +1,11 @@
-import { getProducts } from "@/app/actions/product";
+import { getProducts, getInventoryLogs } from "@/app/actions/product";
 import { getCategories } from "@/app/actions/category";
 import AdminClient from "./AdminClient";
 
 export default async function AdminPage() {
   const products = await getProducts();
   const categories = await getCategories();
+  const inventoryLogs = await getInventoryLogs();
 
   return (
     <>
@@ -15,7 +16,7 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      <AdminClient products={products} categories={categories} />
+      <AdminClient products={products} categories={categories} inventoryLogs={inventoryLogs} />
     </>
   );
 }
