@@ -110,8 +110,8 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Nombre</th>
+                <th>ID</th>
                 <th>Visible en Web</th>
                 <th>Acción</th>
               </tr>
@@ -119,8 +119,8 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
             <tbody>
               {categories.map((c) => (
                 <tr key={c.id}>
+                  <td style={{ fontWeight: "bold" }}>{c.nombre}</td>
                   <td>{c.id}</td>
-                  <td>{c.nombre}</td>
                   <td>
                     {c.mostrarEnWeb !== false ? (
                       <span style={{ background: "rgba(16, 185, 129, 0.2)", color: "#34d399", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}>Sí</span>

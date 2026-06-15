@@ -171,8 +171,8 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>NIT / Identificación</th>
                 <th>Nombre</th>
+                <th>NIT / Identificación</th>
                 <th>Email</th>
                 <th>Teléfono</th>
                 <th>Dirección / Ubicación</th>
@@ -182,8 +182,8 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
             <tbody>
               {clients.map((c) => (
                 <tr key={c.id}>
-                  <td>{c.nit || "-"}</td>
                   <td className="wrap-text"><strong>{c.nombre}</strong></td>
+                  <td>{c.nit || "-"}</td>
                   <td>{c.email || "-"}</td>
                   <td>
                     {c.telefono || "-"}

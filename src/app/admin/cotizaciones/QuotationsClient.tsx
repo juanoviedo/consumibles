@@ -588,9 +588,9 @@ export default function QuotationsClient({
           <table className="admin-table">
             <thead>
               <tr>
+                <th>Cliente</th>
                 <th>Nº Cotización</th>
                 <th>Nº Cuenta Cobro</th>
-                <th>Cliente</th>
                 <th>Fecha Cotización</th>
                 <th>Fecha Factura</th>
                 <th>Estado</th>
@@ -601,9 +601,9 @@ export default function QuotationsClient({
             <tbody>
               {filteredDocs.map((q) => (
                 <tr key={q.id}>
+                  <td className="wrap-text"><strong>{q.client?.nombre}</strong></td>
                   <td><strong>{q.numeroCotizacion}</strong></td>
                   <td>{q.numeroCuentaCobro ? <strong style={{ color: "#60a5fa" }}>{q.numeroCuentaCobro}</strong> : "-"}</td>
-                  <td className="wrap-text">{q.client?.nombre}</td>
                   <td>{formatDate(q.fechaCotizacion)}</td>
                   <td>{formatDate(q.fechaCuentaCobro)}</td>
                   <td>

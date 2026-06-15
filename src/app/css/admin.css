@@ -289,6 +289,29 @@
   background: #131b2e;
 }
 
+/* Sticky first column */
+.admin-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: #131b2e;
+  border-right: 1px solid var(--admin-glass-border);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.admin-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: #12192b;
+  border-right: 1px solid var(--admin-glass-border);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.admin-table tr:hover td:first-child {
+  background: #192033;
+}
+
 .admin-table td {
   padding: 16px;
   border-bottom: 1px solid rgba(255,255,255,0.05);

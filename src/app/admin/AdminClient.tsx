@@ -304,9 +304,9 @@ export default function AdminClient({
               <table className="admin-table">
                 <thead>
                   <tr>
+                    <th>Nombre</th>
                     <th>Código</th>
                     <th>Imagen</th>
-                    <th>Nombre</th>
                     <th>Categoría</th>
                     <th>Costo Prom.</th>
                     <th>Valor Inv.</th>
@@ -323,11 +323,11 @@ export default function AdminClient({
                     
                     return (
                       <tr key={p.id}>
+                        <td className="wrap-text" style={{ fontWeight: "bold" }}>{p.nombre}</td>
                         <td>{p.codigo}</td>
                         <td>
                           <img src={p.imagenUrl} alt={p.nombre} width="50" />
                         </td>
-                        <td className="wrap-text">{p.nombre}</td>
                         <td>{p.category ? p.category.nombre : "-"}</td>
                         <td>
                           {p.costoInicialConfigurado ? (
@@ -471,8 +471,8 @@ export default function AdminClient({
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Fecha</th>
                   <th>Producto</th>
+                  <th>Fecha</th>
                   <th>Tipo</th>
                   <th>Cantidad</th>
                   <th>Costo Unit.</th>
@@ -501,11 +501,11 @@ export default function AdminClient({
 
                   return (
                     <tr key={log.id}>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        {new Date(log.createdAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}
-                      </td>
                       <td className="wrap-text" style={{ fontWeight: "bold" }}>
                         {log.product ? log.product.nombre : `ID: ${log.productId}`}
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {new Date(log.createdAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}
                       </td>
                       <td>
                         <span style={{
