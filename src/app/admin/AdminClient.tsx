@@ -66,6 +66,32 @@ export default function AdminClient({
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Inventario Mínimo</label>
             <input type="number" name="minStock" defaultValue={editingProduct.minStock ?? 0} required min="0" />
           </div>
+          <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap", borderTop: "1px solid var(--admin-glass-border)", paddingTop: "15px", paddingBottom: "5px" }}>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "5px" }}>Costo Promedio de Compra (Lectura)</label>
+              <input 
+                type="text" 
+                readOnly 
+                value={editingProduct.costoInicialConfigurado 
+                  ? `COP ${Number(editingProduct.precioPromedioCompra).toLocaleString("es-CO", { minimumFractionDigits: 2 })}` 
+                  : "No configurado / Sin costo inicial"
+                } 
+                style={{ background: "rgba(255, 255, 255, 0.05)", cursor: "not-allowed", border: "1px solid var(--admin-glass-border)", color: "var(--admin-text-muted)", width: "100%", padding: "10px", borderRadius: "5px" }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: "250px" }}>
+              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "5px" }}>Fecha Promedio de Compra (Lectura)</label>
+              <input 
+                type="text" 
+                readOnly 
+                value={editingProduct.fechaPromedioCompra 
+                  ? new Date(editingProduct.fechaPromedioCompra).toLocaleDateString("es-CO") 
+                  : "-"
+                } 
+                style={{ background: "rgba(255, 255, 255, 0.05)", cursor: "not-allowed", border: "1px solid var(--admin-glass-border)", color: "var(--admin-text-muted)", width: "100%", padding: "10px", borderRadius: "5px" }}
+              />
+            </div>
+          </div>
           <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: "250px" }}>
               <label style={{ fontSize: "14px", marginBottom: "5px", display: "block" }}>Nueva Imagen Principal Local</label>
@@ -533,43 +559,74 @@ export default function AdminClient({
         }}>
           <div className="glass-container" style={{ width: "100%", maxWidth: "450px", padding: "30px", border: "1px solid var(--admin-glass-border)", background: "rgba(15, 23, 42, 0.95)" }}>
             <h3 style={{ margin: "0 0 15px 0", color: "white" }}>Inicializar Costo de Inventario</h3>
-            <p style={{ fontSize: "14px", color: "var(--admin-text-muted)", marginBottom: "20px" }}>
+            <p style={{ fontSize: "14px", color: "var(--admin-text-muted)", marginBottom: "15px" }}>
               Configura el costo promedio ponderado inicial y la fecha promedio de adquisición para <strong>{initializingProduct.nombre}</strong>.
             </p>
-            <form action={async (formData) => {
-              const cost = parseFloat(formData.get("precioPromedioInicial") as string || "0");
-              const date = formData.get("fechaPromedioInicial") as string;
-              await initializeProductCost(initializingProduct.id, cost, date);
-              setInitializingProduct(null);
-            }} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-              <div className="admin-input-group" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Promedio Inicial (COP)</label>
-                <input 
-                  type="number" 
-                  name="precioPromedioInicial" 
-                  required 
-                  min="0" 
-                  step="any" 
-                  placeholder="Ej. 15000" 
-                  className="admin-input" 
-                  style={{ width: "100%" }} 
-                />
+            
+            <div style={{
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid var(--admin-glass-border)",
+              borderRadius: "8px",
+              padding: "10px 15px",
+              marginBottom: "20px",
+              fontSize: "14px"
+            }}>
+              <strong>Inventario Actual:</strong> <span style={{ color: initializingProduct.stockActual > 0 ? "#34d399" : "#f87171", fontWeight: "bold" }}>{initializingProduct.stockActual} unidades</span>
+            </div>
+
+            {initializingProduct.stockActual <= 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                <div style={{
+                  background: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  borderRadius: "8px",
+                  padding: "15px",
+                  color: "#f87171",
+                  fontSize: "14px",
+                  lineHeight: "1.5"
+                }}>
+                  <strong>⚠️ Acción no permitida:</strong> Este producto no tiene unidades en inventario (Stock: 0). Registre una compra o actualice el stock antes de configurar el costo promedio inicial.
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+                  <button type="button" onClick={() => setInitializingProduct(null)} className="admin-btn">Aceptar</button>
+                </div>
               </div>
-              <div className="admin-input-group" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha Promedio de Adquisición</label>
-                <input 
-                  type="date" 
-                  name="fechaPromedioInicial" 
-                  required 
-                  className="admin-input" 
-                  style={{ width: "100%" }} 
-                />
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "15px" }}>
-                <button type="button" onClick={() => setInitializingProduct(null)} className="admin-btn admin-btn-outline">Cancelar</button>
-                <button type="submit" className="admin-btn">Inicializar</button>
-              </div>
-            </form>
+            ) : (
+              <form action={async (formData) => {
+                const cost = parseFloat(formData.get("precioPromedioInicial") as string || "0");
+                const date = formData.get("fechaPromedioInicial") as string;
+                await initializeProductCost(initializingProduct.id, cost, date);
+                setInitializingProduct(null);
+              }} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                <div className="admin-input-group" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Promedio Inicial (COP)</label>
+                  <input 
+                    type="number" 
+                    name="precioPromedioInicial" 
+                    required 
+                    min="0" 
+                    step="any" 
+                    placeholder="Ej. 15000" 
+                    className="admin-input" 
+                    style={{ width: "100%" }} 
+                  />
+                </div>
+                <div className="admin-input-group" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha Promedio de Adquisición</label>
+                  <input 
+                    type="date" 
+                    name="fechaPromedioInicial" 
+                    required 
+                    className="admin-input" 
+                    style={{ width: "100%" }} 
+                  />
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "15px" }}>
+                  <button type="button" onClick={() => setInitializingProduct(null)} className="admin-btn admin-btn-outline">Cancelar</button>
+                  <button type="submit" className="admin-btn">Inicializar</button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
