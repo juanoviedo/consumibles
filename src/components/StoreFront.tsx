@@ -21,6 +21,32 @@ export default function StoreFront({ products, categories = [] }: { products: an
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Listen for clicks outside the cart to close it
+  useEffect(() => {
+    if (!isCartOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      const cartEl = document.getElementById("carrito-flotante");
+      const btnEl = document.querySelector(".btn-flotante-carrito");
+      const target = event.target as HTMLElement;
+      
+      if (
+        cartEl && 
+        !cartEl.contains(target) &&
+        btnEl &&
+        !btnEl.contains(target) &&
+        !target.closest(".control-cantidad")
+      ) {
+        setIsCartOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleOutsideClick);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [isCartOpen]);
+
   const filteredProducts = products.filter(
     (p) => {
       const matchesSearch = p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
