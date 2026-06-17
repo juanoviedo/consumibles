@@ -232,6 +232,72 @@ export async function deleteProduct(id: number) {
   revalidatePath("/admin");
 }
 
+export async function getProductDetails(id: number) {
+  const p = await prisma.product.findUnique({
+    where: { id },
+    include: {
+      category: true,
+      discounts: {
+        include: {
+          discount: true
+        }
+      }
+    }
+  });
+
+  if (!p) return null;
+
+  const precioBase = Number(p.precio);
+  let maxSavings = 0;
+  let appliedDiscount: { idDescuento: number; nombre: string; tipo: string; valor: number } | null = null;
+  const now = new Date();
+
+  if (p.discounts && p.discounts.length > 0) {
+    for (const pd of p.discounts) {
+      const d = pd.discount;
+      if (!d || !d.activo) continue;
+
+      const inicio = new Date(d.fechaInicio);
+      const fin = new Date(d.fechaFin);
+      if (now < inicio || now > fin) continue;
+
+      let savings = 0;
+      if (d.tipoDescuento === "Porcentaje") {
+        savings = precioBase * (Number(d.valorDescuento) / 100);
+      } else if (d.tipoDescuento === "ValorFijo") {
+        savings = Number(d.valorDescuento);
+      }
+
+      if (savings > precioBase) {
+        savings = precioBase;
+      }
+
+      if (savings > maxSavings) {
+        maxSavings = savings;
+        appliedDiscount = {
+          idDescuento: d.id,
+          nombre: d.nombre,
+          tipo: d.tipoDescuento,
+          valor: Number(d.valorDescuento)
+        };
+      }
+    }
+  }
+
+  const precioFinal = precioBase - maxSavings;
+
+  return {
+    ...p,
+    precio: precioBase,
+    precioBase,
+    precioFinal,
+    idProducto: p.id,
+    descuentoAplicado: appliedDiscount,
+    precioPromedioCompra: Number(p.precioPromedioCompra),
+    valorInventarioActual: Number(p.valorInventarioActual)
+  };
+}
+
 export async function initializeProductCost(
   productId: number,
   precioPromedioInicial: number,
