@@ -124,12 +124,14 @@ export default function ProductDetailClient({ product }: { product: any }) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     if (!imagenes || imagenes.length === 0) return (
-       <div className="img-container"><img src="" alt={nombre} /></div>
+       <div style={{ width: "100%", aspectRatio: "1 / 1", display: "flex", alignItems: "center", justifyContent: "center", padding: "5px", boxSizing: "border-box" }}>
+         <img src="" alt={nombre} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+       </div>
     );
     if (imagenes.length === 1) {
       return (
-        <div className="img-container">
-          <img src={imagenes[0]} alt={nombre} />
+        <div style={{ width: "100%", aspectRatio: "1 / 1", display: "flex", alignItems: "center", justifyContent: "center", padding: "5px", boxSizing: "border-box" }}>
+          <img src={imagenes[0]} alt={nombre} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "8px" }} />
         </div>
       );
     }
@@ -147,23 +149,23 @@ export default function ProductDetailClient({ product }: { product: any }) {
     };
 
     return (
-      <div className="img-container" style={{ position: "relative" }}>
-        <img src={imagenes[currentIndex]} alt={`${nombre} - ${currentIndex + 1}`} />
+      <div style={{ width: "100%", aspectRatio: "1 / 1", display: "flex", alignItems: "center", justifyContent: "center", padding: "5px", boxSizing: "border-box", position: "relative" }}>
+        <img src={imagenes[currentIndex]} alt={`${nombre} - ${currentIndex + 1}`} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "8px" }} />
         
         <button 
           onClick={prevImage}
-          style={{ position: "absolute", left: "5px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}
+          style={{ position: "absolute", left: "5px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", zIndex: 10 }}
         >
           &#10094;
         </button>
         <button 
           onClick={nextImage}
-          style={{ position: "absolute", right: "5px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}
+          style={{ position: "absolute", right: "5px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", zIndex: 10 }}
         >
           &#10095;
         </button>
         
-        <div style={{ position: "absolute", bottom: "5px", display: "flex", gap: "4px", left: "50%", transform: "translateX(-50%)" }}>
+        <div style={{ position: "absolute", bottom: "5px", display: "flex", gap: "4px", left: "50%", transform: "translateX(-50%)", zIndex: 10 }}>
           {imagenes.map((_, i) => (
             <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: i === currentIndex ? "#8b0500" : "rgba(0,0,0,0.3)" }} />
           ))}
@@ -177,9 +179,10 @@ export default function ProductDetailClient({ product }: { product: any }) {
   return (
     <>
       <div style={{ maxWidth: "600px", margin: "80px auto 40px auto", padding: "0 20px", boxSizing: "border-box" }}>
-        {/* Back Link */}
-        <div style={{ marginBottom: "20px" }}>
-          <a href="/" style={{ color: "#8b0500", textDecoration: "none", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px", fontSize: "15px" }}>
+
+        {/* Back Link at the Top */}
+        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
+          <a href="/" style={{ color: "#8b0500", textDecoration: "none", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px", fontSize: "15px", background: "rgba(139, 5, 0, 0.05)", padding: "10px 20px", borderRadius: "20px", border: "1px solid rgba(139, 5, 0, 0.15)", transition: "all 0.3s ease" }}>
             &larr; Volver al Catálogo
           </a>
         </div>
@@ -315,6 +318,13 @@ export default function ProductDetailClient({ product }: { product: any }) {
               precio={product.descuentoAplicado ? product.precioFinal : product.precioBase} 
             />
           </div>
+        </div>
+
+        {/* Back Link at the Bottom */}
+        <div style={{ marginTop: "24px", display: "flex", justifyContent: "center" }}>
+          <a href="/" style={{ color: "#8b0500", textDecoration: "none", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px", fontSize: "15px", background: "rgba(139, 5, 0, 0.05)", padding: "10px 20px", borderRadius: "20px", border: "1px solid rgba(139, 5, 0, 0.15)", transition: "all 0.3s ease" }}>
+            &larr; Volver al Catálogo
+          </a>
         </div>
       </div>
 
