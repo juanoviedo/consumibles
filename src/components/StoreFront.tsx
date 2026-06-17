@@ -272,23 +272,20 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   precio={p.descuentoAplicado ? p.precioFinal : p.precioBase} 
                 />
 
-                <div style={{ 
-                  marginTop: "12px", 
-                  fontSize: "12px", 
-                  color: p.stockActual > 0 ? "#10b981" : "#8b0500", 
-                  fontWeight: "700", 
-                  textAlign: "center",
-                  background: p.stockActual > 0 ? "rgba(16, 185, 129, 0.05)" : "rgba(139, 5, 0, 0.05)",
-                  border: p.stockActual > 0 ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid rgba(139, 5, 0, 0.2)",
-                  padding: "6px 12px",
-                  borderRadius: "8px",
-                  display: "block",
-                  width: "100%",
-                  boxSizing: "border-box",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px"
-                }}>
-                  {p.stockActual > 0 ? `Disponible: ${p.stockActual} ${p.stockActual === 1 ? 'unidad' : 'unidades'}` : "Agotado"}
+                <div style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: "8px" }}>
+                  <div style={{ 
+                    fontSize: "10px", 
+                    color: p.stockActual > 0 ? "#71717a" : "#dc2626", 
+                    fontWeight: "700", 
+                    background: p.stockActual > 0 ? "rgba(0, 0, 0, 0.04)" : "rgba(220, 38, 38, 0.05)",
+                    border: p.stockActual > 0 ? "1px solid rgba(0, 0, 0, 0.08)" : "1px solid rgba(220, 38, 38, 0.15)",
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>
+                    {p.stockActual > 0 ? `Disponible: ${p.stockActual} u.` : "Agotado"}
+                  </div>
                 </div>
               </div>
             </div>
