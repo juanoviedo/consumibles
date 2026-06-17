@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 export default function StoreFront({ products, categories = [] }: { products: any[], categories?: any[] }) {
   const [carrito, setCarrito] = useState<Record<string, { nombre: string; precio: number; cantidad: number }>>({});
+  const [selectedProductDetail, setSelectedProductDetail] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(8);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -117,7 +118,7 @@ export default function StoreFront({ products, categories = [] }: { products: an
   const ControlCantidad = ({ nombre, codigo, precio }: { nombre: string; codigo: string; precio: number }) => {
     const cantidad = carrito[codigo]?.cantidad || 0;
     return (
-      <div className="control-cantidad">
+      <div className="control-cantidad" onClick={(e) => e.stopPropagation()}>
         <button className="btn-menos" onClick={() => modificarCantidad(codigo, nombre, precio, -1)}>-</button>
         <div className="indicador-carrito">
           <i className="icon-basket"></i> <span className="cantidad-producto">{cantidad}</span>
@@ -224,7 +225,12 @@ export default function StoreFront({ products, categories = [] }: { products: an
           <p className="no-results">No se encontraron resultados para "{searchTerm}"</p>
         ) : (
           visibleProducts.map((p) => (
-            <div key={p.id} className="product-card" style={{ position: "relative" }}>
+            <div 
+              key={p.id} 
+              className="product-card" 
+              style={{ position: "relative", cursor: "pointer" }}
+              onClick={() => setSelectedProductDetail(p)}
+            >
               {p.descuentoAplicado && (
                 <div style={{
                   position: "absolute",
@@ -272,7 +278,7 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   precio={p.descuentoAplicado ? p.precioFinal : p.precioBase} 
                 />
 
-                <div style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "flex-start", width: "100%", marginTop: "8px" }}>
                   <div style={{ 
                     fontSize: "10px", 
                     color: p.stockActual > 0 ? "#71717a" : "#dc2626", 
@@ -325,6 +331,163 @@ export default function StoreFront({ products, categories = [] }: { products: an
           Vaciar Carrito
         </button>
       </div>
+
+      {selectedProductDetail && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          background: "rgba(15, 23, 42, 0.6)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          zIndex: 2000,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-end",
+        }}
+        onClick={() => setSelectedProductDetail(null)}
+        >
+          <style>{`
+            @keyframes slideUp {
+              from {
+                transform: translateY(100%);
+              }
+              to {
+                transform: translateY(0);
+              }
+            }
+          `}</style>
+          <div style={{
+            background: "#fff",
+            width: "100%",
+            maxWidth: "500px",
+            maxHeight: "92vh",
+            borderTopLeftRadius: "24px",
+            borderTopRightRadius: "24px",
+            padding: "24px",
+            boxSizing: "border-box",
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+            color: "#1e293b",
+            boxShadow: "0 -10px 25px -5px rgba(0, 0, 0, 0.2)"
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>
+                Ref: {selectedProductDetail.codigo}
+              </span>
+              <button 
+                onClick={() => setSelectedProductDetail(null)}
+                style={{
+                  background: "#f1f5f9",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: "36px",
+                  height: "36px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  color: "#475569"
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div style={{ width: "100%", display: "flex", justifyContent: "center", background: "#f8fafc", borderRadius: "16px", padding: "16px", boxSizing: "border-box" }}>
+              <div style={{ width: "100%", maxWidth: "300px" }}>
+                <ProductImageGallery 
+                  imagenes={[selectedProductDetail.imagenUrl, ...(selectedProductDetail.galeria || [])].filter(Boolean)} 
+                  nombre={selectedProductDetail.nombre} 
+                />
+              </div>
+            </div>
+
+            <div>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a", margin: "0 0 10px 0", lineHeight: "1.2" }}>
+                {selectedProductDetail.nombre}
+              </h2>
+
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", marginBottom: "12px" }}>
+                <div style={{ 
+                  fontSize: "10px", 
+                  color: selectedProductDetail.stockActual > 0 ? "#71717a" : "#dc2626", 
+                  fontWeight: "700", 
+                  background: selectedProductDetail.stockActual > 0 ? "rgba(0, 0, 0, 0.04)" : "rgba(220, 38, 38, 0.05)",
+                  border: selectedProductDetail.stockActual > 0 ? "1px solid rgba(0, 0, 0, 0.08)" : "1px solid rgba(220, 38, 38, 0.15)",
+                  padding: "3px 8px",
+                  borderRadius: "4px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}>
+                  {selectedProductDetail.stockActual > 0 ? `Disponible: ${selectedProductDetail.stockActual} u.` : "Agotado"}
+                </div>
+
+                {selectedProductDetail.descuentoAplicado && (
+                  <div style={{
+                    background: "linear-gradient(135deg, #8b0500, #dc2626)",
+                    color: "#fff",
+                    fontWeight: "bold",
+                    fontSize: "10px",
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>
+                    {selectedProductDetail.descuentoAplicado.tipo === "Porcentaje" ? `-${selectedProductDetail.descuentoAplicado.valor}%` : `-${formatearMoneda(selectedProductDetail.descuentoAplicado.valor)}`} OFF
+                  </div>
+                )}
+              </div>
+
+              {selectedProductDetail.descuentoAplicado ? (
+                <div style={{ display: "flex", alignItems: "baseline", gap: "10px" }}>
+                  <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#dc2626" }}>
+                    {formatearMoneda(selectedProductDetail.precioFinal)}
+                  </span>
+                  <span style={{ textDecoration: "line-through", color: "#94a3b8", fontSize: "1rem" }}>
+                    {formatearMoneda(selectedProductDetail.precioBase)}
+                  </span>
+                </div>
+              ) : (
+                <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#8b0500" }}>
+                  {formatearMoneda(selectedProductDetail.precioBase)}
+                </span>
+              )}
+            </div>
+
+            <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "15px" }}>
+              <h3 style={{ fontSize: "12px", fontWeight: "700", color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
+                Descripción del Producto
+              </h3>
+              <p style={{ fontSize: "14px", color: "#475569", lineHeight: "1.6", margin: "0 0 12px 0" }}>
+                {selectedProductDetail.descripcion1}
+              </p>
+              {selectedProductDetail.descripcion2 && (
+                <p style={{ fontSize: "14px", color: "#475569", lineHeight: "1.6", margin: "0" }}>
+                  {selectedProductDetail.descripcion2}
+                </p>
+              )}
+            </div>
+
+            <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "15px", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
+              <span style={{ fontSize: "14px", fontWeight: "600", color: "#475569" }}>Cantidad:</span>
+              <ControlCantidad 
+                nombre={selectedProductDetail.nombre} 
+                codigo={selectedProductDetail.codigo} 
+                precio={selectedProductDetail.descuentoAplicado ? selectedProductDetail.precioFinal : selectedProductDetail.precioBase} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
