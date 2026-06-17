@@ -198,19 +198,52 @@ export default function StoreFront({ products, categories = [] }: { products: an
           <p className="no-results">No se encontraron resultados para "{searchTerm}"</p>
         ) : (
           visibleProducts.map((p) => (
-            <div key={p.id} className="product-card">
+            <div key={p.id} className="product-card" style={{ position: "relative" }}>
+              {p.descuentoAplicado && (
+                <div style={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  background: "#dc2626",
+                  color: "#fff",
+                  fontWeight: "bold",
+                  fontSize: "11px",
+                  padding: "4px 8px",
+                  borderRadius: "20px",
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                  zIndex: 10
+                }}>
+                  {p.descuentoAplicado.tipo === "Porcentaje" ? `-${p.descuentoAplicado.valor}%` : `-${formatearMoneda(p.descuentoAplicado.valor)}`}
+                </div>
+              )}
               <ProductImageGallery imagenes={[p.imagenUrl, ...(p.galeria || [])].filter(Boolean)} nombre={p.nombre} />
               <div className="card-body">
                 <h2>{p.nombre}</h2>
                 <p className="codigo-ref">Ref: {p.codigo}</p>
-                <p className="precio">{formatearMoneda(p.precio)}</p>
+                
+                {p.descuentoAplicado ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", margin: "0 0 10px 0" }}>
+                    <span style={{ textDecoration: "line-through", color: "#888", fontSize: "0.85em" }}>
+                      {formatearMoneda(p.precioBase)}
+                    </span>
+                    <span style={{ fontSize: "1.35em", fontWeight: "bold", color: "#dc2626" }}>
+                      {formatearMoneda(p.precioFinal)}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="precio">{formatearMoneda(p.precioBase)}</p>
+                )}
 
                 <div className="desc">
                   <p>{p.descripcion1}</p>
                   {p.descripcion2 && <p>{p.descripcion2}</p>}
                 </div>
 
-                <ControlCantidad nombre={p.nombre} codigo={p.codigo} precio={p.precio} />
+                <ControlCantidad 
+                  nombre={p.nombre} 
+                  codigo={p.codigo} 
+                  precio={p.descuentoAplicado ? p.precioFinal : p.precioBase} 
+                />
 
                 <a target="_blank" href={`https://wa.me/573332782483?text=Hola.%20Necesito%20mas%20info%20sobre%20${encodeURIComponent(p.nombre)}`} className="cuadrolink">
                   <div className="cuadrodentro">¡Consultar ahora!</div>

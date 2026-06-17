@@ -29,6 +29,7 @@ model Product {
   incomingOrders          IncomingOrder[]
   quotationItems          QuotationItem[]
   inventoryLogs           InventoryLog[]
+  discounts               ProductDiscount[]
   createdAt               DateTime?       @default(now()) @db.Timestamp(6)
   updatedAt               DateTime?       @default(now()) @db.Timestamp(6)
 }
@@ -157,5 +158,27 @@ model InventoryLog {
   stockNuevo  Int
   detalle     String?
   createdAt   DateTime @default(now()) @db.Timestamp(6)
+}
+
+model Discount {
+  id              Int               @id @default(autoincrement())
+  nombre          String
+  tipoDescuento   String            // Porcentaje / ValorFijo
+  valorDescuento  Decimal           @db.Decimal(10, 2)
+  fechaInicio     DateTime          @db.Timestamp(6)
+  fechaFin        DateTime          @db.Timestamp(6)
+  activo          Boolean           @default(true)
+  fechaCreacion   DateTime          @default(now()) @db.Timestamp(6)
+  usuarioCreacion String?
+  products        ProductDiscount[]
+}
+
+model ProductDiscount {
+  idProducto  Int
+  product     Product  @relation(fields: [idProducto], references: [id], onDelete: Cascade)
+  idDescuento Int
+  discount    Discount @relation(fields: [idDescuento], references: [id], onDelete: Cascade)
+
+  @@id([idProducto, idDescuento])
 }
 
