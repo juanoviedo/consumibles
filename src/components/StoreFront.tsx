@@ -271,9 +271,21 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   precio={p.descuentoAplicado ? p.precioFinal : p.precioBase} 
                 />
 
-                <a target="_blank" href={`https://wa.me/573332782483?text=Hola.%20Necesito%20mas%20info%20sobre%20${encodeURIComponent(p.nombre)}`} className="cuadrolink">
-                  <div className="cuadrodentro">¡Consultar ahora!</div>
-                </a>
+                <div style={{ 
+                  marginTop: "12px", 
+                  fontSize: "14px", 
+                  color: p.stockActual > 0 ? "#10b981" : "#ef4444", 
+                  fontWeight: "600", 
+                  textAlign: "center",
+                  background: p.stockActual > 0 ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  display: "block",
+                  width: "100%",
+                  boxSizing: "border-box"
+                }}>
+                  {p.stockActual > 0 ? `Disponible: ${p.stockActual} ${p.stockActual === 1 ? 'unidad' : 'unidades'}` : "Agotado"}
+                </div>
               </div>
             </div>
           ))
