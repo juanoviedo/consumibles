@@ -230,14 +230,15 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   position: "absolute",
                   top: "10px",
                   right: "10px",
-                  background: "#dc2626",
+                  background: "linear-gradient(135deg, #8b0500, #dc2626)",
                   color: "#fff",
                   fontWeight: "bold",
                   fontSize: "11px",
-                  padding: "4px 8px",
+                  padding: "4px 10px",
                   borderRadius: "20px",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                  zIndex: 10
+                  boxShadow: "0 4px 6px rgba(139, 5, 0, 0.2)",
+                  zIndex: 10,
+                  letterSpacing: "0.5px"
                 }}>
                   {p.descuentoAplicado.tipo === "Porcentaje" ? `-${p.descuentoAplicado.valor}%` : `-${formatearMoneda(p.descuentoAplicado.valor)}`}
                 </div>
@@ -273,16 +274,19 @@ export default function StoreFront({ products, categories = [] }: { products: an
 
                 <div style={{ 
                   marginTop: "12px", 
-                  fontSize: "14px", 
-                  color: p.stockActual > 0 ? "#10b981" : "#ef4444", 
-                  fontWeight: "600", 
+                  fontSize: "12px", 
+                  color: p.stockActual > 0 ? "#10b981" : "#8b0500", 
+                  fontWeight: "700", 
                   textAlign: "center",
-                  background: p.stockActual > 0 ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                  background: p.stockActual > 0 ? "rgba(16, 185, 129, 0.05)" : "rgba(139, 5, 0, 0.05)",
+                  border: p.stockActual > 0 ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid rgba(139, 5, 0, 0.2)",
                   padding: "6px 12px",
-                  borderRadius: "6px",
+                  borderRadius: "8px",
                   display: "block",
                   width: "100%",
-                  boxSizing: "border-box"
+                  boxSizing: "border-box",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
                 }}>
                   {p.stockActual > 0 ? `Disponible: ${p.stockActual} ${p.stockActual === 1 ? 'unidad' : 'unidades'}` : "Agotado"}
                 </div>
