@@ -276,6 +276,24 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   <h2>{p.nombre}</h2>
                   <p className="codigo-ref">Ref: {p.codigo}</p>
                   
+                  {/* Stock badge directly below title & reference */}
+                  <div style={{ display: "flex", justifyContent: "flex-start", width: "100%", marginBottom: "10px" }}>
+                    <div style={{ 
+                      fontSize: "10px", 
+                      color: p.stockActual > 0 ? "#71717a" : "#dc2626", 
+                      fontWeight: "700", 
+                      background: p.stockActual > 0 ? "rgba(0, 0, 0, 0.04)" : "rgba(220, 38, 38, 0.05)",
+                      border: p.stockActual > 0 ? "1px solid rgba(0, 0, 0, 0.08)" : "1px solid rgba(220, 38, 38, 0.15)",
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>
+                      {p.stockActual > 0 ? `Disponible: ${p.stockActual} u.` : "Agotado"}
+                    </div>
+                  </div>
+
+                  {/* Price info directly below stock */}
                   {p.descuentoAplicado ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px", margin: "0 0 10px 0" }}>
                       <span style={{ textDecoration: "line-through", color: "#888", fontSize: "0.85em" }}>
@@ -286,13 +304,8 @@ export default function StoreFront({ products, categories = [] }: { products: an
                       </span>
                     </div>
                   ) : (
-                    <p className="precio">{formatearMoneda(p.precioBase)}</p>
+                    <p className="precio" style={{ margin: "0 0 10px 0" }}>{formatearMoneda(p.precioBase)}</p>
                   )}
-
-                  <div className="desc">
-                    <p>{p.descripcion1}</p>
-                    {p.descripcion2 && <p>{p.descripcion2}</p>}
-                  </div>
                 </div>
               </a>
 
@@ -302,22 +315,6 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   codigo={p.codigo} 
                   precio={p.descuentoAplicado ? p.precioFinal : p.precioBase} 
                 />
-
-                <div style={{ display: "flex", justifyContent: "flex-start", width: "100%", marginTop: "8px" }}>
-                  <div style={{ 
-                    fontSize: "10px", 
-                    color: p.stockActual > 0 ? "#71717a" : "#dc2626", 
-                    fontWeight: "700", 
-                    background: p.stockActual > 0 ? "rgba(0, 0, 0, 0.04)" : "rgba(220, 38, 38, 0.05)",
-                    border: p.stockActual > 0 ? "1px solid rgba(0, 0, 0, 0.08)" : "1px solid rgba(220, 38, 38, 0.15)",
-                    padding: "3px 8px",
-                    borderRadius: "4px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px"
-                  }}>
-                    {p.stockActual > 0 ? `Disponible: ${p.stockActual} u.` : "Agotado"}
-                  </div>
-                </div>
               </div>
             </div>
           ))
