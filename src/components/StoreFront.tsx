@@ -243,11 +243,10 @@ export default function StoreFront({ products, categories = [] }: { products: an
           <p className="no-results">No se encontraron resultados para "{searchTerm}"</p>
         ) : (
           visibleProducts.map((p) => (
-            <a 
+            <div 
               key={p.id} 
-              href={`/producto/${p.id}`}
               className="product-card" 
-              style={{ position: "relative", cursor: "pointer", textDecoration: "none", color: "inherit" }}
+              style={{ position: "relative" }}
             >
               {p.descuentoAplicado && (
                 <div style={{
@@ -267,29 +266,37 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   {p.descuentoAplicado.tipo === "Porcentaje" ? `-${p.descuentoAplicado.valor}%` : `-${formatearMoneda(p.descuentoAplicado.valor)}`}
                 </div>
               )}
-              <ProductImageGallery imagenes={[p.imagenUrl, ...(p.galeria || [])].filter(Boolean)} nombre={p.nombre} />
-              <div className="card-body">
-                <h2>{p.nombre}</h2>
-                <p className="codigo-ref">Ref: {p.codigo}</p>
-                
-                {p.descuentoAplicado ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", margin: "0 0 10px 0" }}>
-                    <span style={{ textDecoration: "line-through", color: "#888", fontSize: "0.85em" }}>
-                      {formatearMoneda(p.precioBase)}
-                    </span>
-                    <span style={{ fontSize: "1.35em", fontWeight: "bold", color: "#dc2626" }}>
-                      {formatearMoneda(p.precioFinal)}
-                    </span>
+              
+              <a 
+                href={`/producto/${p.id}`}
+                style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flexGrow: 1 }}
+              >
+                <ProductImageGallery imagenes={[p.imagenUrl, ...(p.galeria || [])].filter(Boolean)} nombre={p.nombre} />
+                <div className="card-body" style={{ paddingBottom: "0" }}>
+                  <h2>{p.nombre}</h2>
+                  <p className="codigo-ref">Ref: {p.codigo}</p>
+                  
+                  {p.descuentoAplicado ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px", margin: "0 0 10px 0" }}>
+                      <span style={{ textDecoration: "line-through", color: "#888", fontSize: "0.85em" }}>
+                        {formatearMoneda(p.precioBase)}
+                      </span>
+                      <span style={{ fontSize: "1.35em", fontWeight: "bold", color: "#dc2626" }}>
+                        {formatearMoneda(p.precioFinal)}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="precio">{formatearMoneda(p.precioBase)}</p>
+                  )}
+
+                  <div className="desc">
+                    <p>{p.descripcion1}</p>
+                    {p.descripcion2 && <p>{p.descripcion2}</p>}
                   </div>
-                ) : (
-                  <p className="precio">{formatearMoneda(p.precioBase)}</p>
-                )}
-
-                <div className="desc">
-                  <p>{p.descripcion1}</p>
-                  {p.descripcion2 && <p>{p.descripcion2}</p>}
                 </div>
+              </a>
 
+              <div className="card-body" style={{ paddingTop: "0", flexGrow: 0 }}>
                 <ControlCantidad 
                   nombre={p.nombre} 
                   codigo={p.codigo} 
@@ -312,7 +319,7 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           ))
         )}
       </div>
