@@ -14,6 +14,10 @@
   --admin-backdrop: blur(12px);
 }
 
+body {
+  background-color: var(--admin-bg-gradient) !important;
+}
+
 .admin-body {
   margin: 0;
   font-family: 'Outfit', sans-serif;
