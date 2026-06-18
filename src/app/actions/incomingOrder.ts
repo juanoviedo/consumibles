@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 
 export async function getIncomingOrders() {
   const orders = await prisma.incomingOrder.findMany({
-    where: { estado: "EN_CAMINO" },
     include: {
       product: true,
     },
@@ -88,7 +87,7 @@ export async function completeIncomingOrder(id: number) {
     let precioPromedioNuevo = 0;
     let fechaPromedioNuevo: Date | null = null;
 
-    if (stockPrevio <= 0) {
+    if (!product.costoInicialConfigurado || Number(product.precioPromedioCompra) <= 0 || stockPrevio <= 0) {
       precioPromedioNuevo = Number(order.costoUnitario);
       fechaPromedioNuevo = new Date(order.fechaPedido);
     } else {
@@ -113,7 +112,8 @@ export async function completeIncomingOrder(id: number) {
         stockActual: stockNuevo,
         precioPromedioCompra: precioPromedioNuevo,
         fechaPromedioCompra: fechaPromedioNuevo,
-        valorInventarioActual: valorInventarioNuevo
+        valorInventarioActual: valorInventarioNuevo,
+        costoInicialConfigurado: true
       }
     });
 

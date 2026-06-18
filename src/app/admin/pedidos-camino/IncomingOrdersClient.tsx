@@ -10,6 +10,7 @@ export default function IncomingOrdersClient({
   orders: any[], 
   products: any[] 
 }) {
+  const [activeTab, setActiveTab] = useState<"activos" | "historial">("activos");
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -292,13 +293,21 @@ export default function IncomingOrdersClient({
     );
   }
 
+  const displayedOrders = orders.filter((o) => {
+    if (activeTab === "activos") {
+      return o.estado === "EN_CAMINO";
+    } else {
+      return o.estado === "COMPLETADO" || o.estado === "CANCELADO";
+    }
+  });
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center" }}>
         <div>
-          <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: 0 }}>Pedidos en Camino</h1>
+          <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: 0 }}>Pedidos de Abastecimiento</h1>
           <p style={{ color: "var(--admin-text-muted)", marginTop: "4px" }}>
-            Gestiona los pedidos de abastecimiento de inventario en tránsito.
+            Gestiona los pedidos de abastecimiento e inventario en tránsito.
           </p>
         </div>
         <button 
@@ -314,9 +323,47 @@ export default function IncomingOrdersClient({
         </button>
       </div>
 
+      {/* Sub-Tabs Navigation */}
+      <div style={{ display: "flex", gap: "15px", marginBottom: "25px", borderBottom: "1px solid var(--admin-glass-border)", paddingBottom: "10px" }}>
+        <button 
+          onClick={() => setActiveTab("activos")} 
+          style={{
+            background: "transparent",
+            border: "none",
+            color: activeTab === "activos" ? "white" : "var(--admin-text-muted)",
+            fontSize: "16px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            padding: "8px 16px",
+            borderBottom: activeTab === "activos" ? "2px solid #60a5fa" : "none",
+            transition: "all 0.2s"
+          }}
+        >
+          🚚 Pedidos Activos ({orders.filter(o => o.estado === "EN_CAMINO").length})
+        </button>
+        <button 
+          onClick={() => setActiveTab("historial")} 
+          style={{
+            background: "transparent",
+            border: "none",
+            color: activeTab === "historial" ? "white" : "var(--admin-text-muted)",
+            fontSize: "16px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            padding: "8px 16px",
+            borderBottom: activeTab === "historial" ? "2px solid #60a5fa" : "none",
+            transition: "all 0.2s"
+          }}
+        >
+          📜 Historial de Pedidos ({orders.filter(o => o.estado !== "EN_CAMINO").length})
+        </button>
+      </div>
+
       <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
         <div style={{ padding: "30px 30px 15px 30px" }}>
-          <h2 style={{ margin: 0 }}>Pedidos Activos</h2>
+          <h2 style={{ margin: 0 }}>
+            {activeTab === "activos" ? "Pedidos Activos en Tránsito" : "Historial de Pedidos Ingresados/Cancelados"}
+          </h2>
         </div>
 
         <div className="admin-table-container">
@@ -330,11 +377,11 @@ export default function IncomingOrdersClient({
                 <th>Fecha Pedido</th>
                 <th>Llegada Estimada</th>
                 <th>Estado</th>
-                <th>Acción</th>
+                {activeTab === "activos" && <th>Acción</th>}
               </tr>
             </thead>
             <tbody>
-              {orders.map((o) => (
+              {displayedOrders.map((o) => (
                 <tr key={o.id}>
                   <td className="wrap-text">
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -361,48 +408,64 @@ export default function IncomingOrdersClient({
                         borderRadius: "6px",
                         fontSize: "12px",
                         fontWeight: "bold",
-                        background: "rgba(59, 130, 246, 0.2)",
-                        color: "#60a5fa",
-                        border: "1px solid rgba(59, 130, 246, 0.3)"
+                        background: o.estado === "COMPLETADO" 
+                          ? "rgba(16, 185, 129, 0.2)" 
+                          : o.estado === "CANCELADO"
+                            ? "rgba(239, 68, 68, 0.2)"
+                            : "rgba(59, 130, 246, 0.2)",
+                        color: o.estado === "COMPLETADO" 
+                          ? "#34d399" 
+                          : o.estado === "CANCELADO"
+                            ? "#f87171"
+                            : "#60a5fa",
+                        border: o.estado === "COMPLETADO" 
+                          ? "1px solid rgba(16, 185, 129, 0.3)" 
+                          : o.estado === "CANCELADO"
+                            ? "1px solid rgba(239, 68, 68, 0.3)"
+                            : "1px solid rgba(59, 130, 246, 0.3)"
                       }}
                     >
                       {o.estado}
                     </span>
                   </td>
-                  <td>
-                    <div className="admin-table-actions">
-                      <button 
-                        type="button" 
-                        className="admin-btn admin-btn-outline admin-btn-sm"
-                        style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
-                        onClick={() => {
-                          setEditingId(o.id);
-                          setEditQty(o.cantidad.toString());
-                          const unitCost = Number(o.costoUnitario || 0);
-                          setEditUnitCost(unitCost ? unitCost.toString() : "");
-                          setEditTotalCost(unitCost ? (o.cantidad * unitCost).toString() : "");
-                        }}
-                      >
-                        Editar
-                      </button>
-                      <form action={completeIncomingOrder.bind(null, o.id)}>
-                        <button type="submit" className="admin-btn admin-btn-success admin-btn-sm">
-                          Recibido (Suma Stock)
+                  {activeTab === "activos" && (
+                    <td>
+                      <div className="admin-table-actions">
+                        <button 
+                          type="button" 
+                          className="admin-btn admin-btn-outline admin-btn-sm"
+                          style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
+                          onClick={() => {
+                            setEditingId(o.id);
+                            setEditQty(o.cantidad.toString());
+                            const unitCost = Number(o.costoUnitario || 0);
+                            setEditUnitCost(unitCost ? unitCost.toString() : "");
+                            setEditTotalCost(unitCost ? (o.cantidad * unitCost).toString() : "");
+                          }}
+                        >
+                          Editar
                         </button>
-                      </form>
-                      <form action={cancelIncomingOrder.bind(null, o.id)}>
-                        <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">
-                          Cancelar
-                        </button>
-                      </form>
-                    </div>
-                  </td>
+                        <form action={completeIncomingOrder.bind(null, o.id)}>
+                          <button type="submit" className="admin-btn admin-btn-success admin-btn-sm">
+                            Recibido (Suma Stock)
+                          </button>
+                        </form>
+                        <form action={cancelIncomingOrder.bind(null, o.id)}>
+                          <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">
+                            Cancelar
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
-              {orders.length === 0 && (
+              {displayedOrders.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
-                    No hay pedidos en tránsito registrados actualmente.
+                  <td colSpan={activeTab === "activos" ? 8 : 7} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                    {activeTab === "activos" 
+                      ? "No hay pedidos en tránsito registrados actualmente."
+                      : "No hay registros históricos de pedidos completados o cancelados."}
                   </td>
                 </tr>
               )}
