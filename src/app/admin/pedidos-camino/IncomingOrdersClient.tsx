@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createIncomingOrder, completeIncomingOrder, cancelIncomingOrder, updateIncomingOrder } from "@/app/actions/incomingOrder";
+import { createIncomingOrder, completeIncomingOrder, cancelIncomingOrder, updateIncomingOrder, deleteIncomingOrder } from "@/app/actions/incomingOrder";
+import SubmitButton from "@/components/SubmitButton";
+import ActionButton from "@/components/ActionButton";
 
 export default function IncomingOrdersClient({ 
   orders, 
@@ -13,6 +15,7 @@ export default function IncomingOrdersClient({
   const [activeTab, setActiveTab] = useState<"activos" | "historial">("activos");
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // States to calculate unit cost and total cost dynamically
   const [newQty, setNewQty] = useState<string>("1");
@@ -189,9 +192,9 @@ export default function IncomingOrdersClient({
           </div>
 
           <div style={{ display: "flex", gap: "10px", marginTop: "15px", gridColumn: "1 / -1" }}>
-            <button type="submit" className="admin-btn">
+            <SubmitButton className="admin-btn" loadingText="Guardando...">
               Guardar Cambios
-            </button>
+            </SubmitButton>
             <button type="button" className="admin-btn admin-btn-outline" onClick={() => setEditingId(null)}>
               Cancelar
             </button>
@@ -281,9 +284,9 @@ export default function IncomingOrdersClient({
           </div>
 
           <div style={{ display: "flex", gap: "10px", marginTop: "15px", gridColumn: "1 / -1" }}>
-            <button type="submit" className="admin-btn">
+            <SubmitButton className="admin-btn" loadingText="Registrando...">
               Registrar Pedido
-            </button>
+            </SubmitButton>
             <button type="button" className="admin-btn admin-btn-outline" onClick={() => setShowNewForm(false)}>
               Cancelar
             </button>
@@ -377,7 +380,7 @@ export default function IncomingOrdersClient({
                 <th>Fecha Pedido</th>
                 <th>Llegada Estimada</th>
                 <th>Estado</th>
-                {activeTab === "activos" && <th>Acción</th>}
+                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -433,7 +436,7 @@ export default function IncomingOrdersClient({
                       <div className="admin-table-actions">
                         <button 
                           type="button" 
-                          className="admin-btn admin-btn-outline admin-btn-sm"
+                          className="admin-btn admin-btn-outline"
                           style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
                           onClick={() => {
                             setEditingId(o.id);
@@ -446,15 +449,35 @@ export default function IncomingOrdersClient({
                           Editar
                         </button>
                         <form action={completeIncomingOrder.bind(null, o.id)}>
-                          <button type="submit" className="admin-btn admin-btn-success admin-btn-sm">
+                          <SubmitButton className="admin-btn admin-btn-success admin-btn-sm" loadingText="Recibiendo...">
                             Recibido (Suma Stock)
-                          </button>
+                          </SubmitButton>
                         </form>
                         <form action={cancelIncomingOrder.bind(null, o.id)}>
-                          <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">
+                          <SubmitButton className="admin-btn admin-btn-danger admin-btn-sm" loadingText="Cancelando...">
                             Cancelar
-                          </button>
+                          </SubmitButton>
                         </form>
+                        <button 
+                          type="button" 
+                          className="admin-btn admin-btn-danger admin-btn-sm"
+                          onClick={() => setDeleteConfirmId(o.id)}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                  {activeTab !== "activos" && (
+                    <td>
+                      <div className="admin-table-actions">
+                        <button 
+                          type="button" 
+                          className="admin-btn admin-btn-danger admin-btn-sm"
+                          onClick={() => setDeleteConfirmId(o.id)}
+                        >
+                          Eliminar
+                        </button>
                       </div>
                     </td>
                   )}
@@ -462,7 +485,7 @@ export default function IncomingOrdersClient({
               ))}
               {displayedOrders.length === 0 && (
                 <tr>
-                  <td colSpan={activeTab === "activos" ? 8 : 7} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     {activeTab === "activos" 
                       ? "No hay pedidos en tránsito registrados actualmente."
                       : "No hay registros históricos de pedidos completados o cancelados."}
@@ -473,6 +496,57 @@ export default function IncomingOrdersClient({
           </table>
         </div>
       </section>
+
+      {deleteConfirmId !== null && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)",
+          display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100
+        }}>
+          <div className="glass-container" style={{ maxWidth: "400px", width: "90%", border: "1px solid rgba(239, 68, 68, 0.3)", boxShadow: "0 8px 32px 0 rgba(239, 68, 68, 0.15)", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
+            <div style={{ textAlign: "center", marginBottom: "25px" }}>
+              <div style={{
+                width: "60px", height: "60px", background: "rgba(239, 68, 68, 0.2)",
+                borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 15px auto", border: "1px solid rgba(239, 68, 68, 0.4)"
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: "1.25rem", margin: "0 0 10px 0", color: "#f87171" }}>¿Confirmar Eliminación?</h3>
+              <p style={{ color: "var(--admin-text-muted)", fontSize: "14px", lineHeight: "1.5", margin: 0 }}>
+                Esta acción es permanente y eliminará el registro de este pedido. ¿Deseas continuar?
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <ActionButton 
+                className="admin-btn admin-btn-danger"
+                onClick={async () => {
+                  await deleteIncomingOrder(deleteConfirmId);
+                  setDeleteConfirmId(null);
+                }}
+                loadingText="Eliminando..."
+                style={{ flex: 1 }}
+              >
+                Sí, Eliminar
+              </ActionButton>
+              <button 
+                type="button" 
+                className="admin-btn admin-btn-outline" 
+                style={{ color: "white", borderColor: "rgba(255,255,255,0.4)", flex: 1 }}
+                onClick={() => setDeleteConfirmId(null)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

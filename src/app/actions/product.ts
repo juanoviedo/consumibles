@@ -141,6 +141,21 @@ export async function createProduct(formData: FormData) {
     galeriaUrls.push(...splitUrls);
   }
 
+  const duplicate = await prisma.product.findFirst({
+    where: {
+      OR: [
+        { codigo },
+        { nombre }
+      ],
+      createdAt: {
+        gte: new Date(Date.now() - 3000)
+      }
+    }
+  });
+  if (duplicate) {
+    throw new Error("Producto duplicado detectado. Operación bloqueada.");
+  }
+
   await prisma.product.create({
     data: { 
       codigo, 

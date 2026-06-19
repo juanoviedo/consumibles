@@ -41,6 +41,20 @@ export async function createIncomingOrder(formData: FormData) {
   const fechaPedidoRaw = formData.get("fechaPedido") as string;
   const fechaPedido = fechaPedidoRaw ? new Date(fechaPedidoRaw) : new Date();
 
+  const duplicate = await prisma.incomingOrder.findFirst({
+    where: {
+      productId,
+      cantidad,
+      costoUnitario,
+      createdAt: {
+        gte: new Date(Date.now() - 3000)
+      }
+    }
+  });
+  if (duplicate) {
+    throw new Error("Pedido duplicado detectado. Operación bloqueada.");
+  }
+
   await prisma.incomingOrder.create({
     data: {
       productId,
@@ -184,6 +198,15 @@ export async function updateIncomingOrder(formData: FormData) {
       fechaPedido,
       fechaEstimada,
     },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/pedidos-camino");
+}
+
+export async function deleteIncomingOrder(id: number) {
+  await prisma.incomingOrder.delete({
+    where: { id },
   });
 
   revalidatePath("/admin");

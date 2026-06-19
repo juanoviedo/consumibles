@@ -1,4 +1,5 @@
 import { getSettings, updateSettings } from "@/app/actions/billing";
+import SubmitButton from "@/components/SubmitButton";
 
 export const dynamic = "force-dynamic";
 
@@ -163,9 +164,9 @@ export default async function SettingsPage() {
           </div>
 
           <div style={{ marginTop: "25px", gridColumn: "1 / -1" }}>
-            <button type="submit" className="admin-btn">
+            <SubmitButton className="admin-btn" loadingText="Guardando configuración...">
               Guardar Configuración
-            </button>
+            </SubmitButton>
           </div>
         </form>
       </section>

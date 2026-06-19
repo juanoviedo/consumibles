@@ -7,6 +7,8 @@ import {
   deleteDiscount, 
   toggleDiscountStatus 
 } from "@/app/actions/discount";
+import SubmitButton from "@/components/SubmitButton";
+import ActionButton from "@/components/ActionButton";
 
 interface DiscountsClientProps {
   products: any[];
@@ -27,6 +29,7 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
   const [activo, setActivo] = useState(true);
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [prodSearch, setProdSearch] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -97,6 +100,7 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
     if (new Date(fechaInicio) > new Date(fechaFin)) return alert("La fecha de inicio no puede ser posterior a la fecha de fin");
 
     try {
+      setIsSubmitting(true);
       await createDiscount({
         nombre,
         tipoDescuento,
@@ -109,6 +113,8 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
       setShowNewForm(false);
     } catch (err: any) {
       alert("Error al crear descuento: " + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -123,6 +129,7 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
     if (new Date(fechaInicio) > new Date(fechaFin)) return alert("La fecha de inicio no puede ser posterior a la fecha de fin");
 
     try {
+      setIsSubmitting(true);
       await updateDiscount(editingId, {
         nombre,
         tipoDescuento,
@@ -135,6 +142,8 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
       setEditingId(null);
     } catch (err: any) {
       alert("Error al actualizar descuento: " + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -345,9 +354,9 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
             </div>
 
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", gridColumn: "1 / -1" }}>
-              <button type="submit" className="admin-btn">
+              <SubmitButton className="admin-btn" loading={isSubmitting} loadingText="Guardando...">
                 {editingId !== null ? "Guardar Cambios" : "Crear Descuento"}
-              </button>
+              </SubmitButton>
               <button 
                 type="button" 
                 className="admin-btn admin-btn-outline" 
@@ -431,14 +440,14 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
                   </td>
                   <td>
                     <div className="admin-table-actions">
-                      <button 
-                        type="button" 
+                      <ActionButton 
                         className={`admin-btn admin-btn-sm ${d.activo ? "admin-btn-outline" : "admin-btn-success"}`}
-                        onClick={() => handleToggleActive(d.id, d.activo)}
+                        onClick={async () => await handleToggleActive(d.id, d.activo)}
+                        loadingText={d.activo ? "Desactivando..." : "Activando..."}
                         style={{ padding: "6px 12px" }}
                       >
                         {d.activo ? "Desactivar" : "Activar"}
-                      </button>
+                      </ActionButton>
 
                       <button 
                         type="button" 
@@ -501,14 +510,14 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
             </div>
 
             <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <button 
-                type="button" 
+              <ActionButton 
                 className="admin-btn admin-btn-danger"
-                onClick={() => handleConfirmDelete(deleteConfirmId)}
+                onClick={async () => await handleConfirmDelete(deleteConfirmId)}
+                loadingText="Eliminando..."
                 style={{ flex: 1 }}
               >
                 Sí, Eliminar
-              </button>
+              </ActionButton>
               <button 
                 type="button" 
                 className="admin-btn admin-btn-outline" 

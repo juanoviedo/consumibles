@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { createProduct, deleteProduct, updateProduct, initializeProductCost, adjustProductStock } from "@/app/actions/product";
+import SubmitButton from "@/components/SubmitButton";
+import ActionButton from "@/components/ActionButton";
 
 export default function AdminClient({ 
   products, 
@@ -120,9 +122,9 @@ export default function AdminClient({
             <textarea name="descripcion2" defaultValue={editingProduct.descripcion2} rows={2} />
           </div>
           <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-            <button type="submit" className="admin-btn">
+            <SubmitButton className="admin-btn" loadingText="Guardando...">
               Guardar Cambios
-            </button>
+            </SubmitButton>
             <button type="button" className="admin-btn admin-btn-outline" onClick={cancelEdit}>
               Cancelar
             </button>
@@ -191,9 +193,9 @@ export default function AdminClient({
             <textarea name="descripcion2" placeholder="Descripción opcional 2" rows={2} />
           </div>
           <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-            <button type="submit" className="admin-btn">
+            <SubmitButton className="admin-btn" loadingText="Guardando...">
               Guardar Nuevo Producto
-            </button>
+            </SubmitButton>
             <button type="button" className="admin-btn admin-btn-outline" onClick={() => setShowNewForm(false)}>
               Cancelar
             </button>
@@ -624,9 +626,9 @@ export default function AdminClient({
             </div>
 
             <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-              <button type="submit" className="admin-btn">
+              <SubmitButton className="admin-btn" loadingText="Registrando...">
                 Registrar Ajuste
-              </button>
+              </SubmitButton>
               <button type="button" className="admin-btn admin-btn-outline" onClick={() => setActiveTab("products")}>
                 Cancelar
               </button>
@@ -716,7 +718,7 @@ export default function AdminClient({
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "15px" }}>
                   <button type="button" onClick={() => setInitializingProduct(null)} className="admin-btn admin-btn-outline">Cancelar</button>
-                  <button type="submit" className="admin-btn">Inicializar</button>
+                  <SubmitButton className="admin-btn" loadingText="Inicializando...">Inicializar</SubmitButton>
                 </div>
               </form>
             )}
@@ -751,17 +753,17 @@ export default function AdminClient({
             </div>
 
             <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <button 
-                type="button" 
+              <ActionButton 
                 className="admin-btn admin-btn-danger"
                 onClick={async () => {
                   await deleteProduct(deleteConfirmId);
                   setDeleteConfirmId(null);
                 }}
+                loadingText="Eliminando..."
                 style={{ flex: 1 }}
               >
                 Sí, Eliminar
-              </button>
+              </ActionButton>
               <button 
                 type="button" 
                 className="admin-btn admin-btn-outline" 

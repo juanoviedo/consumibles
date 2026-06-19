@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { createCategory, updateCategory, deleteCategory } from "@/app/actions/category";
+import SubmitButton from "@/components/SubmitButton";
+import ActionButton from "@/components/ActionButton";
 
 export default function AdminCategories({ categories }: { categories: any[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -45,7 +47,7 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
             </label>
           </div>
           <div style={{ display: "flex", gap: "10px", marginTop: "20px", gridColumn: "1/-1" }}>
-            <button type="submit" className="admin-btn">Guardar Cambios</button>
+            <SubmitButton className="admin-btn" loadingText="Guardando...">Guardar Cambios</SubmitButton>
             <button type="button" className="admin-btn admin-btn-outline" onClick={cancelEdit}>Cancelar</button>
           </div>
         </form>
@@ -81,9 +83,9 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
             </label>
           </div>
           <div style={{ display: "flex", gap: "10px", marginTop: "20px", gridColumn: "1/-1" }}>
-            <button type="submit" className="admin-btn">
+            <SubmitButton className="admin-btn" loadingText="Guardando...">
               Guardar Categoría
-            </button>
+            </SubmitButton>
             <button type="button" className="admin-btn admin-btn-outline" onClick={() => setShowNewForm(false)}>
               Cancelar
             </button>
@@ -178,17 +180,17 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
             </div>
 
             <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <button 
-                type="button" 
+              <ActionButton 
                 className="admin-btn admin-btn-danger"
                 onClick={async () => {
                   await handleConfirmDelete(deleteConfirmId);
                   setDeleteConfirmId(null);
                 }}
+                loadingText="Eliminando..."
                 style={{ flex: 1 }}
               >
                 Sí, Eliminar
-              </button>
+              </ActionButton>
               <button 
                 type="button" 
                 className="admin-btn admin-btn-outline" 

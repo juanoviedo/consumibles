@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { changePasswordAction } from "@/app/actions/user";
 
+import SubmitButton from "@/components/SubmitButton";
+
 export default function PerfilClient({ email }: { email: string }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -50,9 +52,9 @@ export default function PerfilClient({ email }: { email: string }) {
         </div>
         
         <div style={{ marginTop: "10px" }}>
-          <button type="submit" className="admin-btn" disabled={isSubmitting} style={{ width: "100%" }}>
-            {isSubmitting ? "Guardando..." : "Actualizar Contraseña"}
-          </button>
+          <SubmitButton type="submit" className="admin-btn" loading={isSubmitting} loadingText="Guardando..." style={{ width: "100%" }}>
+            Actualizar Contraseña
+          </SubmitButton>
         </div>
       </form>
     </section>

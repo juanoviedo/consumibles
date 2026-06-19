@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { createUserAction, deleteUserAction } from "@/app/actions/user";
+import SubmitButton from "@/components/SubmitButton";
+import ActionButton from "@/components/ActionButton";
 
 export default function UsersClient({ 
   users, 
@@ -31,7 +33,7 @@ export default function UsersClient({
             <label htmlFor="isSuperAdmin" style={{ cursor: "pointer", color: "var(--admin-text-main)" }}>Este usuario será Super Admin (podrá gestionar a otros administradores)</label>
           </div>
           <div style={{ gridColumn: "1/-1", display: "flex", justifyContent: "flex-end" }}>
-            <button type="submit" className="admin-btn">Crear Administrador</button>
+            <SubmitButton className="admin-btn" loadingText="Creando...">Crear Administrador</SubmitButton>
           </div>
         </form>
       </section>
@@ -112,17 +114,17 @@ export default function UsersClient({
             </div>
 
             <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <button 
-                type="button" 
+              <ActionButton 
                 className="admin-btn admin-btn-danger"
                 onClick={async () => {
                   await handleConfirmDelete(deleteConfirmId);
                   setDeleteConfirmId(null);
                 }}
+                loadingText="Revocando..."
                 style={{ flex: 1 }}
               >
                 Sí, Revocar
-              </button>
+              </ActionButton>
               <button 
                 type="button" 
                 className="admin-btn admin-btn-outline" 

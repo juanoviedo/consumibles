@@ -43,6 +43,20 @@ export async function getDiscounts() {
 export async function createDiscount(data: DiscountInput) {
   if (!data.nombre) throw new Error("El nombre es requerido");
   if (data.valorDescuento <= 0) throw new Error("El valor del descuento debe ser mayor a cero");
+
+  const duplicate = await prisma.discount.findFirst({
+    where: {
+      nombre: data.nombre,
+      tipoDescuento: data.tipoDescuento,
+      valorDescuento: data.valorDescuento,
+      fechaCreacion: {
+        gte: new Date(Date.now() - 3000)
+      }
+    }
+  });
+  if (duplicate) {
+    throw new Error("Descuento duplicado detectado. Operación bloqueada.");
+  }
   
   await prisma.$transaction(async (tx) => {
     const discount = await tx.discount.create({

@@ -23,6 +23,21 @@ export async function createClient(formData: FormData) {
   const departamento = formData.get("departamento") as string;
   const pais = formData.get("pais") as string;
 
+  const duplicate = await prisma.client.findFirst({
+    where: {
+      OR: [
+        nit ? { nit } : null,
+        { nombre }
+      ].filter(Boolean) as any,
+      createdAt: {
+        gte: new Date(Date.now() - 3000)
+      }
+    }
+  });
+  if (duplicate) {
+    throw new Error("Cliente duplicado detectado. Operación bloqueada.");
+  }
+
   await prisma.client.create({
     data: {
       nit: nit || null,
@@ -149,6 +164,19 @@ export async function createQuotation(
     }
   });
   const numeroCotizacion = `COT-${nextNum.toString().padStart(4, "0")}`;
+
+  const duplicate = await prisma.quotation.findFirst({
+    where: {
+      clientId,
+      total,
+      createdAt: {
+        gte: new Date(Date.now() - 3000)
+      }
+    }
+  });
+  if (duplicate) {
+    throw new Error("Cotización duplicada detectada. Operación bloqueada.");
+  }
 
   const quotation = await prisma.quotation.create({
     data: {

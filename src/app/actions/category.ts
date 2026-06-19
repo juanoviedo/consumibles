@@ -13,6 +13,19 @@ export async function getCategories() {
 export async function createCategory(formData: FormData) {
   const nombre = formData.get("nombre") as string;
   const mostrarEnWeb = formData.get("mostrarEnWeb") === "true" || formData.get("mostrarEnWeb") === "on";
+
+  const duplicate = await prisma.category.findFirst({
+    where: {
+      nombre,
+      createdAt: {
+        gte: new Date(Date.now() - 3000)
+      }
+    }
+  });
+  if (duplicate) {
+    throw new Error("Categoría duplicada detectada. Operación bloqueada.");
+  }
+
   await prisma.category.create({
     data: { nombre, mostrarEnWeb },
   });

@@ -10,6 +10,8 @@ import {
   revertToQuotation, 
   deleteQuotation 
 } from "@/app/actions/billing";
+import SubmitButton from "@/components/SubmitButton";
+import ActionButton from "@/components/ActionButton";
 import { downloadDocumentPDF } from "@/lib/pdfGenerator";
 
 interface QuotationItemInput {
@@ -34,6 +36,7 @@ export default function QuotationsClient({
   settings: any;
 }) {
   const [showNewForm, setShowNewForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterType, setFilterType] = useState<"TODAS" | "COTIZACIONES" | "CUENTAS_COBRO">("TODAS");
   
   // Edit States
@@ -234,6 +237,7 @@ export default function QuotationsClient({
     }
 
     try {
+      setIsSubmitting(true);
       await createQuotation(
         Number(selectedClientId),
         validItems.map(i => ({
@@ -247,6 +251,8 @@ export default function QuotationsClient({
       setShowNewForm(false);
     } catch (err: any) {
       alert("Error al guardar: " + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -261,6 +267,7 @@ export default function QuotationsClient({
     }
 
     try {
+      setIsSubmitting(true);
       await updateQuotation(
         editingQuotationId,
         Number(selectedClientId),
@@ -273,6 +280,8 @@ export default function QuotationsClient({
       handleCancelEdit();
     } catch (err: any) {
       alert("Error al guardar: " + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -523,13 +532,15 @@ export default function QuotationsClient({
                   Solo Lectura (Bloqueado)
                 </button>
               ) : (
-                <button 
-                  type="submit" 
-                  className="admin-btn"
-                  disabled={currentItems.length === 0 || selectedClientId === ""}
-                >
-                  {editingQuotationId !== null ? "Guardar Cambios" : "Registrar Cotización"}
-                </button>
+                <SubmitButton 
+                type="submit" 
+                className="admin-btn"
+                loading={isSubmitting}
+                loadingText="Procesando..."
+                disabled={currentItems.length === 0 || selectedClientId === ""}
+              >
+                {editingQuotationId !== null ? "Guardar Cambios" : "Registrar Cotización"}
+              </SubmitButton>
               )}
               <button 
                 type="button" 
@@ -644,27 +655,27 @@ export default function QuotationsClient({
                       {/* APROBAR Y FACTURAR (CONVIERTE A CUENTA COBRO Y DESCUENTA STOCK) */}
                       {(q.estado === "COTIZACION" || q.estado === "APROBADA") && (
                         <form action={convertToBillOfCollection.bind(null, q.id)}>
-                          <button type="submit" className="admin-btn admin-btn-success admin-btn-sm">
+                          <SubmitButton className="admin-btn admin-btn-success admin-btn-sm" loadingText="Facturando...">
                             Facturar (Saca Stock)
-                          </button>
+                          </SubmitButton>
                         </form>
                       )}
 
                       {/* PAGAR (REGISTRA PAGO DE LA CUENTA COBRO) */}
                       {q.estado === "CUENTA_COBRO" && (
                         <form action={markAsPaid.bind(null, q.id)}>
-                          <button type="submit" className="admin-btn admin-btn-sm" style={{ background: "#8b5cf6" }}>
+                          <SubmitButton className="admin-btn admin-btn-sm" style={{ background: "#8b5cf6" }} loadingText="Procesando...">
                             Marcar Pagada
-                          </button>
+                          </SubmitButton>
                         </form>
                       )}
 
                       {/* RECHAZAR COTIZACION */}
                       {q.estado === "COTIZACION" && (
                         <form action={markAsRejected.bind(null, q.id)}>
-                          <button type="submit" className="admin-btn admin-btn-danger admin-btn-sm">
+                          <SubmitButton className="admin-btn admin-btn-danger admin-btn-sm" loadingText="Rechazando...">
                             Rechazar
-                          </button>
+                          </SubmitButton>
                         </form>
                       )}
 
@@ -877,7 +888,7 @@ export default function QuotationsClient({
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <button 
+              <ActionButton 
                 type="button" 
                 className="admin-btn"
                 style={{ background: "#10b981" }}
@@ -885,11 +896,12 @@ export default function QuotationsClient({
                   await revertToQuotation(activeRevertQuoteId, true);
                   setActiveRevertQuoteId(null);
                 }}
+                loadingText="Devolviendo..."
               >
                 Sí, devolver productos al inventario
-              </button>
+              </ActionButton>
 
-              <button 
+              <ActionButton 
                 type="button" 
                 className="admin-btn admin-btn-outline"
                 style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}
@@ -897,9 +909,10 @@ export default function QuotationsClient({
                   await revertToQuotation(activeRevertQuoteId, false);
                   setActiveRevertQuoteId(null);
                 }}
+                loadingText="Revirtiendo..."
               >
                 No, mantener inventario actual
-              </button>
+              </ActionButton>
 
               <button 
                 type="button" 
@@ -941,17 +954,17 @@ export default function QuotationsClient({
             </div>
 
             <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <button 
-                type="button" 
+              <ActionButton 
                 className="admin-btn admin-btn-danger"
                 onClick={async () => {
                   await deleteQuotation(deleteConfirmId);
                   setDeleteConfirmId(null);
                 }}
+                loadingText="Eliminando..."
                 style={{ flex: 1 }}
               >
                 Sí, Eliminar
-              </button>
+              </ActionButton>
               <button 
                 type="button" 
                 className="admin-btn admin-btn-outline" 
