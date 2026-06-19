@@ -384,7 +384,8 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .glass-container {
-    padding: 20px;
+    padding: 12px;
+    border-radius: 8px;
   }
   
   .admin-header {
@@ -398,7 +399,11 @@ body {
   }
   
   .admin-dashboard {
-    padding: 20px;
+    padding: 0;
+  }
+
+  .admin-content-area {
+    padding: 15px 4px !important;
   }
 
   .admin-grid-form {
@@ -408,6 +413,16 @@ body {
   .admin-table td {
     max-width: 150px;
     padding: 10px;
+  }
+
+  /* First column max width 40% of table on mobile */
+  .admin-table th:first-child,
+  .admin-table td:first-child {
+    max-width: 40% !important;
+    width: 40% !important;
+    min-width: unset !important;
+    white-space: normal !important;
+    word-break: break-word !important;
   }
 }
 
