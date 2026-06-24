@@ -266,6 +266,8 @@ body {
 /* Table styles */
 .admin-table-container {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
   overflow-y: auto;
   max-height: calc(100vh - 280px);
@@ -558,6 +560,10 @@ body {
     justify-content: center;
     width: 50px;
     height: 50px;
+  }
+
+  .admin-grid-form {
+    grid-template-columns: 1fr;
   }
 }
 
