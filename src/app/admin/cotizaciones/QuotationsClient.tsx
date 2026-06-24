@@ -654,29 +654,54 @@ export default function QuotationsClient({
 
                       {/* APROBAR Y FACTURAR (CONVIERTE A CUENTA COBRO Y DESCUENTA STOCK) */}
                       {(q.estado === "COTIZACION" || q.estado === "APROBADA") && (
-                        <form action={convertToBillOfCollection.bind(null, q.id)}>
-                          <SubmitButton className="admin-btn admin-btn-success admin-btn-sm" loadingText="Facturando...">
-                            Facturar (Saca Stock)
-                          </SubmitButton>
-                        </form>
+                        <ActionButton 
+                          className="admin-btn admin-btn-success admin-btn-sm" 
+                          onClick={async () => {
+                            try {
+                              await convertToBillOfCollection(q.id);
+                            } catch (err: any) {
+                              alert("Error al facturar: " + err.message);
+                            }
+                          }}
+                          loadingText="Facturando..."
+                        >
+                          Facturar (Saca Stock)
+                        </ActionButton>
                       )}
 
                       {/* PAGAR (REGISTRA PAGO DE LA CUENTA COBRO) */}
                       {q.estado === "CUENTA_COBRO" && (
-                        <form action={markAsPaid.bind(null, q.id)}>
-                          <SubmitButton className="admin-btn admin-btn-sm" style={{ background: "#8b5cf6" }} loadingText="Procesando...">
-                            Marcar Pagada
-                          </SubmitButton>
-                        </form>
+                        <ActionButton 
+                          className="admin-btn admin-btn-sm" 
+                          style={{ background: "#8b5cf6" }} 
+                          onClick={async () => {
+                            try {
+                              await markAsPaid(q.id);
+                            } catch (err: any) {
+                              alert("Error al marcar pagada: " + err.message);
+                            }
+                          }}
+                          loadingText="Procesando..."
+                        >
+                          Marcar Pagada
+                        </ActionButton>
                       )}
 
                       {/* RECHAZAR COTIZACION */}
                       {q.estado === "COTIZACION" && (
-                        <form action={markAsRejected.bind(null, q.id)}>
-                          <SubmitButton className="admin-btn admin-btn-danger admin-btn-sm" loadingText="Rechazando...">
-                            Rechazar
-                          </SubmitButton>
-                        </form>
+                        <ActionButton 
+                          className="admin-btn admin-btn-danger admin-btn-sm" 
+                          onClick={async () => {
+                            try {
+                              await markAsRejected(q.id);
+                            } catch (err: any) {
+                              alert("Error al rechazar: " + err.message);
+                            }
+                          }}
+                          loadingText="Rechazando..."
+                        >
+                          Rechazar
+                        </ActionButton>
                       )}
 
                       {/* REVERTIR CUENTA COBRO A COTIZACION CON POPUP */}

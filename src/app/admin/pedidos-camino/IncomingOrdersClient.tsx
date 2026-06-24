@@ -448,16 +448,32 @@ export default function IncomingOrdersClient({
                         >
                           Editar
                         </button>
-                        <form action={completeIncomingOrder.bind(null, o.id)}>
-                          <SubmitButton className="admin-btn admin-btn-success admin-btn-sm" loadingText="Recibiendo...">
-                            Recibido (Suma Stock)
-                          </SubmitButton>
-                        </form>
-                        <form action={cancelIncomingOrder.bind(null, o.id)}>
-                          <SubmitButton className="admin-btn admin-btn-danger admin-btn-sm" loadingText="Cancelando...">
-                            Cancelar
-                          </SubmitButton>
-                        </form>
+                        <ActionButton 
+                          className="admin-btn admin-btn-success admin-btn-sm"
+                          onClick={async () => {
+                            try {
+                              await completeIncomingOrder(o.id);
+                            } catch (err: any) {
+                              alert("Error al completar el pedido: " + err.message);
+                            }
+                          }}
+                          loadingText="Recibiendo..."
+                        >
+                          Recibido (Suma Stock)
+                        </ActionButton>
+                        <ActionButton 
+                          className="admin-btn admin-btn-danger admin-btn-sm"
+                          onClick={async () => {
+                            try {
+                              await cancelIncomingOrder(o.id);
+                            } catch (err: any) {
+                              alert("Error al cancelar el pedido: " + err.message);
+                            }
+                          }}
+                          loadingText="Cancelando..."
+                        >
+                          Cancelar
+                        </ActionButton>
                         <button 
                           type="button" 
                           className="admin-btn admin-btn-danger admin-btn-sm"
