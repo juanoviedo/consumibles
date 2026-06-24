@@ -4,6 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { QuotationStatus } from "@prisma/client";
 
+function safeDecimal(val: number): number {
+  if (isNaN(val) || !isFinite(val)) return 0;
+  const MAX_LIMIT = 99999999.99;
+  const MIN_LIMIT = -99999999.99;
+  if (val > MAX_LIMIT) return MAX_LIMIT;
+  if (val < MIN_LIMIT) return MIN_LIMIT;
+  return val;
+}
+
 // --- CLIENTS CRUD ---
 
 export async function getClients() {
@@ -317,8 +326,8 @@ export async function convertToBillOfCollection(quotationId: number) {
         const fechaPromedioCompra = product.fechaPromedioCompra;
 
         const precioUnit = Number(item.precioUnitario);
-        const utilidadUnitaria = precioUnit - costoPromedioUnitario;
-        const utilidadTotal = utilidadUnitaria * item.cantidad;
+        const utilidadUnitaria = safeDecimal(precioUnit - costoPromedioUnitario);
+        const utilidadTotal = safeDecimal(utilidadUnitaria * item.cantidad);
 
         // Calcular días en inventario (mínimo 1)
         let diasInventario = 1;
@@ -334,9 +343,9 @@ export async function convertToBillOfCollection(quotationId: number) {
         let rentabilidadEfectivaAnual = 0;
         if (costoPromedioUnitario > 0) {
           const r = utilidadUnitaria / costoPromedioUnitario;
-          rentabilidadPorcentual = r * 100;
-          rentabilidadMensual = (Math.pow(1 + r, 30 / diasInventario) - 1) * 100;
-          rentabilidadEfectivaAnual = (Math.pow(1 + r, 365 / diasInventario) - 1) * 100;
+          rentabilidadPorcentual = safeDecimal(r * 100);
+          rentabilidadMensual = safeDecimal((Math.pow(1 + r, 30 / diasInventario) - 1) * 100);
+          rentabilidadEfectivaAnual = safeDecimal((Math.pow(1 + r, 365 / diasInventario) - 1) * 100);
         }
 
         // Snapshot financiero a nivel de item
@@ -384,7 +393,7 @@ export async function convertToBillOfCollection(quotationId: number) {
       }
 
       // 2. Calcular consolidados de cabecera
-      const utilidadTotalConsolidada = subtotalVenta - subtotalCosto;
+      const utilidadTotalConsolidada = safeDecimal(subtotalVenta - subtotalCosto);
       let diasPromedioInventario = 1;
       if (subtotalCosto > 0) {
         diasPromedioInventario = weightedDaysSum / subtotalCosto;
@@ -398,9 +407,9 @@ export async function convertToBillOfCollection(quotationId: number) {
       let rentabilidadEfectivaAnualConsolidada = 0;
       if (subtotalCosto > 0) {
         const r_consolidado = utilidadTotalConsolidada / subtotalCosto;
-        rentabilidadPorcentualConsolidada = r_consolidado * 100;
-        rentabilidadMensualConsolidada = (Math.pow(1 + r_consolidado, 30 / diasPromedioInventario) - 1) * 100;
-        rentabilidadEfectivaAnualConsolidada = (Math.pow(1 + r_consolidado, 365 / diasPromedioInventario) - 1) * 100;
+        rentabilidadPorcentualConsolidada = safeDecimal(r_consolidado * 100);
+        rentabilidadMensualConsolidada = safeDecimal((Math.pow(1 + r_consolidado, 30 / diasPromedioInventario) - 1) * 100);
+        rentabilidadEfectivaAnualConsolidada = safeDecimal((Math.pow(1 + r_consolidado, 365 / diasPromedioInventario) - 1) * 100);
       }
 
       // 3. Actualizar la cabecera de la cotización a Cuenta de Cobro
@@ -411,8 +420,8 @@ export async function convertToBillOfCollection(quotationId: number) {
           numeroCuentaCobro,
           fechaCuentaCobro,
           fechaVencimiento,
-          subtotalVenta,
-          subtotalCosto,
+          subtotalVenta: safeDecimal(subtotalVenta),
+          subtotalCosto: safeDecimal(subtotalCosto),
           utilidadTotal: utilidadTotalConsolidada,
           rentabilidadPorcentual: rentabilidadPorcentualConsolidada,
           rentabilidadMensual: rentabilidadMensualConsolidada,
