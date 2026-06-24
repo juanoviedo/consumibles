@@ -100,151 +100,169 @@ export async function getProducts() {
 }
 
 export async function createProduct(formData: FormData) {
-  const codigo = formData.get("codigo") as string;
-  const nombre = formData.get("nombre") as string;
-  const precio = parseInt(formData.get("precio") as string, 10);
-  let imagenUrl = formData.get("imagenUrl") as string;
-  const descripcion1 = formData.get("descripcion1") as string;
-  const descripcion2 = formData.get("descripcion2") as string;
-  const categoryIdRaw = formData.get("categoryId") as string;
-  const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
-  const minStock = parseInt(formData.get("minStock") as string || "0", 10);
-  
-  const file = formData.get("imagenFile") as File | null;
   try {
-    const uploadedUrl = await uploadImage(file);
-    if (uploadedUrl) {
-      imagenUrl = uploadedUrl; // Overwrite the manually passed string if a file was uploaded
+    const codigo = formData.get("codigo") as string;
+    const nombre = formData.get("nombre") as string;
+    const precio = parseInt(formData.get("precio") as string, 10);
+    let imagenUrl = formData.get("imagenUrl") as string;
+    const descripcion1 = formData.get("descripcion1") as string;
+    const descripcion2 = formData.get("descripcion2") as string;
+    const categoryIdRaw = formData.get("categoryId") as string;
+    const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
+    const minStock = parseInt(formData.get("minStock") as string || "0", 10);
+    
+    const file = formData.get("imagenFile") as File | null;
+    try {
+      const uploadedUrl = await uploadImage(file);
+      if (uploadedUrl) {
+        imagenUrl = uploadedUrl; // Overwrite the manually passed string if a file was uploaded
+      }
+    } catch(err) {
+      console.error(err);
+      // Continue with the manual string or empty string
     }
-  } catch(err) {
-    console.error(err);
-    // Continue with the manual string or empty string
-  }
 
-  const galeriaFiles = formData.getAll("galeriaFiles") as File[];
-  const galeriaUrls: string[] = [];
+    const galeriaFiles = formData.getAll("galeriaFiles") as File[];
+    const galeriaUrls: string[] = [];
 
-  for (const f of galeriaFiles) {
-    if (f && f.size > 0 && f.name !== "undefined") {
-      try {
-        const url = await uploadImage(f);
-        if (url) galeriaUrls.push(url);
-      } catch (err) {
-        console.error(err);
+    for (const f of galeriaFiles) {
+      if (f && f.size > 0 && f.name !== "undefined") {
+        try {
+          const url = await uploadImage(f);
+          if (url) galeriaUrls.push(url);
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
-  }
 
-  const galeriaUrlsString = formData.get("galeriaUrlsString") as string;
-  if (galeriaUrlsString) {
-    const splitUrls = galeriaUrlsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
-    galeriaUrls.push(...splitUrls);
-  }
-
-  const duplicate = await prisma.product.findFirst({
-    where: {
-      OR: [
-        { codigo },
-        { nombre }
-      ],
-      createdAt: {
-        gte: new Date(Date.now() - 3000)
-      }
+    const galeriaUrlsString = formData.get("galeriaUrlsString") as string;
+    if (galeriaUrlsString) {
+      const splitUrls = galeriaUrlsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      galeriaUrls.push(...splitUrls);
     }
-  });
-  if (duplicate) {
-    throw new Error("Producto duplicado detectado. Operación bloqueada.");
+
+    const duplicate = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { codigo },
+          { nombre }
+        ],
+        createdAt: {
+          gte: new Date(Date.now() - 3000)
+        }
+      }
+    });
+    if (duplicate) {
+      throw new Error("Producto duplicado detectado. Operación bloqueada.");
+    }
+
+    const product = await prisma.product.create({
+      data: { 
+        codigo, 
+        nombre, 
+        precio, 
+        imagenUrl: imagenUrl || "", 
+        galeria: galeriaUrls, 
+        descripcion1, 
+        descripcion2, 
+        categoryId, 
+        stockActual: 0, 
+        minStock,
+        precioPromedioCompra: 0,
+        valorInventarioActual: 0,
+        costoInicialConfigurado: false
+      },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/admin");
+    return { success: true, product };
+  } catch (err: any) {
+    console.error("Error creating product:", err);
+    return { error: err.message || "Error interno al crear producto" };
   }
-
-  await prisma.product.create({
-    data: { 
-      codigo, 
-      nombre, 
-      precio, 
-      imagenUrl: imagenUrl || "", 
-      galeria: galeriaUrls, 
-      descripcion1, 
-      descripcion2, 
-      categoryId, 
-      stockActual: 0, 
-      minStock,
-      precioPromedioCompra: 0,
-      valorInventarioActual: 0,
-      costoInicialConfigurado: false
-    },
-  });
-
-  revalidatePath("/");
-  revalidatePath("/admin");
 }
 
 export async function updateProduct(formData: FormData) {
-  const id = parseInt(formData.get("id") as string, 10);
-  const codigo = formData.get("codigo") as string;
-  const nombre = formData.get("nombre") as string;
-  const precio = parseInt(formData.get("precio") as string, 10);
-  let imagenUrl = formData.get("imagenUrl") as string;
-  const descripcion1 = formData.get("descripcion1") as string;
-  const descripcion2 = formData.get("descripcion2") as string;
-  const categoryIdRaw = formData.get("categoryId") as string;
-  const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
-  const minStock = parseInt(formData.get("minStock") as string || "0", 10);
-
-  const file = formData.get("imagenFile") as File | null;
   try {
-    const uploadedUrl = await uploadImage(file);
-    if (uploadedUrl) {
-      imagenUrl = uploadedUrl;
+    const id = parseInt(formData.get("id") as string, 10);
+    const codigo = formData.get("codigo") as string;
+    const nombre = formData.get("nombre") as string;
+    const precio = parseInt(formData.get("precio") as string, 10);
+    let imagenUrl = formData.get("imagenUrl") as string;
+    const descripcion1 = formData.get("descripcion1") as string;
+    const descripcion2 = formData.get("descripcion2") as string;
+    const categoryIdRaw = formData.get("categoryId") as string;
+    const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
+    const minStock = parseInt(formData.get("minStock") as string || "0", 10);
+
+    const file = formData.get("imagenFile") as File | null;
+    try {
+      const uploadedUrl = await uploadImage(file);
+      if (uploadedUrl) {
+        imagenUrl = uploadedUrl;
+      }
+    } catch(err) {
+      console.error(err);
     }
-  } catch(err) {
-    console.error(err);
-  }
 
-  const galeriaFiles = formData.getAll("galeriaFiles") as File[];
-  const galeriaUrls: string[] = [];
+    const galeriaFiles = formData.getAll("galeriaFiles") as File[];
+    const galeriaUrls: string[] = [];
 
-  for (const f of galeriaFiles) {
-    if (f && f.size > 0 && f.name !== "undefined") {
-      try {
-        const url = await uploadImage(f);
-        if (url) galeriaUrls.push(url);
-      } catch (err) {
-        console.error(err);
+    for (const f of galeriaFiles) {
+      if (f && f.size > 0 && f.name !== "undefined") {
+        try {
+          const url = await uploadImage(f);
+          if (url) galeriaUrls.push(url);
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
+
+    const galeriaUrlsString = formData.get("galeriaUrlsString") as string;
+    if (galeriaUrlsString) {
+      const splitUrls = galeriaUrlsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      galeriaUrls.push(...splitUrls);
+    }
+
+    await prisma.product.update({
+      where: { id },
+      data: { 
+        codigo, 
+        nombre, 
+        precio, 
+        imagenUrl: imagenUrl || "", 
+        galeria: galeriaUrls, 
+        descripcion1, 
+        descripcion2, 
+        categoryId, 
+        minStock
+      },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Error updating product:", err);
+    return { error: err.message || "Error interno al actualizar producto" };
   }
-
-  const galeriaUrlsString = formData.get("galeriaUrlsString") as string;
-  if (galeriaUrlsString) {
-    const splitUrls = galeriaUrlsString.split(',').map(s => s.trim()).filter(s => s.length > 0);
-    galeriaUrls.push(...splitUrls);
-  }
-
-  await prisma.product.update({
-    where: { id },
-    data: { 
-      codigo, 
-      nombre, 
-      precio, 
-      imagenUrl: imagenUrl || "", 
-      galeria: galeriaUrls, 
-      descripcion1, 
-      descripcion2, 
-      categoryId, 
-      minStock
-    },
-  });
-
-  revalidatePath("/");
-  revalidatePath("/admin");
 }
 
 export async function deleteProduct(id: number) {
-  await prisma.product.delete({
-    where: { id },
-  });
-  revalidatePath("/");
-  revalidatePath("/admin");
+  try {
+    await prisma.product.delete({
+      where: { id },
+    });
+    revalidatePath("/");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Error deleting product:", err);
+    return { error: err.message || "Error interno al eliminar producto" };
+  }
 }
 
 export async function getProductDetails(id: number) {
@@ -318,42 +336,48 @@ export async function initializeProductCost(
   precioPromedioInicial: number,
   fechaPromedioInicial: string | Date
 ) {
-  const product = await prisma.product.findUnique({
-    where: { id: productId }
-  });
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: productId }
+    });
 
-  if (!product) {
-    throw new Error("Producto no encontrado");
+    if (!product) {
+      throw new Error("Producto no encontrado");
+    }
+
+    const stockActual = product.stockActual;
+    const valorInventarioActual = stockActual * precioPromedioInicial;
+
+    await prisma.$transaction([
+      prisma.product.update({
+        where: { id: productId },
+        data: {
+          precioPromedioCompra: precioPromedioInicial,
+          fechaPromedioCompra: new Date(fechaPromedioInicial),
+          valorInventarioActual,
+          costoInicialConfigurado: true
+        }
+      }),
+      prisma.inventoryLog.create({
+        data: {
+          productId,
+          tipo: "INICIALIZACION",
+          cantidad: stockActual,
+          costoUnit: precioPromedioInicial,
+          stockPrevio: stockActual,
+          stockNuevo: stockActual,
+          detalle: `Inicialización de costo a $${precioPromedioInicial.toLocaleString()} con fecha ${new Date(fechaPromedioInicial).toLocaleDateString("es-CO", { timeZone: "UTC" })}`
+        }
+      })
+    ]);
+
+    revalidatePath("/");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Error initializing product cost:", err);
+    return { error: err.message || "Error interno al inicializar costo" };
   }
-
-  const stockActual = product.stockActual;
-  const valorInventarioActual = stockActual * precioPromedioInicial;
-
-  await prisma.$transaction([
-    prisma.product.update({
-      where: { id: productId },
-      data: {
-        precioPromedioCompra: precioPromedioInicial,
-        fechaPromedioCompra: new Date(fechaPromedioInicial),
-        valorInventarioActual,
-        costoInicialConfigurado: true
-      }
-    }),
-    prisma.inventoryLog.create({
-      data: {
-        productId,
-        tipo: "INICIALIZACION",
-        cantidad: stockActual,
-        costoUnit: precioPromedioInicial,
-        stockPrevio: stockActual,
-        stockNuevo: stockActual,
-        detalle: `Inicialización de costo a $${precioPromedioInicial.toLocaleString()} con fecha ${new Date(fechaPromedioInicial).toLocaleDateString("es-CO", { timeZone: "UTC" })}`
-      }
-    })
-  ]);
-
-  revalidatePath("/");
-  revalidatePath("/admin");
 }
 
 export async function getInventoryLogs() {
@@ -381,57 +405,63 @@ export async function adjustProductStock(
   cantidad: number,
   detalle: string
 ) {
-  if (cantidad <= 0) {
-    throw new Error("La cantidad debe ser mayor a cero");
+  try {
+    if (cantidad <= 0) {
+      throw new Error("La cantidad debe ser mayor a cero");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: productId }
+      });
+
+      if (!product) {
+        throw new Error("Producto no encontrado");
+      }
+
+      const stockActual = product.stockActual;
+      let newStock = stockActual;
+
+      if (tipo === "INGRESO") {
+        newStock = stockActual + cantidad;
+      } else if (tipo === "SALIDA") {
+        newStock = stockActual - cantidad;
+        if (newStock < 0) {
+          throw new Error("El inventario resultante no puede ser menor a cero");
+        }
+      } else {
+        throw new Error("Tipo de ajuste no válido");
+      }
+
+      const precioPromedio = Number(product.precioPromedioCompra || 0);
+      const newValor = newStock * precioPromedio;
+
+      await tx.product.update({
+        where: { id: productId },
+        data: {
+          stockActual: newStock,
+          valorInventarioActual: newValor
+        }
+      });
+
+      await tx.inventoryLog.create({
+        data: {
+          productId,
+          tipo: tipo === "INGRESO" ? "AJUSTE_INGRESO" : "AJUSTE_SALIDA",
+          cantidad,
+          costoUnit: precioPromedio,
+          stockPrevio: stockActual,
+          stockNuevo: newStock,
+          detalle: detalle || `Ajuste manual de tipo ${tipo}`
+        }
+      });
+    });
+
+    revalidatePath("/");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Error adjusting product stock:", err);
+    return { error: err.message || "Error interno al ajustar stock" };
   }
-
-  await prisma.$transaction(async (tx) => {
-    const product = await tx.product.findUnique({
-      where: { id: productId }
-    });
-
-    if (!product) {
-      throw new Error("Producto no encontrado");
-    }
-
-    const stockActual = product.stockActual;
-    let newStock = stockActual;
-
-    if (tipo === "INGRESO") {
-      newStock = stockActual + cantidad;
-    } else if (tipo === "SALIDA") {
-      newStock = stockActual - cantidad;
-      if (newStock < 0) {
-        throw new Error("El inventario resultante no puede ser menor a cero");
-      }
-    } else {
-      throw new Error("Tipo de ajuste no válido");
-    }
-
-    const precioPromedio = Number(product.precioPromedioCompra || 0);
-    const newValor = newStock * precioPromedio;
-
-    await tx.product.update({
-      where: { id: productId },
-      data: {
-        stockActual: newStock,
-        valorInventarioActual: newValor
-      }
-    });
-
-    await tx.inventoryLog.create({
-      data: {
-        productId,
-        tipo: tipo === "INGRESO" ? "AJUSTE_INGRESO" : "AJUSTE_SALIDA",
-        cantidad,
-        costoUnit: precioPromedio,
-        stockPrevio: stockActual,
-        stockNuevo: newStock,
-        detalle: detalle || `Ajuste manual de tipo ${tipo}`
-      }
-    });
-  });
-
-  revalidatePath("/");
-  revalidatePath("/admin");
 }

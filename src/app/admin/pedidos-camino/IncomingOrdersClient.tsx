@@ -117,8 +117,12 @@ export default function IncomingOrdersClient({
         <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Editar Pedido</h2>
         <form
           action={async (formData) => {
-            await updateIncomingOrder(formData);
-            setEditingId(null);
+            const res = await updateIncomingOrder(formData);
+            if (res && res.error) {
+              alert("Error al actualizar el pedido: " + res.error);
+            } else {
+              setEditingId(null);
+            }
           }}
           className="admin-grid-form"
         >
@@ -210,8 +214,12 @@ export default function IncomingOrdersClient({
         <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Registrar Pedido en Camino</h2>
         <form
           action={async (formData) => {
-            await createIncomingOrder(formData);
-            setShowNewForm(false);
+            const res = await createIncomingOrder(formData);
+            if (res && res.error) {
+              alert("Error al registrar pedido: " + res.error);
+            } else {
+              setShowNewForm(false);
+            }
           }}
           className="admin-grid-form"
         >
@@ -451,10 +459,9 @@ export default function IncomingOrdersClient({
                         <ActionButton 
                           className="admin-btn admin-btn-success admin-btn-sm"
                           onClick={async () => {
-                            try {
-                              await completeIncomingOrder(o.id);
-                            } catch (err: any) {
-                              alert("Error al completar el pedido: " + err.message);
+                            const res = await completeIncomingOrder(o.id);
+                            if (res && res.error) {
+                              alert("Error al completar el pedido: " + res.error);
                             }
                           }}
                           loadingText="Recibiendo..."
@@ -464,10 +471,9 @@ export default function IncomingOrdersClient({
                         <ActionButton 
                           className="admin-btn admin-btn-danger admin-btn-sm"
                           onClick={async () => {
-                            try {
-                              await cancelIncomingOrder(o.id);
-                            } catch (err: any) {
-                              alert("Error al cancelar el pedido: " + err.message);
+                            const res = await cancelIncomingOrder(o.id);
+                            if (res && res.error) {
+                              alert("Error al cancelar el pedido: " + res.error);
                             }
                           }}
                           loadingText="Cancelando..."
@@ -543,8 +549,12 @@ export default function IncomingOrdersClient({
               <ActionButton 
                 className="admin-btn admin-btn-danger"
                 onClick={async () => {
-                  await deleteIncomingOrder(deleteConfirmId);
-                  setDeleteConfirmId(null);
+                  const res = await deleteIncomingOrder(deleteConfirmId);
+                  if (res && res.error) {
+                    alert("Error al eliminar el pedido: " + res.error);
+                  } else {
+                    setDeleteConfirmId(null);
+                  }
                 }}
                 loadingText="Eliminando..."
                 style={{ flex: 1 }}

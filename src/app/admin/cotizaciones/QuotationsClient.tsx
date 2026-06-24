@@ -238,7 +238,7 @@ export default function QuotationsClient({
 
     try {
       setIsSubmitting(true);
-      await createQuotation(
+      const res = await createQuotation(
         Number(selectedClientId),
         validItems.map(i => ({
           productId: Number(i.productId),
@@ -246,9 +246,13 @@ export default function QuotationsClient({
           precioUnitario: Number(i.precioUnitario) || 0
         }))
       );
-      setSelectedClientId("");
-      setCurrentItems([]);
-      setShowNewForm(false);
+      if (res && "error" in res && res.error) {
+        alert("Error al guardar: " + res.error);
+      } else {
+        setSelectedClientId("");
+        setCurrentItems([]);
+        setShowNewForm(false);
+      }
     } catch (err: any) {
       alert("Error al guardar: " + err.message);
     } finally {
@@ -268,7 +272,7 @@ export default function QuotationsClient({
 
     try {
       setIsSubmitting(true);
-      await updateQuotation(
+      const res = await updateQuotation(
         editingQuotationId,
         Number(selectedClientId),
         validItems.map(i => ({
@@ -277,7 +281,11 @@ export default function QuotationsClient({
           precioUnitario: Number(i.precioUnitario) || 0
         }))
       );
-      handleCancelEdit();
+      if (res && "error" in res && res.error) {
+        alert("Error al guardar: " + res.error);
+      } else {
+        handleCancelEdit();
+      }
     } catch (err: any) {
       alert("Error al guardar: " + err.message);
     } finally {
@@ -657,10 +665,9 @@ export default function QuotationsClient({
                         <ActionButton 
                           className="admin-btn admin-btn-success admin-btn-sm" 
                           onClick={async () => {
-                            try {
-                              await convertToBillOfCollection(q.id);
-                            } catch (err: any) {
-                              alert("Error al facturar: " + err.message);
+                            const res = await convertToBillOfCollection(q.id);
+                            if (res && res.error) {
+                              alert("Error al facturar: " + res.error);
                             }
                           }}
                           loadingText="Facturando..."
@@ -675,10 +682,9 @@ export default function QuotationsClient({
                           className="admin-btn admin-btn-sm" 
                           style={{ background: "#8b5cf6" }} 
                           onClick={async () => {
-                            try {
-                              await markAsPaid(q.id);
-                            } catch (err: any) {
-                              alert("Error al marcar pagada: " + err.message);
+                            const res = await markAsPaid(q.id);
+                            if (res && res.error) {
+                              alert("Error al marcar pagada: " + res.error);
                             }
                           }}
                           loadingText="Procesando..."
@@ -692,10 +698,9 @@ export default function QuotationsClient({
                         <ActionButton 
                           className="admin-btn admin-btn-danger admin-btn-sm" 
                           onClick={async () => {
-                            try {
-                              await markAsRejected(q.id);
-                            } catch (err: any) {
-                              alert("Error al rechazar: " + err.message);
+                            const res = await markAsRejected(q.id);
+                            if (res && res.error) {
+                              alert("Error al rechazar: " + res.error);
                             }
                           }}
                           loadingText="Rechazando..."
@@ -918,8 +923,12 @@ export default function QuotationsClient({
                 className="admin-btn"
                 style={{ background: "#10b981" }}
                 onClick={async () => {
-                  await revertToQuotation(activeRevertQuoteId, true);
-                  setActiveRevertQuoteId(null);
+                  const res = await revertToQuotation(activeRevertQuoteId, true);
+                  if (res && res.error) {
+                    alert("Error al revertir: " + res.error);
+                  } else {
+                    setActiveRevertQuoteId(null);
+                  }
                 }}
                 loadingText="Devolviendo..."
               >
@@ -931,8 +940,12 @@ export default function QuotationsClient({
                 className="admin-btn admin-btn-outline"
                 style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}
                 onClick={async () => {
-                  await revertToQuotation(activeRevertQuoteId, false);
-                  setActiveRevertQuoteId(null);
+                  const res = await revertToQuotation(activeRevertQuoteId, false);
+                  if (res && res.error) {
+                    alert("Error al revertir: " + res.error);
+                  } else {
+                    setActiveRevertQuoteId(null);
+                  }
                 }}
                 loadingText="Revirtiendo..."
               >
@@ -982,8 +995,12 @@ export default function QuotationsClient({
               <ActionButton 
                 className="admin-btn admin-btn-danger"
                 onClick={async () => {
-                  await deleteQuotation(deleteConfirmId);
-                  setDeleteConfirmId(null);
+                  const res = await deleteQuotation(deleteConfirmId);
+                  if (res && res.error) {
+                    alert("Error al eliminar: " + res.error);
+                  } else {
+                    setDeleteConfirmId(null);
+                  }
                 }}
                 loadingText="Eliminando..."
                 style={{ flex: 1 }}

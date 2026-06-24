@@ -35,8 +35,12 @@ export default function AdminClient({
         <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Editar Producto: {editingProduct.nombre}</h2>
         <form
           action={async (formData) => { 
-            await updateProduct(formData); 
-            setEditingId(null); 
+            const res = await updateProduct(formData); 
+            if (res && res.error) {
+              alert("Error al actualizar producto: " + res.error);
+            } else {
+              setEditingId(null); 
+            }
           }}
           className="admin-grid-form"
         >
@@ -140,8 +144,12 @@ export default function AdminClient({
         <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Agregar Nuevo Producto</h2>
         <form
           action={async (formData) => {
-            await createProduct(formData);
-            setShowNewForm(false);
+            const res = await createProduct(formData);
+            if (res && res.error) {
+              alert("Error al crear producto: " + res.error);
+            } else {
+              setShowNewForm(false);
+            }
           }}
           className="admin-grid-form"
         >
@@ -581,9 +589,13 @@ export default function AdminClient({
               const detalle = formData.get("detalle") as string;
               
               try {
-                await adjustProductStock(productId, tipo, cantidad, detalle);
-                alert("Ajuste de inventario registrado con éxito");
-                setActiveTab("products");
+                const res = await adjustProductStock(productId, tipo, cantidad, detalle);
+                if (res && res.error) {
+                  alert("Error al registrar ajuste: " + res.error);
+                } else {
+                  alert("Ajuste de inventario registrado con éxito");
+                  setActiveTab("products");
+                }
               } catch (err: any) {
                 alert("Error al registrar ajuste: " + err.message);
               }
@@ -690,8 +702,12 @@ export default function AdminClient({
               <form action={async (formData) => {
                 const cost = parseFloat(formData.get("precioPromedioInicial") as string || "0");
                 const date = formData.get("fechaPromedioInicial") as string;
-                await initializeProductCost(initializingProduct.id, cost, date);
-                setInitializingProduct(null);
+                const res = await initializeProductCost(initializingProduct.id, cost, date);
+                if (res && res.error) {
+                  alert("Error al inicializar costo: " + res.error);
+                } else {
+                  setInitializingProduct(null);
+                }
               }} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
                 <div className="admin-input-group" style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                   <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Promedio Inicial (COP)</label>
@@ -756,8 +772,12 @@ export default function AdminClient({
               <ActionButton 
                 className="admin-btn admin-btn-danger"
                 onClick={async () => {
-                  await deleteProduct(deleteConfirmId);
-                  setDeleteConfirmId(null);
+                  const res = await deleteProduct(deleteConfirmId);
+                  if (res && res.error) {
+                    alert("Error al eliminar el producto: " + res.error);
+                  } else {
+                    setDeleteConfirmId(null);
+                  }
                 }}
                 loadingText="Eliminando..."
                 style={{ flex: 1 }}
