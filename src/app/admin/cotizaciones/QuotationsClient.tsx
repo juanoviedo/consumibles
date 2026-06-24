@@ -396,8 +396,8 @@ export default function QuotationsClient({
             {/* List of items currently added to the quote draft */}
             <div style={{ gridColumn: "1 / -1", marginTop: "15px" }}>
               <h4 style={{ fontSize: "14px", marginBottom: "10px" }}>Productos Cotizados (Edición en Línea):</h4>
-              <div className="admin-table-container" style={{ maxHeight: "350px", border: "1px solid var(--admin-glass-border)" }}>
-                <table className="admin-table">
+              <div className="admin-table-container" style={{ maxHeight: "350px", border: "1px solid var(--admin-glass-border)", width: "100%", maxWidth: "100%", overflowX: "auto" }}>
+                <table className="admin-table" style={{ minWidth: "650px" }}>
                   <thead>
                     <tr>
                       <th style={{ width: "150px" }}>Código</th>
@@ -831,8 +831,8 @@ export default function QuotationsClient({
             )}
 
             <h3 style={{ fontSize: "16px", marginBottom: "10px" }}>Artículos Cotizados</h3>
-            <div className="admin-table-container" style={{ border: "1px solid var(--admin-glass-border)", marginBottom: "20px" }}>
-              <table className="admin-table">
+            <div className="admin-table-container" style={{ border: "1px solid var(--admin-glass-border)", marginBottom: "20px", width: "100%", maxWidth: "100%", overflowX: "auto" }}>
+              <table className="admin-table" style={{ minWidth: "500px" }}>
                 <thead>
                   <tr>
                     <th>Ref</th>

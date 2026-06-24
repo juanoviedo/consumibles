@@ -583,3 +583,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
+
+@media (max-width: 600px) {
+  .admin-content-area {
+    padding: 4px !important;
+  }
+  .glass-container {
+    padding: 8px !important;
+    border-radius: 8px !important;
+  }
+  .admin-table th:first-child,
+  .admin-table td:first-child {
+    max-width: 40% !important;
+    width: 40% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+}
+
