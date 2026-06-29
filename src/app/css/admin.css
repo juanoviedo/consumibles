@@ -563,7 +563,10 @@ body {
   }
 
   .admin-grid-form {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
   }
 }
 
