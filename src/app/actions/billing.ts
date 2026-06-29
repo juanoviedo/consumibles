@@ -256,6 +256,36 @@ export async function updateQuotation(
   }
 }
 
+export async function copyQuotationAsNew(quotationId: number) {
+  try {
+    const source = await prisma.quotation.findUnique({
+      where: { id: quotationId },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!source) {
+      throw new Error("Documento de origen no encontrado.");
+    }
+
+    const itemsToCopy = source.items.map((item) => ({
+      productId: item.productId,
+      cantidad: item.cantidad,
+      precioUnitario: Number(item.precioUnitario),
+    }));
+
+    const result = await createQuotation(source.clientId, itemsToCopy);
+
+    revalidatePath("/admin/cotizaciones");
+    return result;
+  } catch (err: any) {
+    console.error("Error al copiar cotización:", err);
+    return { error: err.message || "Error interno al copiar cotización" };
+  }
+}
+
+
 
 /**
  * Convierte una cotización en Cuenta de Cobro (estado CUENTA_COBRO).

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { 
   createQuotation, 
   updateQuotation,
+  copyQuotationAsNew,
   convertToBillOfCollection, 
   markAsPaid, 
   markAsRejected, 
@@ -61,6 +62,9 @@ export default function QuotationsClient({
 
   // Delete Confirmation State
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  // Copy Confirmation State
+  const [copyConfirmQuotation, setCopyConfirmQuotation] = useState<any | null>(null);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -720,6 +724,16 @@ export default function QuotationsClient({
                         </button>
                       )}
 
+                      {/* COPIAR DOCUMENTO (COTIZACIÓN O CUENTA DE COBRO) */}
+                      <button 
+                        type="button" 
+                        className="admin-btn admin-btn-outline admin-btn-sm" 
+                        style={{ borderColor: "#818cf8", color: "#818cf8" }} 
+                        onClick={() => setCopyConfirmQuotation(q)}
+                      >
+                        Copiar
+                      </button>
+
                       <button 
                         type="button" 
                         className="admin-btn admin-btn-danger admin-btn-sm" 
@@ -870,22 +884,33 @@ export default function QuotationsClient({
               Total: {formatCurrency(activeDetailsQuote.total)}
             </div>
 
-             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-               <button 
-                 type="button" 
-                 className="admin-btn admin-btn-success" 
-                 onClick={() => downloadDocumentPDF(activeDetailsQuote, settings)}
-               >
-                 Descargar PDF
-               </button>
-               <button 
-                 type="button" 
-                 className="admin-btn admin-btn-outline" 
-                 onClick={() => setActiveDetailsQuote(null)}
-               >
-                 Cerrar
-               </button>
-             </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <button 
+                  type="button" 
+                  className="admin-btn admin-btn-success" 
+                  onClick={() => downloadDocumentPDF(activeDetailsQuote, settings)}
+                >
+                  Descargar PDF
+                </button>
+                <button 
+                  type="button" 
+                  className="admin-btn admin-btn-outline" 
+                  style={{ borderColor: "#818cf8", color: "#818cf8" }}
+                  onClick={() => {
+                    setCopyConfirmQuotation(activeDetailsQuote);
+                    setActiveDetailsQuote(null);
+                  }}
+                >
+                  Copiar como Cotización
+                </button>
+                <button 
+                  type="button" 
+                  className="admin-btn admin-btn-outline" 
+                  onClick={() => setActiveDetailsQuote(null)}
+                >
+                  Cerrar
+                </button>
+              </div>
           </div>
         </div>
       )}
@@ -957,6 +982,59 @@ export default function QuotationsClient({
                 className="admin-btn admin-btn-outline" 
                 style={{ color: "var(--admin-text-muted)" }}
                 onClick={() => setActiveRevertQuoteId(null)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {copyConfirmQuotation !== null && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)",
+          display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100
+        }}>
+          <div className="glass-container" style={{ maxWidth: "420px", width: "90%", border: "1px solid rgba(129, 140, 248, 0.3)", boxShadow: "0 8px 32px 0 rgba(129, 140, 248, 0.15)", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
+            <div style={{ textAlign: "center", marginBottom: "25px" }}>
+              <div style={{
+                width: "60px", height: "60px", background: "rgba(129, 140, 248, 0.2)",
+                borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 15px auto", border: "1px solid rgba(129, 140, 248, 0.4)"
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: "1.25rem", margin: "0 0 10px 0", color: "#818cf8" }}>¿Copiar Documento?</h3>
+              <p style={{ color: "var(--admin-text-muted)", fontSize: "14px", lineHeight: "1.5", margin: 0 }}>
+                Se creará una **nueva cotización** con la fecha de hoy conteniendo el mismo cliente (<strong>{copyConfirmQuotation.client?.nombre}</strong>) y los mismos {copyConfirmQuotation.items?.length || 0} productos.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <ActionButton 
+                className="admin-btn"
+                style={{ background: "#6366f1", color: "white", flex: 1 }}
+                onClick={async () => {
+                  const res = await copyQuotationAsNew(copyConfirmQuotation.id);
+                  if (res && res.error) {
+                    alert("Error al copiar: " + res.error);
+                  } else {
+                    setCopyConfirmQuotation(null);
+                  }
+                }}
+                loadingText="Copiando..."
+              >
+                Sí, Copiar
+              </ActionButton>
+              <button 
+                type="button" 
+                className="admin-btn admin-btn-outline" 
+                style={{ color: "white", borderColor: "rgba(255,255,255,0.4)", flex: 1 }}
+                onClick={() => setCopyConfirmQuotation(null)}
               >
                 Cancelar
               </button>
