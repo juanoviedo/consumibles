@@ -604,12 +604,12 @@ export default function QuotationsClient({
 
       {/* 4. TABLA DE DOCUMENTOS */}
       <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
-        <div style={{ padding: "30px 30px 15px 30px" }}>
+        <div className="admin-card-header">
           <h2 style={{ margin: 0 }}>Historial de Documentos</h2>
         </div>
 
         <div className="admin-table-container">
-          <table className="admin-table">
+          <table className="admin-table" style={{ minWidth: "950px" }}>
             <thead>
               <tr>
                 <th>Cliente</th>

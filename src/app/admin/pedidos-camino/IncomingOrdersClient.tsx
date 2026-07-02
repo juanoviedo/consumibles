@@ -371,14 +371,14 @@ export default function IncomingOrdersClient({
       </div>
 
       <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
-        <div style={{ padding: "30px 30px 15px 30px" }}>
+        <div className="admin-card-header">
           <h2 style={{ margin: 0 }}>
             {activeTab === "activos" ? "Pedidos Activos en Tránsito" : "Historial de Pedidos Ingresados/Cancelados"}
           </h2>
         </div>
 
         <div className="admin-table-container">
-          <table className="admin-table">
+          <table className="admin-table" style={{ minWidth: "850px" }}>
             <thead>
               <tr>
                 <th>Producto</th>

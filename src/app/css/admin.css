@@ -593,6 +593,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
 
+.admin-card-header {
+  padding: 30px 30px 15px 30px;
+}
+
 @media (max-width: 600px) {
   .admin-content-area {
     padding: 4px !important;
@@ -601,10 +605,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     padding: 8px !important;
     border-radius: 8px !important;
   }
+  .admin-card-header {
+    padding: 12px 12px 6px 12px !important;
+  }
   .admin-table th:first-child,
   .admin-table td:first-child {
-    max-width: 40% !important;
-    width: 40% !important;
+    max-width: 120px !important;
+    width: 120px !important;
     white-space: normal !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;

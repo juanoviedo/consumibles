@@ -320,12 +320,12 @@ export default function AdminClient({
           </div>
 
           <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
-            <div style={{ padding: "30px 30px 15px 30px" }}>
+            <div className="admin-card-header">
               <h2 style={{ margin: 0 }}>Productos Actuales</h2>
             </div>
             
             <div className="admin-table-container">
-              <table className="admin-table">
+              <table className="admin-table" style={{ minWidth: "950px" }}>
                 <thead>
                   <tr>
                     <th>Nombre</th>
@@ -485,7 +485,7 @@ export default function AdminClient({
 
       {activeTab === "audit" && (
         <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
-          <div style={{ padding: "30px 30px 15px 30px" }}>
+          <div className="admin-card-header">
             <h2 style={{ margin: 0 }}>Historial de Movimientos de Inventario</h2>
             <p style={{ color: "var(--admin-text-muted)", fontSize: "14px", marginTop: "5px" }}>
               Registro cronológico de compras, ventas, inicializaciones y reversiones de stock.
@@ -493,7 +493,7 @@ export default function AdminClient({
           </div>
 
           <div className="admin-table-container">
-            <table className="admin-table">
+            <table className="admin-table" style={{ minWidth: "950px" }}>
               <thead>
                 <tr>
                   <th>Producto</th>
