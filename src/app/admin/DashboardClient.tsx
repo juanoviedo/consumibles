@@ -87,7 +87,7 @@ export default function DashboardClient({
     // Helper states for groupings
     const monthlySales: Record<string, number> = {};
     const clientSalesMap: Record<string, { nombre: string; total: number }> = {};
-    const categorySalesMap: Record<string, { nombre: string; total: number; utilidad: number }> = {};
+    const productSalesMap: Record<string, { nombre: string; total: number; utilidad: number }> = {};
     const documentStateCounts: Record<string, number> = {
       COTIZACION: 0,
       APROBADA: 0,
@@ -128,15 +128,15 @@ export default function DashboardClient({
           qCost += costVal;
           qUtil += (salesVal - costVal);
 
-          // Track category contribution
-          if (item.product?.category) {
-            const catName = item.product.category.nombre;
-            const catId = item.product.category.id.toString();
-            if (!categorySalesMap[catId]) {
-              categorySalesMap[catId] = { nombre: catName, total: 0, utilidad: 0 };
+          // Track product contribution
+          if (item.product?.nombre) {
+            const pName = item.product.nombre;
+            const pId = item.productId.toString();
+            if (!productSalesMap[pId]) {
+              productSalesMap[pId] = { nombre: pName, total: 0, utilidad: 0 };
             }
-            categorySalesMap[catId].total += salesVal;
-            categorySalesMap[catId].utilidad += (salesVal - costVal);
+            productSalesMap[pId].total += salesVal;
+            productSalesMap[pId].utilidad += (salesVal - costVal);
           }
         }
       });
@@ -210,9 +210,10 @@ export default function DashboardClient({
       .sort((a, b) => b.total - a.total)
       .slice(0, 5);
 
-    // Convert Category sales to list
-    const topCategories = Object.values(categorySalesMap)
-      .sort((a, b) => b.total - a.total);
+    // Convert Product sales to list
+    const topProducts = Object.values(productSalesMap)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 6);
 
     return {
       salesTotal,
@@ -223,7 +224,7 @@ export default function DashboardClient({
       transactionCount,
       sortedMonthlySales,
       topClients,
-      topCategories,
+      topProducts,
       documentStateCounts,
     };
   }, [quotations, selectedClientId, selectedCategoryId, activeDateRange]);
@@ -239,11 +240,11 @@ export default function DashboardClient({
     return Math.max(...filteredMetrics.sortedMonthlySales.map((m) => m.total), 1);
   }, [filteredMetrics.sortedMonthlySales]);
 
-  // Max value calculation for category bar chart scaling
-  const maxCategorySales = useMemo(() => {
-    if (filteredMetrics.topCategories.length === 0) return 1;
-    return Math.max(...filteredMetrics.topCategories.map((c) => c.total), 1);
-  }, [filteredMetrics.topCategories]);
+  // Max value calculation for product bar chart scaling
+  const maxProductSales = useMemo(() => {
+    if (filteredMetrics.topProducts.length === 0) return 1;
+    return Math.max(...filteredMetrics.topProducts.map((p) => p.total), 1);
+  }, [filteredMetrics.topProducts]);
 
   // Max client sales for scaling
   const maxClientSales = useMemo(() => {
@@ -573,24 +574,24 @@ export default function DashboardClient({
         gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
         gap: "25px"
       }}>
-        {/* Category Breakdown (Horizontal Bar chart) */}
+        {/* Product Breakdown (Horizontal Bar chart) */}
         <div className="glass-container" style={{ padding: "25px", minHeight: "350px", display: "flex", flexDirection: "column" }}>
-          <h4 style={{ fontSize: "15px", margin: "0 0 20px 0", color: "#fbbf24" }}>Ventas y Margen por Categoría</h4>
-          {filteredMetrics.topCategories.length === 0 ? (
+          <h4 style={{ fontSize: "15px", margin: "0 0 20px 0", color: "#fbbf24" }}>Top Productos más Vendidos (Ventas y Margen)</h4>
+          {filteredMetrics.topProducts.length === 0 ? (
             <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", color: "var(--admin-text-muted)" }}>
-              No hay ventas asociadas a categorías en este periodo.
+              No hay ventas asociadas a productos en este periodo.
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "15px", flex: 1 }}>
-              {filteredMetrics.topCategories.map((c, index) => {
-                const widthPercent = (c.total / maxCategorySales) * 100;
-                const marginPercent = c.total > 0 ? (c.utilidad / c.total) * 100 : 0;
+              {filteredMetrics.topProducts.map((p, index) => {
+                const widthPercent = (p.total / maxProductSales) * 100;
+                const marginPercent = p.total > 0 ? (p.utilidad / p.total) * 100 : 0;
                 return (
                   <div key={index} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", alignItems: "center" }}>
-                      <strong>{c.nombre}</strong>
+                      <strong style={{ maxWidth: "55%", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }} title={p.nombre}>{p.nombre}</strong>
                       <span style={{ fontSize: "11px", color: "var(--admin-text-muted)" }}>
-                        Ventas: {formatCurrency(c.total)} (Margen: <strong style={{ color: "#34d399" }}>{marginPercent.toFixed(1)}%</strong>)
+                        Ventas: {formatCurrency(p.total)} (Margen: <strong style={{ color: "#34d399" }}>{marginPercent.toFixed(1)}%</strong>)
                       </span>
                     </div>
                     {/* Bar Container */}
