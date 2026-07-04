@@ -110,7 +110,11 @@ export async function getQuotations() {
       client: true,
       items: {
         include: {
-          product: true,
+          product: {
+            include: {
+              category: true,
+            },
+          },
         },
       },
     },

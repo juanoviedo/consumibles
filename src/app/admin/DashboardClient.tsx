@@ -473,11 +473,11 @@ export default function DashboardClient({
               No hay ventas registradas para este periodo.
             </div>
           ) : (
-            <div style={{ display: "flex", flex: 1, alignItems: "flex-end", gap: "25px", height: "200px", paddingBottom: "20px", borderBottom: "1px solid var(--admin-glass-border)", margin: "10px 0" }}>
+            <div style={{ display: "flex", flex: 1, alignItems: "flex-end", gap: "25px", height: "180px", paddingBottom: "10px", borderBottom: "1px solid var(--admin-glass-border)", margin: "10px 0" }}>
               {filteredMetrics.sortedMonthlySales.map((m) => {
                 const heightPercent = (m.total / maxMonthlySales) * 100;
                 return (
-                  <div key={m.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", position: "relative" }} className="chart-bar-group">
+                  <div key={m.month} style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center", gap: "8px", position: "relative" }} className="chart-bar-group">
                     {/* Tooltip on Hover */}
                     <div className="bar-tooltip" style={{
                       position: "absolute",
