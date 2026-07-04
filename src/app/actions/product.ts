@@ -177,6 +177,7 @@ export async function createProduct(formData: FormData) {
 
     revalidatePath("/");
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     return { success: true, product };
   } catch (err: any) {
     console.error("Error creating product:", err);
@@ -244,6 +245,7 @@ export async function updateProduct(formData: FormData) {
 
     revalidatePath("/");
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     return { success: true };
   } catch (err: any) {
     console.error("Error updating product:", err);
@@ -258,6 +260,7 @@ export async function deleteProduct(id: number) {
     });
     revalidatePath("/");
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     return { success: true };
   } catch (err: any) {
     console.error("Error deleting product:", err);
@@ -373,6 +376,7 @@ export async function initializeProductCost(
 
     revalidatePath("/");
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     return { success: true };
   } catch (err: any) {
     console.error("Error initializing product cost:", err);
@@ -459,6 +463,7 @@ export async function adjustProductStock(
 
     revalidatePath("/");
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     return { success: true };
   } catch (err: any) {
     console.error("Error adjusting product stock:", err);

@@ -68,6 +68,7 @@ export async function createIncomingOrder(formData: FormData) {
     });
 
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     revalidatePath("/admin/pedidos-camino");
     return { success: true };
   } catch (err: any) {
@@ -161,6 +162,7 @@ export async function completeIncomingOrder(id: number) {
     });
 
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     revalidatePath("/admin/pedidos-camino");
     return { success: true };
   } catch (err: any) {
@@ -179,6 +181,7 @@ export async function cancelIncomingOrder(id: number) {
     });
 
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     revalidatePath("/admin/pedidos-camino");
     return { success: true };
   } catch (err: any) {
@@ -220,6 +223,7 @@ export async function updateIncomingOrder(formData: FormData) {
     });
 
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     revalidatePath("/admin/pedidos-camino");
     return { success: true };
   } catch (err: any) {
@@ -235,6 +239,7 @@ export async function deleteIncomingOrder(id: number) {
     });
 
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     revalidatePath("/admin/pedidos-camino");
     return { success: true };
   } catch (err: any) {

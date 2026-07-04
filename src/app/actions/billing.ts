@@ -463,6 +463,7 @@ export async function convertToBillOfCollection(quotationId: number) {
 
     revalidatePath("/admin/cotizaciones");
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     return { success: true };
   } catch (err: any) {
     console.error("Error al facturar:", err);
@@ -626,6 +627,7 @@ export async function revertToQuotation(quotationId: number, devolverInventario:
 
     revalidatePath("/admin/cotizaciones");
     revalidatePath("/admin");
+    revalidatePath("/admin/productos");
     return { success: true };
   } catch (err: any) {
     console.error("Error in revertToQuotation:", err);

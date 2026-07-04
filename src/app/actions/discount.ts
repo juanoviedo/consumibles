@@ -83,6 +83,7 @@ export async function createDiscount(data: DiscountInput) {
 
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   revalidatePath("/admin/descuentos");
 }
 
@@ -121,6 +122,7 @@ export async function updateDiscount(id: number, data: DiscountInput) {
 
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   revalidatePath("/admin/descuentos");
 }
 
@@ -131,6 +133,7 @@ export async function deleteDiscount(id: number) {
 
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   revalidatePath("/admin/descuentos");
 }
 
@@ -142,5 +145,6 @@ export async function toggleDiscountStatus(id: number, activo: boolean) {
 
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   revalidatePath("/admin/descuentos");
 }

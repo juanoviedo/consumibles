@@ -1,22 +1,29 @@
-import { getProducts, getInventoryLogs } from "@/app/actions/product";
+import { getProducts } from "@/app/actions/product";
 import { getCategories } from "@/app/actions/category";
-import AdminClient from "./AdminClient";
+import { getQuotations, getClients } from "@/app/actions/billing";
+import DashboardClient from "./DashboardClient";
 
-export default async function AdminPage() {
+export default async function AdminDashboardPage() {
+  const quotations = await getQuotations();
   const products = await getProducts();
   const categories = await getCategories();
-  const inventoryLogs = await getInventoryLogs();
+  const clients = await getClients();
 
   return (
     <>
       <div className="admin-header">
         <div>
-          <h1>Gestión de Productos</h1>
-          <p style={{ color: "var(--admin-text-muted)", marginTop: "8px" }}>Agrega, edita y elimina consumibles del catálogo.</p>
+          <h1>Dashboard de Administración</h1>
+          <p style={{ color: "var(--admin-text-muted)", marginTop: "8px" }}>Resumen financiero, métricas de rendimiento y estadísticas generales.</p>
         </div>
       </div>
 
-      <AdminClient products={products} categories={categories} inventoryLogs={inventoryLogs} />
+      <DashboardClient 
+        quotations={quotations} 
+        products={products} 
+        categories={categories} 
+        clients={clients} 
+      />
     </>
   );
 }

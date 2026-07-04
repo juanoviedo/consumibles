@@ -31,6 +31,7 @@ export async function createCategory(formData: FormData) {
   });
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   revalidatePath("/catalogo");
 }
 
@@ -44,6 +45,7 @@ export async function updateCategory(formData: FormData) {
   });
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   revalidatePath("/catalogo");
 }
 
@@ -59,5 +61,6 @@ export async function deleteCategory(id: number) {
   });
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   revalidatePath("/catalogo");
 }
