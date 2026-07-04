@@ -113,6 +113,9 @@ model Quotation {
   fechaCotizacion           DateTime        @default(now()) @db.Timestamp(6)
   fechaCuentaCobro          DateTime?       @db.Timestamp(6)
   fechaVencimiento          DateTime?       @db.Timestamp(6)
+  pagadoConRetenciones      Boolean         @default(false)
+  montoPagado               Decimal?        @db.Decimal(10, 2)
+  retenciones               Decimal?        @db.Decimal(10, 2)
   createdAt                 DateTime?       @default(now()) @db.Timestamp(6)
   updatedAt                 DateTime?       @default(now()) @db.Timestamp(6)
 }

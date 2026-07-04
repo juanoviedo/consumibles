@@ -476,6 +476,9 @@ export async function markAsPaid(quotationId: number) {
       where: { id: quotationId },
       data: {
         estado: QuotationStatus.PAGADA,
+        pagadoConRetenciones: false,
+        montoPagado: null,
+        retenciones: null,
       },
     });
 
@@ -486,6 +489,31 @@ export async function markAsPaid(quotationId: number) {
     return { error: err.message || "Error interno del servidor" };
   }
 }
+
+export async function markAsPaidWithRetentions(
+  quotationId: number,
+  montoPagado: number,
+  retenciones: number
+) {
+  try {
+    await prisma.quotation.update({
+      where: { id: quotationId },
+      data: {
+        estado: QuotationStatus.PAGADA,
+        pagadoConRetenciones: true,
+        montoPagado: safeDecimal(montoPagado),
+        retenciones: safeDecimal(retenciones),
+      },
+    });
+
+    revalidatePath("/admin/cotizaciones");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Error in markAsPaidWithRetentions:", err);
+    return { error: err.message || "Error interno del servidor" };
+  }
+}
+
 
 export async function markAsRejected(quotationId: number) {
   try {
@@ -588,7 +616,10 @@ export async function revertToQuotation(quotationId: number, devolverInventario:
           rentabilidadPorcentual: 0,
           rentabilidadMensual: 0,
           rentabilidadEfectivaAnual: 0,
-          diasPromedioInventario: 0
+          diasPromedioInventario: 0,
+          pagadoConRetenciones: false,
+          montoPagado: null,
+          retenciones: null
         },
       });
     });

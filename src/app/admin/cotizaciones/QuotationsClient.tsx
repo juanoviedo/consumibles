@@ -7,6 +7,7 @@ import {
   copyQuotationAsNew,
   convertToBillOfCollection, 
   markAsPaid, 
+  markAsPaidWithRetentions,
   markAsRejected, 
   revertToQuotation, 
   deleteQuotation 
@@ -65,6 +66,11 @@ export default function QuotationsClient({
 
   // Copy Confirmation State
   const [copyConfirmQuotation, setCopyConfirmQuotation] = useState<any | null>(null);
+
+  // Retention Modal State
+  const [activeRetentionQuote, setActiveRetentionQuote] = useState<any | null>(null);
+  const [montoPagadoInput, setMontoPagadoInput] = useState("");
+  const [retencionesInput, setRetencionesInput] = useState("");
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -682,19 +688,33 @@ export default function QuotationsClient({
 
                       {/* PAGAR (REGISTRA PAGO DE LA CUENTA COBRO) */}
                       {q.estado === "CUENTA_COBRO" && (
-                        <ActionButton 
-                          className="admin-btn admin-btn-sm" 
-                          style={{ background: "#8b5cf6" }} 
-                          onClick={async () => {
-                            const res = await markAsPaid(q.id);
-                            if (res && res.error) {
-                              alert("Error al marcar pagada: " + res.error);
-                            }
-                          }}
-                          loadingText="Procesando..."
-                        >
-                          Marcar Pagada
-                        </ActionButton>
+                        <>
+                          <ActionButton 
+                            className="admin-btn admin-btn-sm" 
+                            style={{ background: "#8b5cf6" }} 
+                            onClick={async () => {
+                              const res = await markAsPaid(q.id);
+                              if (res && res.error) {
+                                alert("Error al marcar pagada: " + res.error);
+                              }
+                            }}
+                            loadingText="Procesando..."
+                          >
+                            Marcar Pagada
+                          </ActionButton>
+                          <button 
+                            type="button"
+                            className="admin-btn admin-btn-outline admin-btn-sm" 
+                            style={{ borderColor: "#c084fc", color: "#c084fc" }} 
+                            onClick={() => {
+                              setActiveRetentionQuote(q);
+                              setMontoPagadoInput(Number(q.total).toString());
+                              setRetencionesInput("0");
+                            }}
+                          >
+                            Pagar con Retención
+                          </button>
+                        </>
                       )}
 
                       {/* RECHAZAR COTIZACION */}
@@ -839,6 +859,35 @@ export default function QuotationsClient({
                   <div>
                     <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Efectiva Anual (REA)</span>
                     <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.rentabilidadEfectivaAnual || 0).toFixed(2)}%</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeDetailsQuote.pagadoConRetenciones && (
+              <div style={{
+                background: "rgba(192, 132, 252, 0.05)",
+                border: "1px solid rgba(192, 132, 252, 0.2)",
+                borderRadius: "8px",
+                padding: "12px 15px",
+                marginBottom: "20px",
+                fontSize: "14px"
+              }}>
+                <h4 style={{ margin: "0 0 8px 0", color: "#c084fc", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                  Pago Recibido con Retenciones
+                </h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", fontSize: "12px", display: "block" }}>Neto Recibido (COP)</span>
+                    <strong>{formatCurrency(Number(activeDetailsQuote.montoPagado))}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", fontSize: "12px", display: "block" }}>Retención Aplicada (COP)</span>
+                    <strong>{formatCurrency(Number(activeDetailsQuote.retenciones))} ({Number(activeDetailsQuote.total) > 0 ? ((Number(activeDetailsQuote.retenciones) / Number(activeDetailsQuote.total)) * 100).toFixed(2) : "0.00"}%)</strong>
                   </div>
                 </div>
               </div>
@@ -1042,6 +1091,162 @@ export default function QuotationsClient({
           </div>
         </div>
       )}
+
+      {activeRetentionQuote !== null && (() => {
+        const totalOriginal = Number(activeRetentionQuote.total);
+        const parsedPaid = parseFloat(montoPagadoInput) || 0;
+        const parsedRet = parseFloat(retencionesInput) || 0;
+        const sum = parsedPaid + parsedRet;
+        const percent = totalOriginal > 0 ? (parsedRet / totalOriginal) * 100 : 0;
+        const isValid = Math.abs(sum - totalOriginal) < 0.01;
+
+        const handlePaidChange = (val: string) => {
+          setMontoPagadoInput(val);
+          const num = parseFloat(val);
+          if (!isNaN(num)) {
+            const calculatedRet = Math.max(0, totalOriginal - num);
+            setRetencionesInput(calculatedRet.toFixed(2));
+          } else {
+            setRetencionesInput("");
+          }
+        };
+
+        const handleRetChange = (val: string) => {
+          setRetencionesInput(val);
+          const num = parseFloat(val);
+          if (!isNaN(num)) {
+            const calculatedPaid = Math.max(0, totalOriginal - num);
+            setMontoPagadoInput(calculatedPaid.toFixed(2));
+          } else {
+            setMontoPagadoInput("");
+          }
+        };
+
+        return (
+          <div style={{
+            position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+            background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)",
+            display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100
+          }}>
+            <div className="glass-container" style={{ maxWidth: "450px", width: "90%", border: "1px solid rgba(192, 132, 252, 0.3)", boxShadow: "0 8px 32px 0 rgba(192, 132, 252, 0.15)", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
+              <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                <div style={{
+                  width: "60px", height: "60px", background: "rgba(192, 132, 252, 0.2)",
+                  borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 15px auto", border: "1px solid rgba(192, 132, 252, 0.4)"
+                }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+                <h3 style={{ fontSize: "1.25rem", margin: "0 0 10px 0", color: "#c084fc" }}>Registrar Pago con Retenciones</h3>
+                <p style={{ color: "var(--admin-text-muted)", fontSize: "14px", lineHeight: "1.5", margin: 0 }}>
+                  Documento: <strong>{activeRetentionQuote.numeroCuentaCobro || activeRetentionQuote.numeroCotizacion}</strong><br/>
+                  Cliente: {activeRetentionQuote.client?.nombre}<br/>
+                  Total Factura: <strong>{formatCurrency(totalOriginal)}</strong>
+                </p>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "15px", marginBottom: "20px" }}>
+                <div className="admin-input-group">
+                  <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Monto Neto Recibido (COP)</label>
+                  <input 
+                    type="number" 
+                    step="any"
+                    min="0"
+                    max={totalOriginal}
+                    placeholder="Ej. 96000"
+                    value={montoPagadoInput}
+                    onChange={(e) => handlePaidChange(e.target.value)}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      background: "rgba(0, 0, 0, 0.3)",
+                      color: "white",
+                      border: "1px solid var(--admin-glass-border)",
+                      borderRadius: "8px",
+                      outline: "none",
+                      fontSize: "15px"
+                    }}
+                  />
+                </div>
+
+                <div className="admin-input-group">
+                  <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Valor de Retención (COP)</label>
+                  <input 
+                    type="number" 
+                    step="any"
+                    min="0"
+                    max={totalOriginal}
+                    placeholder="Ej. 4000"
+                    value={retencionesInput}
+                    onChange={(e) => handleRetChange(e.target.value)}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      background: "rgba(0, 0, 0, 0.3)",
+                      color: "white",
+                      border: "1px solid var(--admin-glass-border)",
+                      borderRadius: "8px",
+                      outline: "none",
+                      fontSize: "15px"
+                    }}
+                  />
+                </div>
+
+                <div style={{
+                  background: isValid ? "rgba(16, 185, 129, 0.05)" : "rgba(239, 68, 68, 0.05)",
+                  border: `1px solid ${isValid ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
+                  borderRadius: "8px",
+                  padding: "12px",
+                  fontSize: "13px",
+                  textAlign: "center"
+                }}>
+                  <div>
+                    Suma: <strong>{formatCurrency(sum)}</strong> de <strong>{formatCurrency(totalOriginal)}</strong>
+                  </div>
+                  <div style={{ marginTop: "4px", color: isValid ? "#34d399" : "#f87171", fontWeight: "bold" }}>
+                    {isValid 
+                      ? `Retención Aplicada: ${percent.toFixed(2)}% (Monto cuadra perfectamente)` 
+                      : `Falta / Sobra: ${formatCurrency(totalOriginal - sum)}`
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+                <ActionButton 
+                  className="admin-btn"
+                  style={{ background: "#8b5cf6", color: "white", flex: 1, opacity: isValid ? 1 : 0.6 }}
+                  disabled={!isValid}
+                  onClick={async () => {
+                    const res = await markAsPaidWithRetentions(activeRetentionQuote.id, parsedPaid, parsedRet);
+                    if (res && res.error) {
+                      alert("Error al registrar el pago: " + res.error);
+                    } else {
+                      setActiveRetentionQuote(null);
+                    }
+                  }}
+                  loadingText="Registrando..."
+                >
+                  Confirmar Pago
+                </ActionButton>
+                <button 
+                  type="button" 
+                  className="admin-btn admin-btn-outline" 
+                  style={{ color: "white", borderColor: "rgba(255,255,255,0.4)", flex: 1 }}
+                  onClick={() => setActiveRetentionQuote(null)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {deleteConfirmId !== null && (
         <div style={{
