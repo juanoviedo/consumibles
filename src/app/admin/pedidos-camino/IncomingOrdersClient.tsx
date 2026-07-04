@@ -383,6 +383,7 @@ export default function IncomingOrdersClient({
               <tr>
                 <th>Producto</th>
                 <th>Código/Ref</th>
+                <th>Imagen</th>
                 <th>Cantidad</th>
                 <th>Costo (U. / Total)</th>
                 <th>Fecha Pedido</th>
@@ -394,15 +395,17 @@ export default function IncomingOrdersClient({
             <tbody>
               {displayedOrders.map((o) => (
                 <tr key={o.id}>
-                  <td className="wrap-text">
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      {o.product?.imagenUrl && (
-                        <img src={o.product.imagenUrl} alt={o.product.nombre} width="40" />
-                      )}
-                      <span>{o.product?.nombre}</span>
-                    </div>
+                  <td className="wrap-text" style={{ fontWeight: "bold" }}>
+                    {o.product?.nombre}
                   </td>
                   <td>{o.product?.codigo}</td>
+                  <td>
+                    {o.product?.imagenUrl ? (
+                      <img src={o.product.imagenUrl} alt={o.product.nombre} width="40" />
+                    ) : (
+                      "-"
+                    )}
+                  </td>
                   <td><strong>{o.cantidad} uds</strong></td>
                   <td>
                     <div>COP {o.costoUnitario ? Number(o.costoUnitario).toLocaleString("es-CO", { minimumFractionDigits: 0 }) : "0"}</div>
@@ -507,7 +510,7 @@ export default function IncomingOrdersClient({
               ))}
               {displayedOrders.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={9} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     {activeTab === "activos" 
                       ? "No hay pedidos en tránsito registrados actualmente."
                       : "No hay registros históricos de pedidos completados o cancelados."}
