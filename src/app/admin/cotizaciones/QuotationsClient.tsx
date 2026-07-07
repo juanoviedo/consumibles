@@ -835,7 +835,7 @@ export default function QuotationsClient({
                 fontSize: "14px"
               }}>
                 <h4 style={{ margin: "0 0 10px 0", color: "#34d399" }}>📈 Indicadores de Rentabilidad</h4>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: "15px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "15px" }}>
                   <div>
                     <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Costo Total Inventario</span>
                     <strong style={{ fontSize: "14px" }}>{formatCurrency(activeDetailsQuote.subtotalCosto)}</strong>
@@ -845,20 +845,24 @@ export default function QuotationsClient({
                     <strong style={{ fontSize: "14px", color: "#34d399" }}>{formatCurrency(activeDetailsQuote.utilidadTotal)}</strong>
                   </div>
                   <div>
-                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Rentabilidad</span>
-                    <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.rentabilidadPorcentual || 0).toFixed(2)}%</strong>
+                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Margen de Utilidad</span>
+                    <strong style={{ fontSize: "14px" }}>
+                      {((Number(activeDetailsQuote.subtotalVenta || activeDetailsQuote.total || 0) > 0 
+                        ? (Number(activeDetailsQuote.utilidadTotal || 0) / Number(activeDetailsQuote.subtotalVenta || activeDetailsQuote.total || 0)) 
+                        : 0) * 100).toFixed(2)}%
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Markup (s/ Costo)</span>
+                    <strong style={{ fontSize: "14px" }}>
+                      {((Number(activeDetailsQuote.subtotalCosto || 0) > 0 
+                        ? (Number(activeDetailsQuote.utilidadTotal || 0) / Number(activeDetailsQuote.subtotalCosto || 0)) 
+                        : 0) * 100).toFixed(2)}%
+                    </strong>
                   </div>
                   <div>
                     <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Días Prom. Rotación</span>
                     <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.diasPromedioInventario || 0).toFixed(1)} días</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Rentabilidad Mensual</span>
-                    <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.rentabilidadMensual || 0).toFixed(2)}%</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: "var(--admin-text-muted)", display: "block", fontSize: "12px" }}>Efectiva Anual (REA)</span>
-                    <strong style={{ fontSize: "14px" }}>{Number(activeDetailsQuote.rentabilidadEfectivaAnual || 0).toFixed(2)}%</strong>
                   </div>
                 </div>
               </div>
@@ -911,14 +915,20 @@ export default function QuotationsClient({
                       <td>{item.product?.codigo}</td>
                       <td className="wrap-text">
                         <div>{item.product?.nombre}</div>
-                        {["CUENTA_COBRO", "PAGADA"].includes(activeDetailsQuote.estado) && item.costoPromedioUnitario > 0 && (
-                          <div style={{ fontSize: "11px", color: "var(--admin-text-muted)", marginTop: "4px" }}>
-                            Costo: {formatCurrency(item.costoPromedioUnitario)} | 
-                            Utilidad: <span style={{ color: "#34d399" }}>{formatCurrency(item.utilidadTotal)}</span> | 
-                            Rentabilidad: {Number(item.rentabilidadPorcentual).toFixed(1)}% | 
-                            Rotación: {item.diasInventario} d
-                          </div>
-                        )}
+                        {["CUENTA_COBRO", "PAGADA"].includes(activeDetailsQuote.estado) && item.costoPromedioUnitario > 0 && (() => {
+                          const itemVenta = item.cantidad * item.precioUnitario;
+                          const itemMargen = itemVenta > 0 ? (Number(item.utilidadTotal) / itemVenta) * 100 : 0;
+                          const itemMarkup = (item.costoPromedioUnitario * item.cantidad) > 0 ? (Number(item.utilidadTotal) / (item.costoPromedioUnitario * item.cantidad)) * 100 : 0;
+                          return (
+                            <div style={{ fontSize: "11px", color: "var(--admin-text-muted)", marginTop: "4px" }}>
+                              Costo: {formatCurrency(item.costoPromedioUnitario)} | 
+                              Utilidad: <span style={{ color: "#34d399" }}>{formatCurrency(item.utilidadTotal)}</span> | 
+                              Margen: {itemMargen.toFixed(1)}% | 
+                              Markup: {itemMarkup.toFixed(1)}% | 
+                              Rotación: {item.diasInventario} d
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td>{item.cantidad}</td>
                       <td>{formatCurrency(item.precioUnitario)}</td>

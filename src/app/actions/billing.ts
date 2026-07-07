@@ -371,15 +371,16 @@ export async function convertToBillOfCollection(quotationId: number) {
           diasInventario = diffDays < 1 ? 1 : diffDays;
         }
 
-        // Rentabilidad del ítem
+        // Margen de utilidad (rentabilidadPorcentual) y Markup (rentabilidadMensual) del ítem
         let rentabilidadPorcentual = 0;
         let rentabilidadMensual = 0;
         let rentabilidadEfectivaAnual = 0;
+
+        if (precioUnit > 0) {
+          rentabilidadPorcentual = safeDecimal((utilidadUnitaria / precioUnit) * 100);
+        }
         if (costoPromedioUnitario > 0) {
-          const r = utilidadUnitaria / costoPromedioUnitario;
-          rentabilidadPorcentual = safeDecimal(r * 100);
-          rentabilidadMensual = safeDecimal((Math.pow(1 + r, 30 / diasInventario) - 1) * 100);
-          rentabilidadEfectivaAnual = safeDecimal((Math.pow(1 + r, 365 / diasInventario) - 1) * 100);
+          rentabilidadMensual = safeDecimal((utilidadUnitaria / costoPromedioUnitario) * 100);
         }
 
         // Snapshot financiero a nivel de item
@@ -439,11 +440,12 @@ export async function convertToBillOfCollection(quotationId: number) {
       let rentabilidadPorcentualConsolidada = 0;
       let rentabilidadMensualConsolidada = 0;
       let rentabilidadEfectivaAnualConsolidada = 0;
+
+      if (subtotalVenta > 0) {
+        rentabilidadPorcentualConsolidada = safeDecimal((utilidadTotalConsolidada / subtotalVenta) * 100);
+      }
       if (subtotalCosto > 0) {
-        const r_consolidado = utilidadTotalConsolidada / subtotalCosto;
-        rentabilidadPorcentualConsolidada = safeDecimal(r_consolidado * 100);
-        rentabilidadMensualConsolidada = safeDecimal((Math.pow(1 + r_consolidado, 30 / diasPromedioInventario) - 1) * 100);
-        rentabilidadEfectivaAnualConsolidada = safeDecimal((Math.pow(1 + r_consolidado, 365 / diasPromedioInventario) - 1) * 100);
+        rentabilidadMensualConsolidada = safeDecimal((utilidadTotalConsolidada / subtotalCosto) * 100);
       }
 
       // 3. Actualizar la cabecera de la cotización a Cuenta de Cobro

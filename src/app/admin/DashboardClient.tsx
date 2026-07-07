@@ -196,8 +196,9 @@ export default function DashboardClient({
       }
     });
 
-    // Calculate profitability percentage
-    const rentabilidadPromedio = costTotal > 0 ? (utilityTotal / costTotal) * 100 : 0;
+    // Calculate profitability percentage (Margin and Markup)
+    const margenPromedio = salesTotal > 0 ? (utilityTotal / salesTotal) * 100 : 0;
+    const markupPromedio = costTotal > 0 ? (utilityTotal / costTotal) * 100 : 0;
 
     // Convert Monthly sales record to sorted list
     const sortedMonthlySales = Object.entries(monthlySales)
@@ -220,7 +221,8 @@ export default function DashboardClient({
       costTotal,
       utilityTotal,
       retencionesTotal,
-      rentabilidadPromedio,
+      margenPromedio,
+      markupPromedio,
       transactionCount,
       sortedMonthlySales,
       topClients,
@@ -423,7 +425,7 @@ export default function DashboardClient({
           <span style={{ fontSize: "12px", color: "var(--admin-text-muted)", textTransform: "uppercase", fontWeight: "bold" }}>Utilidad Total Proyectada</span>
           <span style={{ fontSize: "22px", fontWeight: "bold", color: "#34d399" }}>{formatCurrency(filteredMetrics.utilityTotal)}</span>
           <span style={{ fontSize: "11px", color: "var(--admin-text-muted)" }}>
-            Rentabilidad: <strong>{filteredMetrics.rentabilidadPromedio.toFixed(1)}%</strong>
+            Margen: <strong>{filteredMetrics.margenPromedio.toFixed(1)}%</strong> | Markup: <strong>{filteredMetrics.markupPromedio.toFixed(1)}%</strong>
           </span>
         </div>
 
