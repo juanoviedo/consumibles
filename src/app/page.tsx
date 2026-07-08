@@ -5,8 +5,10 @@ import PublicLayout from "@/components/PublicLayout";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Catálogo de Consumibles y Repuestos",
-  description: "Explora nuestro catálogo completo de consumibles, repuestos y equipos para corte plasma. Optimizamos tu producción en la industria metalmecánica.",
+  title: {
+    absolute: "Consumibles de Plasma y Láser en Colombia | Repuestos Hypertherm y CNC",
+  },
+  description: "Catálogo y distribución de consumibles de plasma y láser en Colombia. Boquillas, electrodos, lentes de protección y repuestos para equipos Hypertherm y corte láser.",
 };
 
 export const dynamic = "force-dynamic";

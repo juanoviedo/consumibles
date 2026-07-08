@@ -203,7 +203,7 @@ export default function StoreFront({ products, categories = [] }: { products: an
       <br></br>
       <br></br>
       <br></br>
-      <h2 className="products-title">Nuestro Catálogo</h2>
+      <h1 className="products-title">Consumibles de Plasma en Colombia</h1>
 
       {categories && categories.length > 0 && (
         <div className="categories-filter">

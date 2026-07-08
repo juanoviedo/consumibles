@@ -4,8 +4,8 @@ import Image from "next/image";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Asesoría y Consumibles",
-  description: "Asesoría técnica telefónica gratuita y venta de consumibles para corte plasma y mesas CNC. Especialistas formados por Hypertherm.",
+  title: "Asesoría Técnica en Corte por Plasma y Láser",
+  description: "Asesoría técnica gratuita en procesos de corte por plasma y láser de fibra en Colombia por la compra de tus consumibles. Expertos en antorchas Hypertherm.",
 };
 
 export default function Home() {
