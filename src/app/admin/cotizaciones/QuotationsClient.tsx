@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { 
   createQuotation, 
@@ -46,6 +46,12 @@ export default function QuotationsClient({
   const router = useRouter();
   const urlClienteId = searchParams.get("clienteId");
   const selectedFilterClient = urlClienteId ? clients.find(c => c.id === Number(urlClienteId)) : null;
+
+  useEffect(() => {
+    if (!urlClienteId) {
+      router.replace("/admin/clientes");
+    }
+  }, [urlClienteId, router]);
   
   // Edit States
   const [editingQuotationId, setEditingQuotationId] = useState<number | null>(null);
@@ -101,7 +107,7 @@ export default function QuotationsClient({
   const handleOpenNewForm = () => {
     setEditingQuotationId(null);
     setEditingQuotationNumber("");
-    setSelectedClientId("");
+    setSelectedClientId(urlClienteId ? Number(urlClienteId) : "");
     setCurrentItems([
       { productId: "", nombre: "", codigo: "", cantidad: "1", precioUnitario: "", priceSource: "", suggestedPrice: 0 }
     ]);
@@ -200,7 +206,7 @@ export default function QuotationsClient({
   const handleCancelEdit = () => {
     setEditingQuotationId(null);
     setEditingQuotationNumber("");
-    setSelectedClientId("");
+    setSelectedClientId(urlClienteId ? Number(urlClienteId) : "");
     setCurrentItems([]);
   };
 
@@ -411,21 +417,11 @@ export default function QuotationsClient({
           <div style={{ display: "flex", gap: "10px" }}>
             <button 
               type="button"
-              className="admin-btn admin-btn-outline admin-btn-sm"
-              onClick={() => {
-                router.push("/admin/cotizaciones");
-              }}
-              style={{ padding: "6px 12px", fontSize: "13px" }}
-            >
-              Mostrar Todos
-            </button>
-            <button 
-              type="button"
               className="admin-btn admin-btn-sm"
               onClick={() => {
                 router.push("/admin/clientes");
               }}
-              style={{ background: "#818cf8", padding: "6px 12px", fontSize: "13px" }}
+              style={{ background: "#818cf8", padding: "8px 16px", fontSize: "14px", fontWeight: "bold" }}
             >
               ← Volver a Clientes
             </button>
@@ -446,7 +442,7 @@ export default function QuotationsClient({
                 value={selectedClientId} 
                 onChange={(e) => handleClientChange(e.target.value)}
                 required
-                disabled={isFormBlocked}
+                disabled={isFormBlocked || !!urlClienteId}
               >
                 <option value="">-- Seleccionar Cliente --</option>
                 {clients.map(c => (
