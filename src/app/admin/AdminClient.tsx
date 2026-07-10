@@ -19,6 +19,7 @@ export default function AdminClient({
   const [activeTab, setActiveTab] = useState<"products" | "audit" | "adjustments">("products");
   const [initializingProduct, setInitializingProduct] = useState<any | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const filteredProducts = filterCategoryId === "ALL" 
     ? products 
@@ -299,21 +300,73 @@ export default function AdminClient({
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <label style={{ color: "var(--admin-text-muted)", fontWeight: "bold" }}>Filtrar por Categoría:</label>
-              <select 
-                value={filterCategoryId} 
-                onChange={(e) => setFilterCategoryId(e.target.value === "ALL" ? "ALL" : Number(e.target.value))}
-                className="admin-input" 
-                style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--admin-glass-border)", background: "rgba(15, 23, 42, 0.95)", color: "white", minWidth: "200px" }}
-              >
-                <option value="ALL">Todas las categorías</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.nombre}</option>
-                ))}
-              </select>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "15px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <label style={{ color: "var(--admin-text-muted)", fontWeight: "bold" }}>Filtrar por Categoría:</label>
+                <select 
+                  value={filterCategoryId} 
+                  onChange={(e) => {
+                    setFilterCategoryId(e.target.value === "ALL" ? "ALL" : Number(e.target.value));
+                    setSelectedId(null);
+                  }}
+                  className="admin-input" 
+                  style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--admin-glass-border)", background: "rgba(15, 23, 42, 0.95)", color: "white", minWidth: "200px" }}
+                >
+                  <option value="ALL">Todas las categorías</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Actions for selection */}
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <button 
+                  type="button" 
+                  disabled={selectedId === null}
+                  onClick={() => {
+                    const selected = products.find(p => p.id === selectedId);
+                    if (selected) startEdit(selected);
+                  }} 
+                  className="admin-btn admin-btn-outline admin-btn-sm"
+                  style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+                >
+                  Editar Seleccionado
+                </button>
+                <button 
+                  type="button" 
+                  disabled={selectedId === null}
+                  onClick={() => selectedId !== null && setDeleteConfirmId(selectedId)} 
+                  className="admin-btn admin-btn-danger admin-btn-sm"
+                  style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+                >
+                  Borrar Seleccionado
+                </button>
+                {selectedId !== null && (() => {
+                  const selectedProd = products.find(p => p.id === selectedId);
+                  if (selectedProd && !selectedProd.costoInicialConfigurado) {
+                    return (
+                      <button 
+                        type="button" 
+                        onClick={() => setInitializingProduct(selectedProd)}
+                        className="admin-btn admin-btn-outline admin-btn-sm"
+                        style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
+                      >
+                        ⚠️ Configurar Costo
+                      </button>
+                    );
+                  }
+                  return null;
+                })()}
+                {selectedId !== null && (
+                  <span style={{ fontSize: "13px", color: "var(--admin-text-muted)" }}>
+                    (1 seleccionado)
+                  </span>
+                )}
+              </div>
             </div>
+
             <button className="admin-btn" onClick={() => setShowNewForm(true)}>
               + Agregar Nuevo Producto
             </button>
@@ -328,6 +381,7 @@ export default function AdminClient({
               <table className="admin-table" style={{ minWidth: "950px" }}>
                 <thead>
                   <tr>
+                    <th style={{ width: "50px", textAlign: "center" }}></th>
                     <th>Nombre</th>
                     <th>Código</th>
                     <th>Imagen</th>
@@ -336,7 +390,6 @@ export default function AdminClient({
                     <th>Valor Inv.</th>
                     <th>Precio</th>
                     <th>Inventario</th>
-                    <th>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -346,7 +399,24 @@ export default function AdminClient({
                     const totalIncomingQty = p.incomingOrders?.reduce((acc: number, order: any) => acc + order.cantidad, 0) || 0;
                     
                     return (
-                      <tr key={p.id}>
+                      <tr 
+                        key={p.id}
+                        onClick={() => setSelectedId(selectedId === p.id ? null : p.id)}
+                        style={{ 
+                          cursor: "pointer", 
+                          background: selectedId === p.id ? "rgba(139, 5, 0, 0.15)" : "" 
+                        }}
+                      >
+                        <td style={{ width: "50px", textAlign: "center" }}>
+                          <input 
+                            type="radio" 
+                            name="selectedProduct" 
+                            checked={selectedId === p.id}
+                            onChange={() => setSelectedId(p.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                          />
+                        </td>
                         <td className="wrap-text" style={{ fontWeight: "bold" }}>{p.nombre}</td>
                         <td>{p.codigo}</td>
                         <td>
@@ -380,14 +450,6 @@ export default function AdminClient({
                               }}>
                                 ⚠️ Sin Costo
                               </span>
-                              <button
-                                type="button"
-                                onClick={() => setInitializingProduct(p)}
-                                className="admin-btn admin-btn-outline admin-btn-sm"
-                                style={{ padding: "3px 8px", fontSize: "11px" }}
-                              >
-                                Configurar
-                              </button>
                             </div>
                           )}
                         </td>
@@ -452,18 +514,6 @@ export default function AdminClient({
                                 )}
                               </div>
                             )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="admin-table-actions">
-                            <button type="button" onClick={() => startEdit(p)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
-                            <button 
-                              type="button" 
-                              onClick={() => setDeleteConfirmId(p.id)} 
-                              className="admin-btn admin-btn-danger admin-btn-sm"
-                            >
-                              Borrar
-                            </button>
                           </div>
                         </td>
                       </tr>

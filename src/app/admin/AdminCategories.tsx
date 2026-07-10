@@ -8,6 +8,7 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const startEdit = (c: any) => setEditingId(c.id);
   const cancelEdit = () => setEditingId(null);
@@ -97,7 +98,37 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "15px" }}>
+        {/* Actions for selection */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button 
+            type="button" 
+            disabled={selectedId === null}
+            onClick={() => {
+              const selected = categories.find(c => c.id === selectedId);
+              if (selected) startEdit(selected);
+            }} 
+            className="admin-btn admin-btn-outline admin-btn-sm"
+            style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+          >
+            Editar Seleccionado
+          </button>
+          <button 
+            type="button" 
+            disabled={selectedId === null}
+            onClick={() => selectedId !== null && setDeleteConfirmId(selectedId)} 
+            className="admin-btn admin-btn-danger admin-btn-sm"
+            style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+          >
+            Borrar Seleccionado
+          </button>
+          {selectedId !== null && (
+            <span style={{ fontSize: "13px", color: "var(--admin-text-muted)" }}>
+              (1 seleccionado)
+            </span>
+          )}
+        </div>
+
         <button className="admin-btn" onClick={() => setShowNewForm(true)}>
           + Agregar Nueva Categoría
         </button>
@@ -112,15 +143,32 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
           <table className="admin-table" style={{ minWidth: "600px" }}>
             <thead>
               <tr>
+                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Nombre</th>
                 <th>ID</th>
                 <th>Visible en Web</th>
-                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
               {categories.map((c) => (
-                <tr key={c.id}>
+                <tr 
+                  key={c.id}
+                  onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
+                  style={{ 
+                    cursor: "pointer", 
+                    background: selectedId === c.id ? "rgba(139, 5, 0, 0.15)" : "" 
+                  }}
+                >
+                  <td style={{ width: "50px", textAlign: "center" }}>
+                    <input 
+                      type="radio" 
+                      name="selectedCategory" 
+                      checked={selectedId === c.id}
+                      onChange={() => setSelectedId(c.id)}
+                      onClick={(e) => e.stopPropagation()} // Evita doble trigger al hacer click en el radio
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </td>
                   <td style={{ fontWeight: "bold" }}>{c.nombre}</td>
                   <td>{c.id}</td>
                   <td>
@@ -129,18 +177,6 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
                     ) : (
                       <span style={{ background: "rgba(148, 163, 184, 0.2)", color: "#cbd5e1", padding: "4px 8px", borderRadius: "6px", fontSize: "12px", fontWeight: "bold" }}>No</span>
                     )}
-                  </td>
-                  <td>
-                    <div className="admin-table-actions">
-                      <button type="button" onClick={() => startEdit(c)} className="admin-btn admin-btn-outline admin-btn-sm">Editar</button>
-                      <button 
-                        type="button" 
-                        onClick={() => setDeleteConfirmId(c.id)} 
-                        className="admin-btn admin-btn-danger admin-btn-sm"
-                      >
-                        Borrar
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))}

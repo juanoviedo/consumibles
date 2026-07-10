@@ -19,6 +19,7 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   // Form states
   const [nombre, setNombre] = useState("");
@@ -204,7 +205,54 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
   return (
     <>
       {/* Action Header */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
+        {/* Actions for selection */}
+        {!showNewForm && editingId === null && (
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <ActionButton 
+              type="button"
+              disabled={selectedId === null}
+              onClick={async () => {
+                const selected = discounts.find(d => d.id === selectedId);
+                if (selected) await handleToggleActive(selected.id, selected.activo);
+              }}
+              loadingText="Actualizando..."
+              className={`admin-btn admin-btn-sm ${selectedId !== null && discounts.find(d => d.id === selectedId)?.activo ? "admin-btn-outline" : "admin-btn-success"}`}
+              style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer", padding: "6px 12px" }}
+            >
+              {selectedId !== null && discounts.find(d => d.id === selectedId)?.activo ? "Desactivar Seleccionado" : "Activar Seleccionado"}
+            </ActionButton>
+
+            <button 
+              type="button" 
+              disabled={selectedId === null}
+              onClick={() => {
+                const selected = discounts.find(d => d.id === selectedId);
+                if (selected) startEdit(selected);
+              }} 
+              className="admin-btn admin-btn-outline admin-btn-sm"
+              style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer", padding: "6px 12px" }}
+            >
+              Editar Seleccionado
+            </button>
+
+            <button 
+              type="button" 
+              disabled={selectedId === null}
+              onClick={() => selectedId !== null && setDeleteConfirmId(selectedId)} 
+              className="admin-btn admin-btn-danger admin-btn-sm"
+              style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer", padding: "6px 12px" }}
+            >
+              Borrar Seleccionado
+            </button>
+            {selectedId !== null && (
+              <span style={{ fontSize: "13px", color: "var(--admin-text-muted)" }}>
+                (1 seleccionado)
+              </span>
+            )}
+          </div>
+        )}
+        
         {!showNewForm && editingId === null && (
           <button className="admin-btn" onClick={startNewDiscount}>
             + Crear Descuento
@@ -382,18 +430,35 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
           <table className="admin-table" style={{ minWidth: "850px" }}>
             <thead>
               <tr>
+                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Nombre</th>
                 <th>Tipo</th>
                 <th>Valor</th>
                 <th>Vigencia</th>
                 <th>Estado</th>
                 <th>Productos Asociados</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {discounts.map((d) => (
-                <tr key={d.id}>
+                <tr 
+                  key={d.id}
+                  onClick={() => setSelectedId(selectedId === d.id ? null : d.id)}
+                  style={{ 
+                    cursor: "pointer", 
+                    background: selectedId === d.id ? "rgba(139, 5, 0, 0.15)" : "" 
+                  }}
+                >
+                  <td style={{ width: "50px", textAlign: "center" }}>
+                    <input 
+                      type="radio" 
+                      name="selectedDiscount" 
+                      checked={selectedId === d.id}
+                      onChange={() => setSelectedId(d.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </td>
                   <td style={{ fontWeight: "bold" }}>{d.nombre}</td>
                   <td>{d.tipoDescuento === "Porcentaje" ? "Porcentaje" : "Valor Fijo"}</td>
                   <td style={{ fontWeight: "bold", color: "#f87171" }}>
@@ -437,36 +502,6 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
                         ))}
                       </div>
                     )}
-                  </td>
-                  <td>
-                    <div className="admin-table-actions">
-                      <ActionButton 
-                        className={`admin-btn admin-btn-sm ${d.activo ? "admin-btn-outline" : "admin-btn-success"}`}
-                        onClick={async () => await handleToggleActive(d.id, d.activo)}
-                        loadingText={d.activo ? "Desactivando..." : "Activando..."}
-                        style={{ padding: "6px 12px" }}
-                      >
-                        {d.activo ? "Desactivar" : "Activar"}
-                      </ActionButton>
-
-                      <button 
-                        type="button" 
-                        className="admin-btn admin-btn-outline admin-btn-sm"
-                        onClick={() => startEdit(d)}
-                        style={{ padding: "6px 12px" }}
-                      >
-                        Editar
-                      </button>
-
-                      <button 
-                        type="button" 
-                        className="admin-btn admin-btn-danger admin-btn-sm"
-                        onClick={() => setDeleteConfirmId(d.id)}
-                        style={{ padding: "6px 12px" }}
-                      >
-                        Borrar
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))}

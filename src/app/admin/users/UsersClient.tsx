@@ -12,6 +12,7 @@ export default function UsersClient({
   sessionData: any 
 }) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const handleConfirmDelete = async (id: number) => {
     await deleteUserAction(id);
@@ -39,22 +40,59 @@ export default function UsersClient({
       </section>
 
       <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
-        <div className="admin-card-header">
+        <div className="admin-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "15px", padding: "20px 30px" }}>
           <h2 style={{ margin: 0 }}>Usuarios Actuales</h2>
+          {/* Actions for selection */}
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <button 
+              type="button" 
+              disabled={selectedId === null || users.find(u => u.id === selectedId)?.email === sessionData.email}
+              onClick={() => selectedId !== null && setDeleteConfirmId(selectedId)} 
+              className="admin-btn admin-btn-danger admin-btn-sm"
+              style={{ 
+                opacity: (selectedId === null || users.find(u => u.id === selectedId)?.email === sessionData.email) ? 0.5 : 1, 
+                cursor: (selectedId === null || users.find(u => u.id === selectedId)?.email === sessionData.email) ? "not-allowed" : "pointer" 
+              }}
+            >
+              Revocar Acceso Seleccionado
+            </button>
+            {selectedId !== null && (
+              <span style={{ fontSize: "13px", color: "var(--admin-text-muted)" }}>
+                {users.find(u => u.id === selectedId)?.email === sessionData.email ? "(No puedes revocar tu propio acceso)" : "(1 seleccionado)"}
+              </span>
+            )}
+          </div>
         </div>
         
         <div className="admin-table-container">
           <table className="admin-table" style={{ minWidth: "600px" }}>
             <thead>
               <tr>
+                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Email</th>
                 <th>Rol</th>
-                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u: any) => (
-                <tr key={u.id}>
+                <tr 
+                  key={u.id}
+                  onClick={() => setSelectedId(selectedId === u.id ? null : u.id)}
+                  style={{ 
+                    cursor: "pointer", 
+                    background: selectedId === u.id ? "rgba(139, 5, 0, 0.15)" : "" 
+                  }}
+                >
+                  <td style={{ width: "50px", textAlign: "center" }}>
+                    <input 
+                      type="radio" 
+                      name="selectedUser" 
+                      checked={selectedId === u.id}
+                      onChange={() => setSelectedId(u.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </td>
                   <td>{u.email}</td>
                   <td>
                     <span style={{ 
@@ -67,17 +105,6 @@ export default function UsersClient({
                     }}>
                       {u.isSuperAdmin ? "Super Admin" : "Admin"}
                     </span>
-                  </td>
-                  <td>
-                    {u.email !== sessionData.email && (
-                      <button 
-                        type="button" 
-                        onClick={() => setDeleteConfirmId(u.id)} 
-                        className="admin-btn admin-btn-danger admin-btn-sm"
-                      >
-                        Revocar Acceso
-                      </button>
-                    )}
                   </td>
                 </tr>
               ))}

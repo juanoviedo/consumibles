@@ -9,6 +9,7 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const startEdit = (c: any) => setEditingId(c.id);
   const cancelEdit = () => setEditingId(null);
@@ -152,13 +153,44 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
         <div>
           <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: 0 }}>Administración de Clientes</h1>
           <p style={{ color: "var(--admin-text-muted)", marginTop: "4px" }}>
             Administra los datos de los clientes para cotizaciones y cuentas de cobro.
           </p>
         </div>
+
+        {/* Actions for selection */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button 
+            type="button" 
+            disabled={selectedId === null}
+            onClick={() => {
+              const selected = clients.find(c => c.id === selectedId);
+              if (selected) startEdit(selected);
+            }} 
+            className="admin-btn admin-btn-outline admin-btn-sm"
+            style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+          >
+            Editar Seleccionado
+          </button>
+          <button 
+            type="button" 
+            disabled={selectedId === null}
+            onClick={() => selectedId !== null && setDeleteConfirmId(selectedId)} 
+            className="admin-btn admin-btn-danger admin-btn-sm"
+            style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+          >
+            Borrar Seleccionado
+          </button>
+          {selectedId !== null && (
+            <span style={{ fontSize: "13px", color: "var(--admin-text-muted)" }}>
+              (1 seleccionado)
+            </span>
+          )}
+        </div>
+
         <button className="admin-btn" onClick={() => setShowNewForm(true)}>
           + Registrar Cliente
         </button>
@@ -173,17 +205,34 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
           <table className="admin-table" style={{ minWidth: "900px" }}>
             <thead>
               <tr>
+                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Nombre</th>
                 <th>NIT / Identificación</th>
                 <th>Email</th>
                 <th>Teléfono</th>
                 <th>Dirección / Ubicación</th>
-                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
               {clients.map((c) => (
-                <tr key={c.id}>
+                <tr 
+                  key={c.id}
+                  onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
+                  style={{ 
+                    cursor: "pointer", 
+                    background: selectedId === c.id ? "rgba(139, 5, 0, 0.15)" : "" 
+                  }}
+                >
+                  <td style={{ width: "50px", textAlign: "center" }}>
+                    <input 
+                      type="radio" 
+                      name="selectedClient" 
+                      checked={selectedId === c.id}
+                      onChange={() => setSelectedId(c.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </td>
                   <td className="wrap-text"><strong>{c.nombre}</strong></td>
                   <td>{c.nit || "-"}</td>
                   <td>{c.email || "-"}</td>
@@ -203,20 +252,6 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
                       </div>
                     )}
                     {!c.direccion && !c.ciudad && !c.departamento && !c.pais && "-"}
-                  </td>
-                  <td>
-                    <div className="admin-table-actions">
-                      <button type="button" onClick={() => startEdit(c)} className="admin-btn admin-btn-outline admin-btn-sm">
-                        Editar
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setDeleteConfirmId(c.id)} 
-                        className="admin-btn admin-btn-danger admin-btn-sm"
-                      >
-                        Borrar
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))}

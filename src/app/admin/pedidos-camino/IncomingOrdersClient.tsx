@@ -16,6 +16,7 @@ export default function IncomingOrdersClient({
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   // States to calculate unit cost and total cost dynamically
   const [newQty, setNewQty] = useState<string>("1");
@@ -337,7 +338,10 @@ export default function IncomingOrdersClient({
       {/* Sub-Tabs Navigation */}
       <div style={{ display: "flex", gap: "15px", marginBottom: "25px", borderBottom: "1px solid var(--admin-glass-border)", paddingBottom: "10px" }}>
         <button 
-          onClick={() => setActiveTab("activos")} 
+          onClick={() => {
+            setActiveTab("activos");
+            setSelectedId(null);
+          }} 
           style={{
             background: "transparent",
             border: "none",
@@ -353,7 +357,10 @@ export default function IncomingOrdersClient({
           🚚 Pedidos Activos ({orders.filter(o => o.estado === "EN_CAMINO").length})
         </button>
         <button 
-          onClick={() => setActiveTab("historial")} 
+          onClick={() => {
+            setActiveTab("historial");
+            setSelectedId(null);
+          }} 
           style={{
             background: "transparent",
             border: "none",
@@ -370,6 +377,88 @@ export default function IncomingOrdersClient({
         </button>
       </div>
 
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
+        {/* Actions for selection */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          {activeTab === "activos" ? (
+            <>
+              <ActionButton 
+                type="button"
+                disabled={selectedId === null}
+                onClick={async () => {
+                  if (selectedId !== null) {
+                    const res = await completeIncomingOrder(selectedId);
+                    if (res && res.error) {
+                      alert("Error al completar el pedido: " + res.error);
+                    } else {
+                      setSelectedId(null);
+                    }
+                  }
+                }}
+                loadingText="Recibiendo..."
+                className="admin-btn admin-btn-success admin-btn-sm"
+                style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+              >
+                Recibido (Suma Stock)
+              </ActionButton>
+              <button 
+                type="button" 
+                disabled={selectedId === null}
+                onClick={() => {
+                  const selected = orders.find(o => o.id === selectedId);
+                  if (selected) {
+                    setEditingId(selected.id);
+                    setEditQty(selected.cantidad.toString());
+                    const unitCost = Number(selected.costoUnitario || 0);
+                    setEditUnitCost(unitCost ? unitCost.toString() : "");
+                    setEditTotalCost(unitCost ? (selected.cantidad * unitCost).toString() : "");
+                  }
+                }} 
+                className="admin-btn admin-btn-outline admin-btn-sm"
+                style={{ borderColor: "#fbbf24", color: "#fbbf24", opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+              >
+                Editar Seleccionado
+              </button>
+              <ActionButton 
+                type="button"
+                disabled={selectedId === null}
+                onClick={async () => {
+                  if (selectedId !== null) {
+                    const res = await cancelIncomingOrder(selectedId);
+                    if (res && res.error) {
+                      alert("Error al cancelar el pedido: " + res.error);
+                    } else {
+                      setSelectedId(null);
+                    }
+                  }
+                }}
+                loadingText="Cancelando..."
+                className="admin-btn admin-btn-outline admin-btn-sm"
+                style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+              >
+                Cancelar Pedido
+              </ActionButton>
+            </>
+          ) : null}
+
+          <button 
+            type="button" 
+            disabled={selectedId === null}
+            onClick={() => selectedId !== null && setDeleteConfirmId(selectedId)} 
+            className="admin-btn admin-btn-danger admin-btn-sm"
+            style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+          >
+            Eliminar Seleccionado
+          </button>
+
+          {selectedId !== null && (
+            <span style={{ fontSize: "13px", color: "var(--admin-text-muted)" }}>
+              (1 seleccionado)
+            </span>
+          )}
+        </div>
+      </div>
+
       <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
         <div className="admin-card-header">
           <h2 style={{ margin: 0 }}>
@@ -381,6 +470,7 @@ export default function IncomingOrdersClient({
           <table className="admin-table" style={{ minWidth: "850px" }}>
             <thead>
               <tr>
+                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Producto</th>
                 <th>Código/Ref</th>
                 <th>Imagen</th>
@@ -389,12 +479,28 @@ export default function IncomingOrdersClient({
                 <th>Fecha Pedido</th>
                 <th>Llegada Estimada</th>
                 <th>Estado</th>
-                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
               {displayedOrders.map((o) => (
-                <tr key={o.id}>
+                <tr 
+                  key={o.id}
+                  onClick={() => setSelectedId(selectedId === o.id ? null : o.id)}
+                  style={{ 
+                    cursor: "pointer", 
+                    background: selectedId === o.id ? "rgba(139, 5, 0, 0.15)" : "" 
+                  }}
+                >
+                  <td style={{ width: "50px", textAlign: "center" }}>
+                    <input 
+                      type="radio" 
+                      name="selectedOrder" 
+                      checked={selectedId === o.id}
+                      onChange={() => setSelectedId(o.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </td>
                   <td className="wrap-text" style={{ fontWeight: "bold" }}>
                     {o.product?.nombre}
                   </td>
@@ -442,70 +548,6 @@ export default function IncomingOrdersClient({
                       {o.estado}
                     </span>
                   </td>
-                  {activeTab === "activos" && (
-                    <td>
-                      <div className="admin-table-actions">
-                        <button 
-                          type="button" 
-                          className="admin-btn admin-btn-outline"
-                          style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
-                          onClick={() => {
-                            setEditingId(o.id);
-                            setEditQty(o.cantidad.toString());
-                            const unitCost = Number(o.costoUnitario || 0);
-                            setEditUnitCost(unitCost ? unitCost.toString() : "");
-                            setEditTotalCost(unitCost ? (o.cantidad * unitCost).toString() : "");
-                          }}
-                        >
-                          Editar
-                        </button>
-                        <ActionButton 
-                          className="admin-btn admin-btn-success admin-btn-sm"
-                          onClick={async () => {
-                            const res = await completeIncomingOrder(o.id);
-                            if (res && res.error) {
-                              alert("Error al completar el pedido: " + res.error);
-                            }
-                          }}
-                          loadingText="Recibiendo..."
-                        >
-                          Recibido (Suma Stock)
-                        </ActionButton>
-                        <ActionButton 
-                          className="admin-btn admin-btn-danger admin-btn-sm"
-                          onClick={async () => {
-                            const res = await cancelIncomingOrder(o.id);
-                            if (res && res.error) {
-                              alert("Error al cancelar el pedido: " + res.error);
-                            }
-                          }}
-                          loadingText="Cancelando..."
-                        >
-                          Cancelar
-                        </ActionButton>
-                        <button 
-                          type="button" 
-                          className="admin-btn admin-btn-danger admin-btn-sm"
-                          onClick={() => setDeleteConfirmId(o.id)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  )}
-                  {activeTab !== "activos" && (
-                    <td>
-                      <div className="admin-table-actions">
-                        <button 
-                          type="button" 
-                          className="admin-btn admin-btn-danger admin-btn-sm"
-                          onClick={() => setDeleteConfirmId(o.id)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  )}
                 </tr>
               ))}
               {displayedOrders.length === 0 && (

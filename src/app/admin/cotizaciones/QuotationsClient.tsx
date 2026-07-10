@@ -71,6 +71,7 @@ export default function QuotationsClient({
   const [activeRetentionQuote, setActiveRetentionQuote] = useState<any | null>(null);
   const [montoPagadoInput, setMontoPagadoInput] = useState("");
   const [retencionesInput, setRetencionesInput] = useState("");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -587,21 +588,30 @@ export default function QuotationsClient({
           <button 
             className={`admin-btn admin-btn-sm ${filterType === "TODAS" ? "" : "admin-btn-outline"}`}
             style={{ border: "none", borderRadius: "6px" }}
-            onClick={() => setFilterType("TODAS")}
+            onClick={() => {
+              setFilterType("TODAS");
+              setSelectedId(null);
+            }}
           >
             Todos
           </button>
           <button 
             className={`admin-btn admin-btn-sm ${filterType === "COTIZACIONES" ? "" : "admin-btn-outline"}`}
             style={{ border: "none", borderRadius: "6px" }}
-            onClick={() => setFilterType("COTIZACIONES")}
+            onClick={() => {
+              setFilterType("COTIZACIONES");
+              setSelectedId(null);
+            }}
           >
             Cotizaciones
           </button>
           <button 
             className={`admin-btn admin-btn-sm ${filterType === "CUENTAS_COBRO" ? "" : "admin-btn-outline"}`}
             style={{ border: "none", borderRadius: "6px" }}
-            onClick={() => setFilterType("CUENTAS_COBRO")}
+            onClick={() => {
+              setFilterType("CUENTAS_COBRO");
+              setSelectedId(null);
+            }}
           >
             Cuentas de Cobro
           </button>
@@ -609,6 +619,160 @@ export default function QuotationsClient({
       </div>
 
       {/* 4. TABLA DE DOCUMENTOS */}
+      {(() => {
+        const selectedQuote = quotations.find(q => q.id === selectedId);
+        return (
+          <div className="glass-container" style={{ marginBottom: "20px", padding: "15px 20px" }}>
+            <h3 style={{ margin: "0 0 12px 0", fontSize: "15px", color: "var(--admin-text-muted)", fontWeight: "bold" }}>
+              Acciones de Documento {selectedQuote ? `(${selectedQuote.numeroCotizacion || selectedQuote.numeroCuentaCobro || `ID: ${selectedQuote.id}`})` : ""}
+            </h3>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+              {/* General Actions */}
+              <button 
+                type="button" 
+                disabled={!selectedQuote}
+                className="admin-btn admin-btn-outline admin-btn-sm"
+                onClick={() => selectedQuote && setActiveDetailsQuote(selectedQuote)}
+                style={{ opacity: !selectedQuote ? 0.5 : 1, cursor: !selectedQuote ? "not-allowed" : "pointer" }}
+              >
+                🔎 Ver Detalle
+              </button>
+
+              <button 
+                type="button" 
+                disabled={!selectedQuote}
+                className="admin-btn admin-btn-outline admin-btn-sm"
+                style={{ borderColor: "#fbbf24", color: "#fbbf24", opacity: !selectedQuote ? 0.5 : 1, cursor: !selectedQuote ? "not-allowed" : "pointer" }}
+                onClick={() => selectedQuote && handleStartEdit(selectedQuote)}
+              >
+                {selectedQuote ? (selectedQuote.estado === "COTIZACION" ? "✏️ Editar" : "👁️ Ver Form. (Bloqueado)") : "✏️ Editar / Ver"}
+              </button>
+
+              <button 
+                type="button" 
+                disabled={!selectedQuote}
+                className="admin-btn admin-btn-success admin-btn-sm"
+                onClick={() => selectedQuote && downloadDocumentPDF(selectedQuote, settings)}
+                style={{ opacity: !selectedQuote ? 0.5 : 1, cursor: !selectedQuote ? "not-allowed" : "pointer" }}
+              >
+                📄 Generar PDF
+              </button>
+
+              <button 
+                type="button" 
+                disabled={!selectedQuote}
+                className="admin-btn admin-btn-outline admin-btn-sm" 
+                style={{ borderColor: "#818cf8", color: "#818cf8", opacity: !selectedQuote ? 0.5 : 1, cursor: !selectedQuote ? "not-allowed" : "pointer" }} 
+                onClick={() => selectedQuote && setCopyConfirmQuotation(selectedQuote)}
+              >
+                🔂 Copiar como Nueva
+              </button>
+
+              {/* Conditional State Actions */}
+              {selectedQuote && (selectedQuote.estado === "COTIZACION" || selectedQuote.estado === "APROBADA") && (
+                <ActionButton 
+                  className="admin-btn admin-btn-success admin-btn-sm" 
+                  onClick={async () => {
+                    if (selectedQuote) {
+                      const res = await convertToBillOfCollection(selectedQuote.id);
+                      if (res && res.error) {
+                        alert("Error al facturar: " + res.error);
+                      } else {
+                        setSelectedId(null);
+                      }
+                    }
+                  }}
+                  loadingText="Facturando..."
+                >
+                  📥 Facturar (Saca Stock)
+                </ActionButton>
+              )}
+
+              {selectedQuote && selectedQuote.estado === "CUENTA_COBRO" && (
+                <>
+                  <ActionButton 
+                    className="admin-btn admin-btn-sm" 
+                    style={{ background: "#8b5cf6" }} 
+                    onClick={async () => {
+                      if (selectedQuote) {
+                        const res = await markAsPaid(selectedQuote.id);
+                        if (res && res.error) {
+                          alert("Error al marcar pagada: " + res.error);
+                        } else {
+                          setSelectedId(null);
+                        }
+                      }
+                    }}
+                    loadingText="Procesando..."
+                  >
+                    💵 Marcar Pagada
+                  </ActionButton>
+                  <button 
+                    type="button"
+                    className="admin-btn admin-btn-outline admin-btn-sm" 
+                    style={{ borderColor: "#c084fc", color: "#c084fc" }} 
+                    onClick={() => {
+                      if (selectedQuote) {
+                        setActiveRetentionQuote(selectedQuote);
+                        setMontoPagadoInput(Number(selectedQuote.total).toString());
+                        setRetencionesInput("0");
+                      }
+                    }}
+                  >
+                    ✂️ Pagar con Retención
+                  </button>
+                </>
+              )}
+
+              {selectedQuote && selectedQuote.estado === "COTIZACION" && (
+                <ActionButton 
+                  className="admin-btn admin-btn-danger admin-btn-sm" 
+                  onClick={async () => {
+                    if (selectedQuote) {
+                      const res = await markAsRejected(selectedQuote.id);
+                      if (res && res.error) {
+                        alert("Error al rechazar: " + res.error);
+                      } else {
+                        setSelectedId(null);
+                      }
+                    }
+                  }}
+                  loadingText="Rechazando..."
+                >
+                  ❌ Rechazar
+                </ActionButton>
+              )}
+
+              {selectedQuote && (selectedQuote.estado === "CUENTA_COBRO" || selectedQuote.estado === "PAGADA") && (
+                <button 
+                  type="button" 
+                  className="admin-btn admin-btn-danger admin-btn-sm"
+                  onClick={() => selectedQuote && setActiveRevertQuoteId(selectedQuote.id)}
+                >
+                  ↩️ Revertir a Cotización
+                </button>
+              )}
+
+              <button 
+                type="button" 
+                disabled={!selectedQuote}
+                className="admin-btn admin-btn-danger admin-btn-sm" 
+                style={{ border: "none", color: "#f87171", opacity: !selectedQuote ? 0.5 : 1, cursor: !selectedQuote ? "not-allowed" : "pointer" }} 
+                onClick={() => selectedQuote && setDeleteConfirmId(selectedQuote.id)}
+              >
+                🗑️ Eliminar
+              </button>
+
+              {!selectedQuote && (
+                <span style={{ fontSize: "13px", color: "var(--admin-text-muted)", marginLeft: "5px" }}>
+                  (Selecciona una fila de la tabla para habilitar las acciones)
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
         <div className="admin-card-header">
           <h2 style={{ margin: 0 }}>Historial de Documentos</h2>
@@ -618,6 +782,7 @@ export default function QuotationsClient({
           <table className="admin-table" style={{ minWidth: "950px" }}>
             <thead>
               <tr>
+                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Cliente</th>
                 <th>Nº Cotización</th>
                 <th>Nº Cuenta Cobro</th>
@@ -625,12 +790,28 @@ export default function QuotationsClient({
                 <th>Fecha Factura</th>
                 <th>Estado</th>
                 <th>Total</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredDocs.map((q) => (
-                <tr key={q.id}>
+                <tr 
+                  key={q.id}
+                  onClick={() => setSelectedId(selectedId === q.id ? null : q.id)}
+                  style={{ 
+                    cursor: "pointer", 
+                    background: selectedId === q.id ? "rgba(139, 5, 0, 0.15)" : "" 
+                  }}
+                >
+                  <td style={{ width: "50px", textAlign: "center" }}>
+                    <input 
+                      type="radio" 
+                      name="selectedQuotation" 
+                      checked={selectedId === q.id}
+                      onChange={() => setSelectedId(q.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </td>
                   <td className="wrap-text"><strong>{q.client?.nombre}</strong></td>
                   <td><strong>{q.numeroCotizacion}</strong></td>
                   <td>{q.numeroCuentaCobro ? <strong style={{ color: "#60a5fa" }}>{q.numeroCuentaCobro}</strong> : "-"}</td>
@@ -642,128 +823,6 @@ export default function QuotationsClient({
                     </span>
                   </td>
                   <td>{formatCurrency(q.total)}</td>
-                  <td>
-                    <div className="admin-table-actions">
-                      <button 
-                        type="button" 
-                        className="admin-btn admin-btn-outline admin-btn-sm"
-                        onClick={() => setActiveDetailsQuote(q)}
-                      >
-                        Ver Detalle
-                      </button>
-
-                      <button 
-                        type="button" 
-                        className="admin-btn admin-btn-success admin-btn-sm"
-                        onClick={() => downloadDocumentPDF(q, settings)}
-                      >
-                        PDF
-                      </button>
-
-                      {/* EDITAR COTIZACION O VER DETALLES EN FORMULARIO */}
-                      <button 
-                        type="button" 
-                        className="admin-btn admin-btn-outline admin-btn-sm"
-                        style={{ borderColor: "#fbbf24", color: "#fbbf24" }}
-                        onClick={() => handleStartEdit(q)}
-                      >
-                        {q.estado === "COTIZACION" ? "Editar" : "Ver Form. (Bloqueado)"}
-                      </button>
-
-                      {/* APROBAR Y FACTURAR (CONVIERTE A CUENTA COBRO Y DESCUENTA STOCK) */}
-                      {(q.estado === "COTIZACION" || q.estado === "APROBADA") && (
-                        <ActionButton 
-                          className="admin-btn admin-btn-success admin-btn-sm" 
-                          onClick={async () => {
-                            const res = await convertToBillOfCollection(q.id);
-                            if (res && res.error) {
-                              alert("Error al facturar: " + res.error);
-                            }
-                          }}
-                          loadingText="Facturando..."
-                        >
-                          Facturar (Saca Stock)
-                        </ActionButton>
-                      )}
-
-                      {/* PAGAR (REGISTRA PAGO DE LA CUENTA COBRO) */}
-                      {q.estado === "CUENTA_COBRO" && (
-                        <>
-                          <ActionButton 
-                            className="admin-btn admin-btn-sm" 
-                            style={{ background: "#8b5cf6" }} 
-                            onClick={async () => {
-                              const res = await markAsPaid(q.id);
-                              if (res && res.error) {
-                                alert("Error al marcar pagada: " + res.error);
-                              }
-                            }}
-                            loadingText="Procesando..."
-                          >
-                            Marcar Pagada
-                          </ActionButton>
-                          <button 
-                            type="button"
-                            className="admin-btn admin-btn-outline admin-btn-sm" 
-                            style={{ borderColor: "#c084fc", color: "#c084fc" }} 
-                            onClick={() => {
-                              setActiveRetentionQuote(q);
-                              setMontoPagadoInput(Number(q.total).toString());
-                              setRetencionesInput("0");
-                            }}
-                          >
-                            Pagar con Retención
-                          </button>
-                        </>
-                      )}
-
-                      {/* RECHAZAR COTIZACION */}
-                      {q.estado === "COTIZACION" && (
-                        <ActionButton 
-                          className="admin-btn admin-btn-danger admin-btn-sm" 
-                          onClick={async () => {
-                            const res = await markAsRejected(q.id);
-                            if (res && res.error) {
-                              alert("Error al rechazar: " + res.error);
-                            }
-                          }}
-                          loadingText="Rechazando..."
-                        >
-                          Rechazar
-                        </ActionButton>
-                      )}
-
-                      {/* REVERTIR CUENTA COBRO A COTIZACION CON POPUP */}
-                      {(q.estado === "CUENTA_COBRO" || q.estado === "PAGADA") && (
-                        <button 
-                          type="button" 
-                          className="admin-btn admin-btn-danger admin-btn-sm"
-                          onClick={() => setActiveRevertQuoteId(q.id)}
-                        >
-                          Revertir a Cotización
-                        </button>
-                      )}
-
-                      {/* COPIAR DOCUMENTO (COTIZACIÓN O CUENTA DE COBRO) */}
-                      <button 
-                        type="button" 
-                        className="admin-btn admin-btn-outline admin-btn-sm" 
-                        style={{ borderColor: "#818cf8", color: "#818cf8" }} 
-                        onClick={() => setCopyConfirmQuotation(q)}
-                      >
-                        Copiar
-                      </button>
-
-                      <button 
-                        type="button" 
-                        className="admin-btn admin-btn-danger admin-btn-sm" 
-                        style={{ border: "none", color: "#f87171" }} 
-                        onClick={() => setDeleteConfirmId(q.id)}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               ))}
               {filteredDocs.length === 0 && (
