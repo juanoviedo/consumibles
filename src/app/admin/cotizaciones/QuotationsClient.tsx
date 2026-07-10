@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { 
   createQuotation, 
   updateQuotation,
@@ -40,6 +41,11 @@ export default function QuotationsClient({
   const [showNewForm, setShowNewForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterType, setFilterType] = useState<"TODAS" | "COTIZACIONES" | "CUENTAS_COBRO">("TODAS");
+  
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const urlClienteId = searchParams.get("clienteId");
+  const selectedFilterClient = urlClienteId ? clients.find(c => c.id === Number(urlClienteId)) : null;
   
   // Edit States
   const [editingQuotationId, setEditingQuotationId] = useState<number | null>(null);
@@ -308,6 +314,9 @@ export default function QuotationsClient({
 
   // Filter logic
   const filteredDocs = quotations.filter(q => {
+    if (urlClienteId && q.clientId !== Number(urlClienteId)) {
+      return false;
+    }
     if (filterType === "TODAS") return true;
     if (filterType === "COTIZACIONES") {
       return q.estado === "COTIZACION" || q.estado === "APROBADA" || q.estado === "RECHAZADA";
@@ -379,6 +388,50 @@ export default function QuotationsClient({
           + Crear Cotización
         </button>
       </div>
+
+      {selectedFilterClient && (
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "rgba(129, 140, 248, 0.15)",
+          border: "1px solid rgba(129, 140, 248, 0.3)",
+          borderRadius: "12px",
+          padding: "12px 20px",
+          marginBottom: "20px",
+          backdropFilter: "blur(8px)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "20px" }}>👤</span>
+            <div>
+              <div style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Filtrando por Cliente</div>
+              <strong style={{ fontSize: "16px", color: "#818cf8" }}>{selectedFilterClient.nombre}</strong>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button 
+              type="button"
+              className="admin-btn admin-btn-outline admin-btn-sm"
+              onClick={() => {
+                router.push("/admin/cotizaciones");
+              }}
+              style={{ padding: "6px 12px", fontSize: "13px" }}
+            >
+              Mostrar Todos
+            </button>
+            <button 
+              type="button"
+              className="admin-btn admin-btn-sm"
+              onClick={() => {
+                router.push("/admin/clientes");
+              }}
+              style={{ background: "#818cf8", padding: "6px 12px", fontSize: "13px" }}
+            >
+              ← Volver a Clientes
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. FORMULARIO NUEVA O EDITAR COTIZACIÓN */}
       {(showNewForm || editingQuotationId !== null) && (

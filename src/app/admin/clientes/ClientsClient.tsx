@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient, updateClient, deleteClient } from "@/app/actions/billing";
 import SubmitButton from "@/components/SubmitButton";
 import ActionButton from "@/components/ActionButton";
 
 export default function ClientsClient({ clients }: { clients: any[] }) {
+  const router = useRouter();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -163,6 +165,38 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
 
         {/* Actions for selection */}
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button 
+            type="button" 
+            disabled={selectedId === null}
+            onClick={() => {
+              if (selectedId !== null) {
+                router.push(`/admin/cotizaciones?clienteId=${selectedId}`);
+              }
+            }} 
+            className="admin-btn admin-btn-outline"
+            title="Ver Cotizaciones y Facturas"
+            style={{ 
+              width: "40px", 
+              height: "40px", 
+              padding: "0", 
+              display: "inline-flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              borderRadius: "8px",
+              borderColor: "#818cf8",
+              color: "#818cf8",
+              opacity: selectedId === null ? 0.5 : 1, 
+              cursor: selectedId === null ? "not-allowed" : "pointer" 
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+          </button>
           <button 
             type="button" 
             disabled={selectedId === null}
