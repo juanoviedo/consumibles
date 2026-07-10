@@ -395,11 +395,25 @@ export default function IncomingOrdersClient({
                     }
                   }
                 }}
-                loadingText="Recibiendo..."
-                className="admin-btn admin-btn-success admin-btn-sm"
-                style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+                loadingText="..."
+                className="admin-btn admin-btn-success"
+                title="Recibido (Suma al Stock)"
+                style={{ 
+                  width: "40px", 
+                  height: "40px", 
+                  padding: "0", 
+                  display: "inline-flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  borderRadius: "8px",
+                  opacity: selectedId === null ? 0.5 : 1, 
+                  cursor: selectedId === null ? "not-allowed" : "pointer" 
+                }}
               >
-                Recibido (Suma Stock)
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
               </ActionButton>
               <button 
                 type="button" 
@@ -414,10 +428,26 @@ export default function IncomingOrdersClient({
                     setEditTotalCost(unitCost ? (selected.cantidad * unitCost).toString() : "");
                   }
                 }} 
-                className="admin-btn admin-btn-outline admin-btn-sm"
-                style={{ borderColor: "#fbbf24", color: "#fbbf24", opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+                className="admin-btn admin-btn-outline"
+                title="Editar Pedido"
+                style={{ 
+                  width: "40px", 
+                  height: "40px", 
+                  padding: "0", 
+                  display: "inline-flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  borderRadius: "8px",
+                  borderColor: "#fbbf24", 
+                  color: "#fbbf24", 
+                  opacity: selectedId === null ? 0.5 : 1, 
+                  cursor: selectedId === null ? "not-allowed" : "pointer" 
+                }}
               >
-                Editar Seleccionado
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z" />
+                </svg>
               </button>
               <ActionButton 
                 type="button"
@@ -432,11 +462,26 @@ export default function IncomingOrdersClient({
                     }
                   }
                 }}
-                loadingText="Cancelando..."
-                className="admin-btn admin-btn-outline admin-btn-sm"
-                style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+                loadingText="..."
+                className="admin-btn admin-btn-outline"
+                title="Cancelar Pedido"
+                style={{ 
+                  width: "40px", 
+                  height: "40px", 
+                  padding: "0", 
+                  display: "inline-flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  borderRadius: "8px",
+                  opacity: selectedId === null ? 0.5 : 1, 
+                  cursor: selectedId === null ? "not-allowed" : "pointer" 
+                }}
               >
-                Cancelar Pedido
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
               </ActionButton>
             </>
           ) : null}
@@ -445,10 +490,26 @@ export default function IncomingOrdersClient({
             type="button" 
             disabled={selectedId === null}
             onClick={() => selectedId !== null && setDeleteConfirmId(selectedId)} 
-            className="admin-btn admin-btn-danger admin-btn-sm"
-            style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer" }}
+            className="admin-btn admin-btn-danger"
+            title="Eliminar Pedido"
+            style={{ 
+              width: "40px", 
+              height: "40px", 
+              padding: "0", 
+              display: "inline-flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              borderRadius: "8px",
+              opacity: selectedId === null ? 0.5 : 1, 
+              cursor: selectedId === null ? "not-allowed" : "pointer" 
+            }}
           >
-            Eliminar Seleccionado
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              <line x1="10" y1="11" x2="10" y2="17" />
+              <line x1="14" y1="11" x2="14" y2="17" />
+            </svg>
           </button>
 
           {selectedId !== null && (

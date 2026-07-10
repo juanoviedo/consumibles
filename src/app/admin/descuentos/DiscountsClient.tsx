@@ -216,11 +216,25 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
                 const selected = discounts.find(d => d.id === selectedId);
                 if (selected) await handleToggleActive(selected.id, selected.activo);
               }}
-              loadingText="Actualizando..."
-              className={`admin-btn admin-btn-sm ${selectedId !== null && discounts.find(d => d.id === selectedId)?.activo ? "admin-btn-outline" : "admin-btn-success"}`}
-              style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer", padding: "6px 12px" }}
+              loadingText="..."
+              className={`admin-btn ${selectedId !== null && discounts.find(d => d.id === selectedId)?.activo ? "admin-btn-outline" : "admin-btn-success"}`}
+              title={selectedId !== null && discounts.find(d => d.id === selectedId)?.activo ? "Desactivar Descuento" : "Activar Descuento"}
+              style={{ 
+                width: "40px", 
+                height: "40px", 
+                padding: "0", 
+                display: "inline-flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                borderRadius: "8px",
+                opacity: selectedId === null ? 0.5 : 1, 
+                cursor: selectedId === null ? "not-allowed" : "pointer" 
+              }}
             >
-              {selectedId !== null && discounts.find(d => d.id === selectedId)?.activo ? "Desactivar Seleccionado" : "Activar Seleccionado"}
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                <line x1="12" y1="2" x2="12" y2="12" />
+              </svg>
             </ActionButton>
 
             <button 
@@ -230,20 +244,50 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
                 const selected = discounts.find(d => d.id === selectedId);
                 if (selected) startEdit(selected);
               }} 
-              className="admin-btn admin-btn-outline admin-btn-sm"
-              style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer", padding: "6px 12px" }}
+              className="admin-btn admin-btn-outline"
+              title="Editar Descuento"
+              style={{ 
+                width: "40px", 
+                height: "40px", 
+                padding: "0", 
+                display: "inline-flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                borderRadius: "8px",
+                opacity: selectedId === null ? 0.5 : 1, 
+                cursor: selectedId === null ? "not-allowed" : "pointer" 
+              }}
             >
-              Editar Seleccionado
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z" />
+              </svg>
             </button>
 
             <button 
               type="button" 
               disabled={selectedId === null}
               onClick={() => selectedId !== null && setDeleteConfirmId(selectedId)} 
-              className="admin-btn admin-btn-danger admin-btn-sm"
-              style={{ opacity: selectedId === null ? 0.5 : 1, cursor: selectedId === null ? "not-allowed" : "pointer", padding: "6px 12px" }}
+              className="admin-btn admin-btn-danger"
+              title="Borrar Descuento"
+              style={{ 
+                width: "40px", 
+                height: "40px", 
+                padding: "0", 
+                display: "inline-flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                borderRadius: "8px",
+                opacity: selectedId === null ? 0.5 : 1, 
+                cursor: selectedId === null ? "not-allowed" : "pointer" 
+              }}
             >
-              Borrar Seleccionado
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
             </button>
             {selectedId !== null && (
               <span style={{ fontSize: "13px", color: "var(--admin-text-muted)" }}>
