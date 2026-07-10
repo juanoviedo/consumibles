@@ -143,7 +143,6 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
           <table className="admin-table" style={{ minWidth: "600px" }}>
             <thead>
               <tr>
-                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Nombre</th>
                 <th>ID</th>
                 <th>Visible en Web</th>
@@ -159,16 +158,6 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
                     background: selectedId === c.id ? "rgba(139, 5, 0, 0.15)" : "" 
                   }}
                 >
-                  <td style={{ width: "50px", textAlign: "center" }}>
-                    <input 
-                      type="radio" 
-                      name="selectedCategory" 
-                      checked={selectedId === c.id}
-                      onChange={() => setSelectedId(c.id)}
-                      onClick={(e) => e.stopPropagation()} // Evita doble trigger al hacer click en el radio
-                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                    />
-                  </td>
                   <td style={{ fontWeight: "bold" }}>{c.nombre}</td>
                   <td>{c.id}</td>
                   <td>
@@ -182,7 +171,7 @@ export default function AdminCategories({ categories }: { categories: any[] }) {
               ))}
               {categories.length === 0 && (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center", padding: "20px", color: "#666" }}>No hay categorías registradas.</td>
+                  <td colSpan={3} style={{ textAlign: "center", padding: "20px", color: "#666" }}>No hay categorías registradas.</td>
                 </tr>
               )}
             </tbody>

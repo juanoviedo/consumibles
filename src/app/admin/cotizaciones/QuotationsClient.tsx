@@ -782,7 +782,6 @@ export default function QuotationsClient({
           <table className="admin-table" style={{ minWidth: "950px" }}>
             <thead>
               <tr>
-                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Cliente</th>
                 <th>Nº Cotización</th>
                 <th>Nº Cuenta Cobro</th>
@@ -802,16 +801,6 @@ export default function QuotationsClient({
                     background: selectedId === q.id ? "rgba(139, 5, 0, 0.15)" : "" 
                   }}
                 >
-                  <td style={{ width: "50px", textAlign: "center" }}>
-                    <input 
-                      type="radio" 
-                      name="selectedQuotation" 
-                      checked={selectedId === q.id}
-                      onChange={() => setSelectedId(q.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                    />
-                  </td>
                   <td className="wrap-text"><strong>{q.client?.nombre}</strong></td>
                   <td><strong>{q.numeroCotizacion}</strong></td>
                   <td>{q.numeroCuentaCobro ? <strong style={{ color: "#60a5fa" }}>{q.numeroCuentaCobro}</strong> : "-"}</td>
@@ -827,7 +816,7 @@ export default function QuotationsClient({
               ))}
               {filteredDocs.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     No se encontraron documentos en esta categoría.
                   </td>
                 </tr>

@@ -381,7 +381,6 @@ export default function AdminClient({
               <table className="admin-table" style={{ minWidth: "950px" }}>
                 <thead>
                   <tr>
-                    <th style={{ width: "50px", textAlign: "center" }}></th>
                     <th>Nombre</th>
                     <th>Código</th>
                     <th>Imagen</th>
@@ -407,16 +406,6 @@ export default function AdminClient({
                           background: selectedId === p.id ? "rgba(139, 5, 0, 0.15)" : "" 
                         }}
                       >
-                        <td style={{ width: "50px", textAlign: "center" }}>
-                          <input 
-                            type="radio" 
-                            name="selectedProduct" 
-                            checked={selectedId === p.id}
-                            onChange={() => setSelectedId(p.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                          />
-                        </td>
                         <td className="wrap-text" style={{ fontWeight: "bold" }}>{p.nombre}</td>
                         <td>{p.codigo}</td>
                         <td>
@@ -521,7 +510,7 @@ export default function AdminClient({
                   })}
                   {filteredProducts.length === 0 && (
                     <tr>
-                      <td colSpan={9} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                      <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                         No hay productos en esta categoría.
                       </td>
                     </tr>

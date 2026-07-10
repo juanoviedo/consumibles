@@ -470,7 +470,6 @@ export default function IncomingOrdersClient({
           <table className="admin-table" style={{ minWidth: "850px" }}>
             <thead>
               <tr>
-                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Producto</th>
                 <th>Código/Ref</th>
                 <th>Imagen</th>
@@ -491,16 +490,6 @@ export default function IncomingOrdersClient({
                     background: selectedId === o.id ? "rgba(139, 5, 0, 0.15)" : "" 
                   }}
                 >
-                  <td style={{ width: "50px", textAlign: "center" }}>
-                    <input 
-                      type="radio" 
-                      name="selectedOrder" 
-                      checked={selectedId === o.id}
-                      onChange={() => setSelectedId(o.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                    />
-                  </td>
                   <td className="wrap-text" style={{ fontWeight: "bold" }}>
                     {o.product?.nombre}
                   </td>
@@ -552,7 +541,7 @@ export default function IncomingOrdersClient({
               ))}
               {displayedOrders.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     {activeTab === "activos" 
                       ? "No hay pedidos en tránsito registrados actualmente."
                       : "No hay registros históricos de pedidos completados o cancelados."}

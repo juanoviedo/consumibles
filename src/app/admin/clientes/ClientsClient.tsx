@@ -205,7 +205,6 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
           <table className="admin-table" style={{ minWidth: "900px" }}>
             <thead>
               <tr>
-                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Nombre</th>
                 <th>NIT / Identificación</th>
                 <th>Email</th>
@@ -223,16 +222,6 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
                     background: selectedId === c.id ? "rgba(139, 5, 0, 0.15)" : "" 
                   }}
                 >
-                  <td style={{ width: "50px", textAlign: "center" }}>
-                    <input 
-                      type="radio" 
-                      name="selectedClient" 
-                      checked={selectedId === c.id}
-                      onChange={() => setSelectedId(c.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                    />
-                  </td>
                   <td className="wrap-text"><strong>{c.nombre}</strong></td>
                   <td>{c.nit || "-"}</td>
                   <td>{c.email || "-"}</td>
@@ -257,7 +246,7 @@ export default function ClientsClient({ clients }: { clients: any[] }) {
               ))}
               {clients.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={5} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     No hay clientes registrados en el sistema.
                   </td>
                 </tr>

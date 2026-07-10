@@ -68,7 +68,6 @@ export default function UsersClient({
           <table className="admin-table" style={{ minWidth: "600px" }}>
             <thead>
               <tr>
-                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Email</th>
                 <th>Rol</th>
               </tr>
@@ -83,16 +82,6 @@ export default function UsersClient({
                     background: selectedId === u.id ? "rgba(139, 5, 0, 0.15)" : "" 
                   }}
                 >
-                  <td style={{ width: "50px", textAlign: "center" }}>
-                    <input 
-                      type="radio" 
-                      name="selectedUser" 
-                      checked={selectedId === u.id}
-                      onChange={() => setSelectedId(u.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                    />
-                  </td>
                   <td>{u.email}</td>
                   <td>
                     <span style={{ 

@@ -430,7 +430,6 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
           <table className="admin-table" style={{ minWidth: "850px" }}>
             <thead>
               <tr>
-                <th style={{ width: "50px", textAlign: "center" }}></th>
                 <th>Nombre</th>
                 <th>Tipo</th>
                 <th>Valor</th>
@@ -449,16 +448,6 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
                     background: selectedId === d.id ? "rgba(139, 5, 0, 0.15)" : "" 
                   }}
                 >
-                  <td style={{ width: "50px", textAlign: "center" }}>
-                    <input 
-                      type="radio" 
-                      name="selectedDiscount" 
-                      checked={selectedId === d.id}
-                      onChange={() => setSelectedId(d.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
-                    />
-                  </td>
                   <td style={{ fontWeight: "bold" }}>{d.nombre}</td>
                   <td>{d.tipoDescuento === "Porcentaje" ? "Porcentaje" : "Valor Fijo"}</td>
                   <td style={{ fontWeight: "bold", color: "#f87171" }}>
@@ -507,7 +496,7 @@ export default function DiscountsClient({ products, discounts }: DiscountsClient
               ))}
               {discounts.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
+                  <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     No hay descuentos registrados en el sistema.
                   </td>
                 </tr>
