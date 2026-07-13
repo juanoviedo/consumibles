@@ -1,19 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export default function ExpertSection() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    // Check localStorage to see if user has already dismissed the section
-    const dismissed = localStorage.getItem("dismissed_expert_section");
-    if (dismissed !== "true") {
-      setIsVisible(true);
-    }
-  }, []);
+  const [isVisible, setIsVisible] = useState(true);
 
   const handleClose = () => {
     setIsVisible(false);
-    localStorage.setItem("dismissed_expert_section", "true");
   };
 
   if (!isVisible) return null;
@@ -183,6 +174,39 @@ export default function ExpertSection() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Action Row - OK Button */}
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "10px"
+          }}>
+            <button
+              onClick={handleClose}
+              style={{
+                background: "linear-gradient(135deg, #8b0500, #dc2626)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "14px 40px",
+                fontSize: "1.05em",
+                fontWeight: "bold",
+                cursor: "pointer",
+                boxShadow: "0 4px 15px rgba(139, 5, 0, 0.2)",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 8px 20px rgba(139, 5, 0, 0.35)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 4px 15px rgba(139, 5, 0, 0.2)";
+              }}
+            >
+              Entendido, ver catálogo
+            </button>
           </div>
         </div>
       </div>
