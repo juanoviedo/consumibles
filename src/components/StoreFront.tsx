@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ExpertSection from "./ExpertSection";
 
 export default function StoreFront({ products, categories = [] }: { products: any[], categories?: any[] }) {
   const [carrito, setCarrito] = useState<Record<string, { nombre: string; precio: number; cantidad: number }>>({});
@@ -204,6 +205,7 @@ export default function StoreFront({ products, categories = [] }: { products: an
       <br></br>
       <br></br>
       <h1 className="products-title">Consumibles de Plasma en Colombia</h1>
+      <ExpertSection />
 
       {categories && categories.length > 0 && (
         <div className="categories-filter">
