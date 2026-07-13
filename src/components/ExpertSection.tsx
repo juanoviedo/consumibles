@@ -1,6 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function ExpertSection() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Check localStorage to see if user has already dismissed the section
+    const dismissed = localStorage.getItem("dismissed_expert_section");
+    if (dismissed !== "true") {
+      setIsVisible(true);
+    }
+  }, []);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    localStorage.setItem("dismissed_expert_section", "true");
+  };
+
+  if (!isVisible) return null;
+
   return (
     <section className="expert-trust-section" style={{
       maxWidth: "1200px",
@@ -23,6 +40,42 @@ export default function ExpertSection() {
           width: "100%"
         }} />
 
+        {/* Close Button */}
+        <button 
+          onClick={handleClose}
+          title="Cerrar esta ventana"
+          style={{
+            position: "absolute",
+            top: "16px",
+            right: "16px",
+            background: "rgba(0, 0, 0, 0.05)",
+            border: "none",
+            borderRadius: "50%",
+            width: "32px",
+            height: "32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: "#71717a",
+            transition: "all 0.2s",
+            zIndex: 10
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(139, 5, 0, 0.1)";
+            e.currentTarget.style.color = "#8b0500";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(0, 0, 0, 0.05)";
+            e.currentTarget.style.color = "#71717a";
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
         <div style={{
           padding: "30px 25px",
           display: "flex",
@@ -34,7 +87,8 @@ export default function ExpertSection() {
             display: "flex",
             alignItems: "center",
             gap: "20px",
-            flexWrap: "wrap"
+            flexWrap: "wrap",
+            paddingRight: "40px" // prevent collision with close button
           }}>
             <div style={{
               width: "80px",
