@@ -26,6 +26,8 @@ model Product {
   fechaPromedioCompra     DateTime?       @db.Timestamp(6)
   valorInventarioActual   Decimal         @db.Decimal(18, 6) @default(0)
   costoInicialConfigurado Boolean         @default(false)
+  esServicio              Boolean         @default(false)
+  mostrarEnWeb            Boolean         @default(true)
   incomingOrders          IncomingOrder[]
   quotationItems          QuotationItem[]
   inventoryLogs           InventoryLog[]

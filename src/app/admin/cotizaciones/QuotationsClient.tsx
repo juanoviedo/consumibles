@@ -491,10 +491,10 @@ export default function QuotationsClient({
                           >
                             <option value="">-- Seleccionar Producto --</option>
                             {products.map(p => (
-                              <option key={p.id} value={p.id}>
-                                {p.nombre} (Stock: {p.stockActual})
-                              </option>
-                            ))}
+                               <option key={p.id} value={p.id}>
+                                 {p.esServicio ? `⚡ ${p.nombre} (Servicio)` : `${p.nombre} (Stock: ${p.stockActual})`}{p.mostrarEnWeb === false ? " [Oculto Web]" : ""}
+                               </option>
+                             ))}
                           </select>
                         </td>
                         <td>

@@ -349,12 +349,12 @@ export async function convertToBillOfCollection(quotationId: number) {
           throw new Error(`Producto con ID ${item.productId} no encontrado`);
         }
 
-        if (product.stockActual < item.cantidad) {
+        if (!product.esServicio && product.stockActual < item.cantidad) {
           throw new Error(`Stock insuficiente para el producto "${product.nombre}". Disponible: ${product.stockActual}, requerido: ${item.cantidad}`);
         }
 
         const stockPrevio = product.stockActual;
-        const stockNuevo = stockPrevio - item.cantidad;
+        const stockNuevo = product.esServicio ? stockPrevio : stockPrevio - item.cantidad;
 
         const costoPromedioUnitario = Number(product.precioPromedioCompra);
         const fechaPromedioCompra = product.fechaPromedioCompra;
@@ -363,12 +363,15 @@ export async function convertToBillOfCollection(quotationId: number) {
         const utilidadUnitaria = safeDecimal(precioUnit - costoPromedioUnitario);
         const utilidadTotal = safeDecimal(utilidadUnitaria * item.cantidad);
 
-        // Calcular días en inventario (mínimo 1)
-        let diasInventario = 1;
-        if (fechaPromedioCompra) {
-          const diffTime = fechaCuentaCobro.getTime() - new Date(fechaPromedioCompra).getTime();
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          diasInventario = diffDays < 1 ? 1 : diffDays;
+        // Calcular días en inventario (mínimo 1 para productos físicos, 0 para servicios)
+        let diasInventario = 0;
+        if (!product.esServicio) {
+          diasInventario = 1;
+          if (fechaPromedioCompra) {
+            const diffTime = fechaCuentaCobro.getTime() - new Date(fechaPromedioCompra).getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            diasInventario = diffDays < 1 ? 1 : diffDays;
+          }
         }
 
         // Margen de utilidad (rentabilidadPorcentual) y Markup (rentabilidadMensual) del ítem
@@ -398,33 +401,37 @@ export async function convertToBillOfCollection(quotationId: number) {
           }
         });
 
-        // Descontar del inventario y valorizar
-        const valorInventarioActual = stockNuevo * costoPromedioUnitario;
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stockActual: stockNuevo,
-            valorInventarioActual
-          }
-        });
+        // Descontar del inventario y valorizar (Solo productos físicos)
+        if (!product.esServicio) {
+          const valorInventarioActual = stockNuevo * costoPromedioUnitario;
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stockActual: stockNuevo,
+              valorInventarioActual
+            }
+          });
 
-        // Crear log de inventario
-        await tx.inventoryLog.create({
-          data: {
-            productId: item.productId,
-            tipo: "VENTA",
-            cantidad: item.cantidad,
-            costoUnit: costoPromedioUnitario,
-            stockPrevio,
-            stockNuevo,
-            detalle: `Venta facturada en Cuenta de Cobro ${numeroCuentaCobro}. Cantidad: ${item.cantidad}. Costo Unitario: $${costoPromedioUnitario.toLocaleString()}`
-          }
-        });
+          // Crear log de inventario
+          await tx.inventoryLog.create({
+            data: {
+              productId: item.productId,
+              tipo: "VENTA",
+              cantidad: item.cantidad,
+              costoUnit: costoPromedioUnitario,
+              stockPrevio,
+              stockNuevo,
+              detalle: `Venta facturada en Cuenta de Cobro ${numeroCuentaCobro}. Cantidad: ${item.cantidad}. Costo Unitario: $${costoPromedioUnitario.toLocaleString()}`
+            }
+          });
+        }
 
         // Acumuladores de cabecera
         subtotalVenta += precioUnit * item.cantidad;
         subtotalCosto += costoPromedioUnitario * item.cantidad;
-        weightedDaysSum += diasInventario * (costoPromedioUnitario * item.cantidad);
+        if (!product.esServicio) {
+          weightedDaysSum += diasInventario * (costoPromedioUnitario * item.cantidad);
+        }
       }
 
       // 2. Calcular consolidados de cabecera
@@ -565,32 +572,34 @@ export async function revertToQuotation(quotationId: number, devolverInventario:
             throw new Error(`Producto con ID ${item.productId} no encontrado`);
           }
 
-          const stockPrevio = product.stockActual;
-          const stockNuevo = stockPrevio + item.cantidad;
-          const costoPromedio = Number(product.precioPromedioCompra);
-          const valorInventarioActual = stockNuevo * costoPromedio;
+          if (!product.esServicio) {
+            const stockPrevio = product.stockActual;
+            const stockNuevo = stockPrevio + item.cantidad;
+            const costoPromedio = Number(product.precioPromedioCompra);
+            const valorInventarioActual = stockNuevo * costoPromedio;
 
-          // Devolver al stock del producto
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stockActual: stockNuevo,
-              valorInventarioActual
-            },
-          });
+            // Devolver al stock del producto
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stockActual: stockNuevo,
+                valorInventarioActual
+              },
+            });
 
-          // Registrar log de reversión
-          await tx.inventoryLog.create({
-            data: {
-              productId: item.productId,
-              tipo: "REVERSION",
-              cantidad: item.cantidad,
-              costoUnit: costoPromedio,
-              stockPrevio,
-              stockNuevo,
-              detalle: `Reversión de venta: Cuenta de Cobro ${quotation.numeroCuentaCobro || ""}. Cantidad devuelta: ${item.cantidad}`
-            }
-          });
+            // Registrar log de reversión
+            await tx.inventoryLog.create({
+              data: {
+                productId: item.productId,
+                tipo: "REVERSION",
+                cantidad: item.cantidad,
+                costoUnit: costoPromedio,
+                stockPrevio,
+                stockNuevo,
+                detalle: `Reversión de venta: Cuenta de Cobro ${quotation.numeroCuentaCobro || ""}. Cantidad devuelta: ${item.cantidad}`
+              }
+            });
+          }
 
           // Limpiar snapshots de item
           await tx.quotationItem.update({

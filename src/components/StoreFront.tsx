@@ -282,16 +282,16 @@ export default function StoreFront({ products, categories = [] }: { products: an
                   <div style={{ display: "flex", justifyContent: "flex-start", width: "100%", marginBottom: "10px" }}>
                     <div style={{ 
                       fontSize: "10px", 
-                      color: p.stockActual > 0 ? "#71717a" : "#dc2626", 
+                      color: p.esServicio ? "#2563eb" : (p.stockActual > 0 ? "#71717a" : "#dc2626"), 
                       fontWeight: "700", 
-                      background: p.stockActual > 0 ? "rgba(0, 0, 0, 0.04)" : "rgba(220, 38, 38, 0.05)",
-                      border: p.stockActual > 0 ? "1px solid rgba(0, 0, 0, 0.08)" : "1px solid rgba(220, 38, 38, 0.15)",
+                      background: p.esServicio ? "rgba(37, 99, 235, 0.08)" : (p.stockActual > 0 ? "rgba(0, 0, 0, 0.04)" : "rgba(220, 38, 38, 0.05)"),
+                      border: p.esServicio ? "1px solid rgba(37, 99, 235, 0.2)" : (p.stockActual > 0 ? "1px solid rgba(0, 0, 0, 0.08)" : "1px solid rgba(220, 38, 38, 0.15)"),
                       padding: "3px 8px",
                       borderRadius: "4px",
                       textTransform: "uppercase",
                       letterSpacing: "0.5px"
                     }}>
-                      {p.stockActual > 0 ? `Disponible: ${p.stockActual} u.` : "Agotado"}
+                      {p.esServicio ? "⚡ Servicio Disponible" : (p.stockActual > 0 ? `Disponible: ${p.stockActual} u.` : "Agotado")}
                     </div>
                   </div>
 

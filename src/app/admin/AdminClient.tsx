@@ -70,9 +70,27 @@ export default function AdminClient({
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Inventario Actual (Solo Lectura)</label>
             <input type="number" defaultValue={editingProduct.stockActual ?? 0} readOnly style={{ background: "rgba(255, 255, 255, 0.05)", cursor: "not-allowed", border: "1px solid var(--admin-glass-border)", color: "var(--admin-text-muted)" }} />
           </div>
-          <div className="admin-input-group">
-            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Inventario Mínimo</label>
-            <input type="number" name="minStock" defaultValue={editingProduct.minStock ?? 0} required min="0" />
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1", display: "flex", gap: "25px", alignItems: "center", background: "rgba(255, 255, 255, 0.03)", padding: "12px 15px", borderRadius: "8px", border: "1px solid var(--admin-glass-border)", marginTop: "5px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "600", color: "#60a5fa" }}>
+              <input 
+                type="checkbox" 
+                name="esServicio" 
+                value="true" 
+                defaultChecked={editingProduct.esServicio ?? false} 
+                style={{ width: "18px", height: "18px", cursor: "pointer" }}
+              />
+              ⚡ Es Servicio / Mano de Obra (Sin inventario)
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "600", color: "#34d399" }}>
+              <input 
+                type="checkbox" 
+                name="mostrarEnWeb" 
+                value="true" 
+                defaultChecked={editingProduct.mostrarEnWeb !== false} 
+                style={{ width: "18px", height: "18px", cursor: "pointer" }}
+              />
+              🌐 Mostrar en Tienda Web
+            </label>
           </div>
           <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap", borderTop: "1px solid var(--admin-glass-border)", paddingTop: "15px", paddingBottom: "5px" }}>
             <div style={{ flex: 1, minWidth: "250px" }}>
@@ -174,6 +192,27 @@ export default function AdminClient({
 
           <div className="admin-input-group">
             <input type="number" name="minStock" placeholder="Inventario Mínimo (ej. 5)" defaultValue={0} required min="0" />
+          </div>
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1", display: "flex", gap: "25px", alignItems: "center", background: "rgba(255, 255, 255, 0.03)", padding: "12px 15px", borderRadius: "8px", border: "1px solid var(--admin-glass-border)", marginTop: "5px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "600", color: "#60a5fa" }}>
+              <input 
+                type="checkbox" 
+                name="esServicio" 
+                value="true" 
+                style={{ width: "18px", height: "18px", cursor: "pointer" }}
+              />
+              ⚡ Es Servicio / Mano de Obra (Sin inventario)
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "600", color: "#34d399" }}>
+              <input 
+                type="checkbox" 
+                name="mostrarEnWeb" 
+                value="true" 
+                defaultChecked={true} 
+                style={{ width: "18px", height: "18px", cursor: "pointer" }}
+              />
+              🌐 Mostrar en Tienda Web
+            </label>
           </div>
           <div className="admin-input-group" style={{ display: "flex", gap: "10px", gridColumn: "1 / -1", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: "250px" }}>
@@ -280,21 +319,21 @@ export default function AdminClient({
             <div className="glass-container" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "5px" }}>
               <span style={{ color: "var(--admin-text-muted)", fontSize: "14px", fontWeight: "bold" }}>Capital Total en Inventario</span>
               <span style={{ fontSize: "28px", fontWeight: "bold", color: "#34d399" }}>
-                COP {products.reduce((acc, p) => acc + (p.valorInventarioActual || 0), 0).toLocaleString("es-CO", { minimumFractionDigits: 0 })}
+                COP {products.filter(p => !p.esServicio).reduce((acc, p) => acc + (p.valorInventarioActual || 0), 0).toLocaleString("es-CO", { minimumFractionDigits: 0 })}
               </span>
-              <span style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Valorizado según el costo promedio actual de cada producto</span>
+              <span style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Valorizado según el costo promedio actual de cada producto físico</span>
             </div>
             <div className="glass-container" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "5px" }}>
               <span style={{ color: "var(--admin-text-muted)", fontSize: "14px", fontWeight: "bold" }}>Total Unidades Disponibles</span>
               <span style={{ fontSize: "28px", fontWeight: "bold", color: "#60a5fa" }}>
-                {products.reduce((acc, p) => acc + (p.stockActual || 0), 0).toLocaleString()} und.
+                {products.filter(p => !p.esServicio).reduce((acc, p) => acc + (p.stockActual || 0), 0).toLocaleString()} und.
               </span>
-              <span style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Cantidad acumulada de todos los productos en catálogo</span>
+              <span style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Cantidad acumulada de productos físicos en catálogo</span>
             </div>
             <div className="glass-container" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "5px" }}>
               <span style={{ color: "var(--admin-text-muted)", fontSize: "14px", fontWeight: "bold" }}>Productos con Costo Pendiente</span>
               <span style={{ fontSize: "28px", fontWeight: "bold", color: "#fbbf24" }}>
-                {products.filter(p => !p.costoInicialConfigurado).length} productos
+                {products.filter(p => !p.esServicio && !p.costoInicialConfigurado).length} productos
               </span>
               <span style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Requieren configuración de costo inicial para calcular rentabilidad</span>
             </div>
@@ -437,7 +476,7 @@ export default function AdminClient({
                 </thead>
                 <tbody>
                   {filteredProducts.map((p) => {
-                    const isUnderMin = p.stockActual <= p.minStock;
+                    const isUnderMin = !p.esServicio && p.stockActual <= p.minStock;
                     const hasIncoming = p.incomingOrders && p.incomingOrders.length > 0;
                     const totalIncomingQty = p.incomingOrders?.reduce((acc: number, order: any) => acc + order.cantidad, 0) || 0;
                     
@@ -450,14 +489,23 @@ export default function AdminClient({
                           background: selectedId === p.id ? "rgba(139, 5, 0, 0.15)" : "" 
                         }}
                       >
-                        <td className="wrap-text" style={{ fontWeight: "bold" }}>{p.nombre}</td>
+                        <td className="wrap-text" style={{ fontWeight: "bold" }}>
+                          {p.nombre}
+                          {p.mostrarEnWeb === false && (
+                            <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "6px", background: "rgba(255,255,255,0.08)", padding: "2px 5px", borderRadius: "4px" }}>
+                              👁️ Oculto
+                            </span>
+                          )}
+                        </td>
                         <td>{p.codigo}</td>
                         <td>
                           <img src={p.imagenUrl} alt={p.nombre} width="50" />
                         </td>
                         <td>{p.category ? p.category.nombre : "-"}</td>
                         <td>
-                          {p.costoInicialConfigurado ? (
+                          {p.esServicio ? (
+                            <span style={{ fontSize: "11px", color: "var(--admin-text-muted)" }}>N/A (Servicio)</span>
+                          ) : p.costoInicialConfigurado ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                               <span style={{ fontWeight: "bold" }}>
                                 COP {Number(p.precioPromedioCompra).toLocaleString("es-CO", { minimumFractionDigits: 0 })}
@@ -487,27 +535,41 @@ export default function AdminClient({
                           )}
                         </td>
                         <td>
-                          COP {Number(p.valorInventarioActual || 0).toLocaleString("es-CO", { minimumFractionDigits: 0 })}
+                          {p.esServicio ? "-" : `COP ${Number(p.valorInventarioActual || 0).toLocaleString("es-CO", { minimumFractionDigits: 0 })}`}
                         </td>
                         <td>COP {Number(p.precio).toLocaleString("es-CO", { minimumFractionDigits: 0 })}</td>
                         <td>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span 
-                                className={`badge-stock ${isUnderMin ? "stock-bajo" : "stock-ok"}`}
-                                style={{
-                                  padding: "4px 8px",
-                                  borderRadius: "6px",
-                                  fontSize: "13px",
-                                  fontWeight: "bold",
-                                  background: isUnderMin ? "rgba(239, 68, 68, 0.2)" : "rgba(16, 185, 129, 0.2)",
-                                  color: isUnderMin ? "#f87171" : "#34d399",
-                                  border: isUnderMin ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)"
-                                }}
-                              >
-                                {p.stockActual} / {p.minStock}
-                              </span>
-                            </div>
+                          {p.esServicio ? (
+                            <span style={{
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              background: "rgba(59, 130, 246, 0.2)",
+                              color: "#60a5fa",
+                              border: "1px solid rgba(59, 130, 246, 0.3)",
+                              display: "inline-block"
+                            }}>
+                              ⚡ Servicio
+                            </span>
+                          ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span 
+                                  className={`badge-stock ${isUnderMin ? "stock-bajo" : "stock-ok"}`}
+                                  style={{
+                                    padding: "4px 8px",
+                                    borderRadius: "6px",
+                                    fontSize: "13px",
+                                    fontWeight: "bold",
+                                    background: isUnderMin ? "rgba(239, 68, 68, 0.2)" : "rgba(16, 185, 129, 0.2)",
+                                    color: isUnderMin ? "#f87171" : "#34d399",
+                                    border: isUnderMin ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)"
+                                  }}
+                                >
+                                  {p.stockActual} / {p.minStock}
+                                </span>
+                              </div>
                             {(hasIncoming || isUnderMin) && (
                               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                                 {hasIncoming && (
@@ -548,6 +610,7 @@ export default function AdminClient({
                               </div>
                             )}
                           </div>
+                        )}
                         </td>
                       </tr>
                     );

@@ -41,7 +41,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   const product = await getProductDetails(productId);
 
-  if (!product) {
+  if (!product || product.mostrarEnWeb === false) {
     notFound();
   }
 

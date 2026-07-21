@@ -233,7 +233,7 @@ export default function DashboardClient({
 
   // 4. Stored Inventory Capital computation (always live)
   const totalInventoryCapital = useMemo(() => {
-    return products.reduce((acc, p) => acc + (p.stockActual * Number(p.precioPromedioCompra || 0)), 0);
+    return products.filter(p => !p.esServicio).reduce((acc, p) => acc + (p.stockActual * Number(p.precioPromedioCompra || 0)), 0);
   }, [products]);
 
   // Max value calculation for month bar chart scaling

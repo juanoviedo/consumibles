@@ -20,8 +20,9 @@ export default async function CatalogoPage() {
   // Filter categories that should be visible on the web
   const visibleCategories = allCategories.filter(c => c.mostrarEnWeb !== false);
 
-  // Filter products that either don't have a category or belong to a visible category
+  // Filter products that are marked to be shown on web AND belong to a visible category
   const visibleProducts = allProducts.filter(p => {
+    if (p.mostrarEnWeb === false) return false;
     if (!p.categoryId) return true;
     const cat = allCategories.find(c => c.id === p.categoryId);
     return cat ? cat.mostrarEnWeb !== false : true;

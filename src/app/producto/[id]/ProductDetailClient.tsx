@@ -257,16 +257,16 @@ export default function ProductDetailClient({ product }: { product: any }) {
             <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
               <div style={{ 
                 fontSize: "10px", 
-                color: product.stockActual > 0 ? "#71717a" : "#dc2626", 
+                color: product.esServicio ? "#2563eb" : (product.stockActual > 0 ? "#71717a" : "#dc2626"), 
                 fontWeight: "700", 
-                background: product.stockActual > 0 ? "rgba(0, 0, 0, 0.04)" : "rgba(220, 38, 38, 0.05)",
-                border: product.stockActual > 0 ? "1px solid rgba(0, 0, 0, 0.08)" : "1px solid rgba(220, 38, 38, 0.15)",
+                background: product.esServicio ? "rgba(37, 99, 235, 0.08)" : (product.stockActual > 0 ? "rgba(0, 0, 0, 0.04)" : "rgba(220, 38, 38, 0.05)"),
+                border: product.esServicio ? "1px solid rgba(37, 99, 235, 0.2)" : (product.stockActual > 0 ? "1px solid rgba(0, 0, 0, 0.08)" : "1px solid rgba(220, 38, 38, 0.15)"),
                 padding: "3px 8px",
                 borderRadius: "4px",
                 textTransform: "uppercase",
                 letterSpacing: "0.5px"
               }}>
-                {product.stockActual > 0 ? `Disponible: ${product.stockActual} u.` : "Agotado"}
+                {product.esServicio ? "⚡ Servicio Disponible" : (product.stockActual > 0 ? `Disponible: ${product.stockActual} u.` : "Agotado")}
               </div>
             </div>
 

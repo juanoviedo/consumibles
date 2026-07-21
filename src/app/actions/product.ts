@@ -110,7 +110,11 @@ export async function createProduct(formData: FormData) {
     const categoryIdRaw = formData.get("categoryId") as string;
     const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
     const minStock = parseInt(formData.get("minStock") as string || "0", 10);
-    
+    const esServicioRaw = formData.get("esServicio");
+    const esServicio = esServicioRaw === "true" || esServicioRaw === "on";
+    const mostrarEnWebRaw = formData.get("mostrarEnWeb");
+    const mostrarEnWeb = mostrarEnWebRaw === null ? true : (mostrarEnWebRaw === "true" || mostrarEnWebRaw === "on");
+
     const file = formData.get("imagenFile") as File | null;
     try {
       const uploadedUrl = await uploadImage(file);
@@ -169,6 +173,8 @@ export async function createProduct(formData: FormData) {
         categoryId, 
         stockActual: 0, 
         minStock,
+        esServicio,
+        mostrarEnWeb,
         precioPromedioCompra: 0,
         valorInventarioActual: 0,
         costoInicialConfigurado: false
@@ -197,6 +203,10 @@ export async function updateProduct(formData: FormData) {
     const categoryIdRaw = formData.get("categoryId") as string;
     const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
     const minStock = parseInt(formData.get("minStock") as string || "0", 10);
+    const esServicioRaw = formData.get("esServicio");
+    const esServicio = esServicioRaw === "true" || esServicioRaw === "on";
+    const mostrarEnWebRaw = formData.get("mostrarEnWeb");
+    const mostrarEnWeb = mostrarEnWebRaw === "true" || mostrarEnWebRaw === "on";
 
     const file = formData.get("imagenFile") as File | null;
     try {
@@ -239,7 +249,9 @@ export async function updateProduct(formData: FormData) {
         descripcion1, 
         descripcion2, 
         categoryId, 
-        minStock
+        minStock,
+        esServicio,
+        mostrarEnWeb
       },
     });
 
