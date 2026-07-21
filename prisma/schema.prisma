@@ -150,6 +150,8 @@ model SystemSettings {
   companyName          String  @default("CONSUMIBLES & REPUESTOS")
   companySlogan        String  @default("Equipos de Corte Plasma y Soldadura Industrial")
   companyPhone         String  @default("+57 316 831 4501")
+  debeANombre          String? @default("")
+  debeACedula          String? @default("")
 }
 
 model InventoryLog {

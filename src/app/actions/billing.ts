@@ -681,6 +681,8 @@ export async function getSettings() {
         companyName: "CONSUMIBLES & REPUESTOS",
         companySlogan: "Equipos de Corte Plasma y Soldadura Industrial",
         companyPhone: "+57 316 831 4501",
+        debeANombre: "",
+        debeACedula: "",
       },
     });
   }
@@ -692,6 +694,8 @@ export async function getSettings() {
     companyName: settings.companyName || "CONSUMIBLES & REPUESTOS",
     companySlogan: settings.companySlogan || "Equipos de Corte Plasma y Soldadura Industrial",
     companyPhone: settings.companyPhone || "+57 316 831 4501",
+    debeANombre: settings.debeANombre || "",
+    debeACedula: settings.debeACedula || "",
   };
 }
 
@@ -702,6 +706,8 @@ export async function updateSettings(formData: FormData) {
   const companyName = formData.get("companyName") as string || "CONSUMIBLES & REPUESTOS";
   const companySlogan = formData.get("companySlogan") as string || "Equipos de Corte Plasma y Soldadura Industrial";
   const companyPhone = formData.get("companyPhone") as string || "+57 316 831 4501";
+  const debeANombre = formData.get("debeANombre") as string || "";
+  const debeACedula = formData.get("debeACedula") as string || "";
 
   await prisma.systemSettings.upsert({
     where: { id: 1 },
@@ -712,6 +718,8 @@ export async function updateSettings(formData: FormData) {
       companyName,
       companySlogan,
       companyPhone,
+      debeANombre,
+      debeACedula,
     },
     create: {
       id: 1,
@@ -721,6 +729,8 @@ export async function updateSettings(formData: FormData) {
       companyName,
       companySlogan,
       companyPhone,
+      debeANombre,
+      debeACedula,
     },
   });
 

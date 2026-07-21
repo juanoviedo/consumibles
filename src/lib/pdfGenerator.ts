@@ -91,6 +91,13 @@ export async function downloadDocumentPDF(quotation: any, settings: any) {
     if (isCC) {
       doc.text(`Fecha Vencimiento: ${formatDate(quotation.fechaVencimiento)}`, 120, 60);
       doc.text("Estado: ACEPTADA / FACTURADA", 120, 66);
+      if (settings?.debeANombre) {
+        doc.setFont("helvetica", "bold");
+        doc.text("DEBE A:", 120, 72);
+        doc.setFont("helvetica", "normal");
+        const debeLine = settings.debeACedula ? `${settings.debeANombre} (C.C./NIT: ${settings.debeACedula})` : settings.debeANombre;
+        doc.text(debeLine, 120, 77);
+      }
     } else {
       doc.text("Estado: PENDIENTE / COTIZACIÓN", 120, 60);
       doc.text("Validez: 15 Días Calendario", 120, 66);
@@ -234,12 +241,21 @@ export async function downloadDocumentPDF(quotation: any, settings: any) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(15, 23, 42);
+
+      let lineY = paymentY + 11;
+      if (settings?.debeANombre) {
+        const titularText = `A favor de (DEBE A): ${settings.debeANombre}${settings.debeACedula ? ` - CC/NIT: ${settings.debeACedula}` : ""}`;
+        doc.setFont("helvetica", "bold");
+        doc.text(titularText, 20, lineY);
+        doc.setFont("helvetica", "normal");
+        lineY += 5;
+      }
       
       // Split bankDetails string by newline and print
-      const lines = (settings.bankDetails || "").split("\n");
+      const lines = (settings?.bankDetails || "").split("\n");
       lines.forEach((line: string, i: number) => {
-        if (i < 3) { // limit lines to fit box
-          doc.text(line, 20, paymentY + 12 + (i * 5));
+        if (i < 2) { // limit lines to fit box
+          doc.text(line, 20, lineY + (i * 5));
         }
       });
     }

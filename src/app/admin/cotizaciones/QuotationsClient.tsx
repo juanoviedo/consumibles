@@ -1052,6 +1052,11 @@ export default function QuotationsClient({
                     <strong>Nº Cuenta Cobro:</strong> {activeDetailsQuote.numeroCuentaCobro}
                   </div>
                 )}
+                {["CUENTA_COBRO", "PAGADA"].includes(activeDetailsQuote.estado) && settings?.debeANombre && (
+                  <div style={{ marginTop: "5px", color: "#60a5fa", fontSize: "13px" }}>
+                    <strong>DEBE A:</strong> {settings.debeANombre}{settings.debeACedula ? ` (CC/NIT: ${settings.debeACedula})` : ""}
+                  </div>
+                )}
               </div>
               <div>
                 <strong>Estado:</strong> <span style={getStatusBadgeStyle(activeDetailsQuote.estado)}>{translateStatus(activeDetailsQuote.estado)}</span>

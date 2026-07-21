@@ -85,6 +85,58 @@ export default async function SettingsPage() {
 
           <div style={{ gridColumn: "1 / -1", margin: "20px 0", borderTop: "1px solid var(--admin-glass-border)" }}></div>
 
+          <h3 style={{ gridColumn: "1 / -1", margin: "0 0 10px 0", fontSize: "16px", fontWeight: "600" }}>Titular de Cuenta de Cobro ("DEBE A:")</h3>
+
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>
+              Nombre Completo / Razon Social ("DEBE A:")
+            </label>
+            <input 
+              type="text" 
+              name="debeANombre" 
+              defaultValue={settings.debeANombre || ""} 
+              placeholder="Ej: Juan Carlos Pérez u Pedro Gomez"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(0,0,0,0.2)",
+                color: "white",
+                border: "1px solid var(--admin-glass-border)",
+                borderRadius: "6px",
+                fontSize: "14px"
+              }}
+            />
+            <span style={{ fontSize: "12px", color: "var(--admin-text-muted)", marginTop: "4px", display: "block" }}>
+              Nombre de la persona o entidad a quien se le debe pagar en las Cuentas de Cobro.
+            </span>
+          </div>
+
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1", marginTop: "15px" }}>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>
+              Cédula de Ciudadanía / NIT del Titular
+            </label>
+            <input 
+              type="text" 
+              name="debeACedula" 
+              defaultValue={settings.debeACedula || ""} 
+              placeholder="Ej: 1.018.412.345 o 900.123.456-7"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "rgba(0,0,0,0.2)",
+                color: "white",
+                border: "1px solid var(--admin-glass-border)",
+                borderRadius: "6px",
+                fontSize: "14px"
+              }}
+            />
+            <span style={{ fontSize: "12px", color: "var(--admin-text-muted)", marginTop: "4px", display: "block" }}>
+              Número de identificación que aparecerá en el encabezado de las Cuentas de Cobro.
+            </span>
+          </div>
+
+          <div style={{ gridColumn: "1 / -1", margin: "20px 0", borderTop: "1px solid var(--admin-glass-border)" }}></div>
+
           <h3 style={{ gridColumn: "1 / -1", margin: "0 0 10px 0", fontSize: "16px", fontWeight: "600" }}>Consecutivos de Documentos</h3>
 
           <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
