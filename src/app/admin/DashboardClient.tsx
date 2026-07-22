@@ -108,6 +108,8 @@ export default function DashboardClient({
         return;
       }
 
+      const isSold = ["CUENTA_COBRO", "PAGADA"].includes(q.estado);
+
       // 3. Category Filter & Item computations
       let qSales = 0;
       let qCost = 0;
@@ -128,8 +130,8 @@ export default function DashboardClient({
           qCost += costVal;
           qUtil += (salesVal - costVal);
 
-          // Track product contribution
-          if (item.product?.nombre) {
+          // Track product contribution ONLY for sold/billed documents (CUENTA_COBRO, PAGADA)
+          if (isSold && item.product?.nombre) {
             const pName = item.product.nombre;
             const pId = item.productId.toString();
             if (!productSalesMap[pId]) {
