@@ -9,7 +9,14 @@ export default async function UsersPage() {
   if (!session) redirect("/admin/login");
 
   const sessionData = JSON.parse(session);
-  if (!sessionData.isSuperAdmin) {
+  
+  const currentUser = sessionData.email
+    ? await prisma.user.findUnique({ where: { email: sessionData.email } })
+    : null;
+
+  const isSuperAdmin = currentUser?.isSuperAdmin ?? sessionData.isSuperAdmin;
+
+  if (!isSuperAdmin) {
     return (
       <div className="glass-container" style={{ textAlign: "center", padding: "40px" }}>
         <h2 style={{ margin: "0 0 10px 0", color: "#ef4444" }}>Acceso Denegado</h2>
@@ -29,7 +36,8 @@ export default async function UsersPage() {
         </div>
       </div>
 
-      <UsersClient users={users} sessionData={sessionData} />
+      <UsersClient users={users} sessionData={{ ...sessionData, isSuperAdmin }} />
     </>
   );
 }
+

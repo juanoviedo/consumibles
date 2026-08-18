@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import AdminSidebarClient from "./AdminSidebarClient";
+import { prisma } from "@/lib/prisma";
 import "@/app/css/admin.css";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -13,11 +14,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const sessionData = JSON.parse(session);
 
+  let isSuperAdmin = sessionData.isSuperAdmin;
+  if (sessionData.email) {
+    const user = await prisma.user.findUnique({
+      where: { email: sessionData.email },
+      select: { isSuperAdmin: true },
+    });
+    if (user && user.isSuperAdmin !== null) {
+      isSuperAdmin = user.isSuperAdmin;
+    }
+  }
+
   return (
     <div className="admin-body">
-      <AdminSidebarClient email={sessionData.email} isSuperAdmin={sessionData.isSuperAdmin}>
+      <AdminSidebarClient email={sessionData.email} isSuperAdmin={isSuperAdmin}>
         {children}
       </AdminSidebarClient>
     </div>
   );
 }
+
