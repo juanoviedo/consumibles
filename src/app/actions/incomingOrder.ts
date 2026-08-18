@@ -190,6 +190,81 @@ export async function cancelIncomingOrder(id: number) {
   }
 }
 
+export async function revertIncomingOrder(id: number) {
+  try {
+    const order = await prisma.incomingOrder.findUnique({
+      where: { id },
+      include: { product: true },
+    });
+
+    if (!order) {
+      throw new Error("Pedido no encontrado");
+    }
+
+    if (order.estado === "EN_CAMINO") {
+      return { success: true, message: "El pedido ya está en camino" };
+    }
+
+    if (order.estado === "COMPLETADO") {
+      await prisma.$transaction(async (tx) => {
+        const product = await tx.product.findUnique({
+          where: { id: order.productId },
+        });
+
+        if (!product) {
+          throw new Error("Producto no encontrado");
+        }
+
+        const stockPrevio = product.stockActual;
+        const stockNuevo = Math.max(0, stockPrevio - order.cantidad);
+        const valorInventarioNuevo = stockNuevo * Number(product.precioPromedioCompra || 0);
+
+        await tx.product.update({
+          where: { id: order.productId },
+          data: {
+            stockActual: stockNuevo,
+            valorInventarioActual: valorInventarioNuevo,
+          },
+        });
+
+        await tx.incomingOrder.update({
+          where: { id },
+          data: {
+            estado: "EN_CAMINO",
+          },
+        });
+
+        await tx.inventoryLog.create({
+          data: {
+            productId: order.productId,
+            tipo: "AJUSTE",
+            cantidad: -order.cantidad,
+            costoUnit: order.costoUnitario,
+            stockPrevio,
+            stockNuevo,
+            detalle: `Reversión de pedido #${order.id} a estado EN_CAMINO para edición. Se descuentan ${order.cantidad} unidades.`,
+          },
+        });
+      });
+    } else if (order.estado === "CANCELADO") {
+      await prisma.incomingOrder.update({
+        where: { id },
+        data: {
+          estado: "EN_CAMINO",
+        },
+      });
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/productos");
+    revalidatePath("/admin/pedidos-camino");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Error reverting incoming order:", err);
+    return { error: err.message || "Error interno del servidor" };
+  }
+}
+
 export async function updateIncomingOrder(formData: FormData) {
   try {
     const id = parseInt(formData.get("id") as string, 10);

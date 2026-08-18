@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createIncomingOrder, completeIncomingOrder, cancelIncomingOrder, updateIncomingOrder, deleteIncomingOrder } from "@/app/actions/incomingOrder";
+import { createIncomingOrder, completeIncomingOrder, cancelIncomingOrder, updateIncomingOrder, deleteIncomingOrder, revertIncomingOrder } from "@/app/actions/incomingOrder";
 import SubmitButton from "@/components/SubmitButton";
 import ActionButton from "@/components/ActionButton";
 
@@ -484,7 +484,96 @@ export default function IncomingOrdersClient({
                 </svg>
               </ActionButton>
             </>
-          ) : null}
+          ) : (
+            <>
+              {/* Actions for Historial: Reversar & Editar */}
+              <ActionButton 
+                type="button"
+                disabled={selectedId === null}
+                onClick={async () => {
+                  if (selectedId !== null) {
+                    const res = await revertIncomingOrder(selectedId);
+                    if (res && res.error) {
+                      alert("Error al reversar el pedido: " + res.error);
+                    } else {
+                      setSelectedId(null);
+                      setActiveTab("activos");
+                    }
+                  }
+                }}
+                loadingText="..."
+                className="admin-btn admin-btn-outline"
+                title="Reversar Pedido a En Tránsito"
+                style={{ 
+                  padding: "0 14px", 
+                  height: "40px", 
+                  display: "inline-flex", 
+                  alignItems: "center", 
+                  gap: "6px",
+                  borderRadius: "8px",
+                  borderColor: "#38bdf8", 
+                  color: "#38bdf8", 
+                  opacity: selectedId === null ? 0.5 : 1, 
+                  cursor: selectedId === null ? "not-allowed" : "pointer",
+                  fontSize: "13px",
+                  fontWeight: 600
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                  <path d="M21 3v5h-5" />
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                  <path d="M8 16H3v5" />
+                </svg>
+                <span>Reversar a Tránsito</span>
+              </ActionButton>
+
+              <ActionButton 
+                type="button"
+                disabled={selectedId === null}
+                onClick={async () => {
+                  if (selectedId !== null) {
+                    const selected = orders.find(o => o.id === selectedId);
+                    const res = await revertIncomingOrder(selectedId);
+                    if (res && res.error) {
+                      alert("Error al reversar el pedido para editar: " + res.error);
+                    } else if (selected) {
+                      setActiveTab("activos");
+                      setEditingId(selected.id);
+                      setEditQty(selected.cantidad.toString());
+                      const unitCost = Number(selected.costoUnitario || 0);
+                      setEditUnitCost(unitCost ? unitCost.toString() : "");
+                      setEditTotalCost(unitCost ? (selected.cantidad * unitCost).toString() : "");
+                      setSelectedId(null);
+                    }
+                  }
+                }}
+                loadingText="..."
+                className="admin-btn admin-btn-outline"
+                title="Reversar y Editar Pedido"
+                style={{ 
+                  padding: "0 14px", 
+                  height: "40px", 
+                  display: "inline-flex", 
+                  alignItems: "center", 
+                  gap: "6px",
+                  borderRadius: "8px",
+                  borderColor: "#fbbf24", 
+                  color: "#fbbf24", 
+                  opacity: selectedId === null ? 0.5 : 1, 
+                  cursor: selectedId === null ? "not-allowed" : "pointer",
+                  fontSize: "13px",
+                  fontWeight: 600
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z" />
+                </svg>
+                <span>Reversar y Editar</span>
+              </ActionButton>
+            </>
+          )}
 
           <button 
             type="button" 
