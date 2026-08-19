@@ -19,13 +19,20 @@ export default function IncomingOrdersClient({
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   // States to calculate unit cost and total cost dynamically
+  const [newTipo, setNewTipo] = useState<string>("PEDIDO");
+  const [newSelectedProductId, setNewSelectedProductId] = useState<string>("");
   const [newQty, setNewQty] = useState<string>("1");
   const [newUnitCost, setNewUnitCost] = useState<string>("");
   const [newTotalCost, setNewTotalCost] = useState<string>("");
+  const [newMotivo, setNewMotivo] = useState<string>("");
 
+  const [editTipo, setEditTipo] = useState<string>("PEDIDO");
   const [editQty, setEditQty] = useState<string>("");
   const [editUnitCost, setEditUnitCost] = useState<string>("");
   const [editTotalCost, setEditTotalCost] = useState<string>("");
+  const [editMotivo, setEditMotivo] = useState<string>("");
+
+  const selectedProduct = products.find(p => p.id === parseInt(newSelectedProductId, 10));
 
   // Bidirectional sync for New Form
   const handleNewQtyChange = (val: string) => {
@@ -115,12 +122,12 @@ export default function IncomingOrdersClient({
 
     return (
       <section className="glass-container" style={{ marginBottom: "40px" }}>
-        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Editar Pedido</h2>
+        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Editar Registro / Pedido #{editingOrder.id}</h2>
         <form
           action={async (formData) => {
             const res = await updateIncomingOrder(formData);
             if (res && res.error) {
-              alert("Error al actualizar el pedido: " + res.error);
+              alert("Error al actualizar: " + res.error);
             } else {
               setEditingId(null);
             }
@@ -134,7 +141,7 @@ export default function IncomingOrdersClient({
             <select name="productId" required defaultValue={editingOrder.productId}>
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.nombre} (Ref: {p.codigo})
+                  {p.nombre} (Ref: {p.codigo} | Stock: {p.stockActual})
                 </option>
               ))}
             </select>
@@ -182,7 +189,7 @@ export default function IncomingOrdersClient({
           </div>
 
           <div className="admin-input-group">
-            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha del Pedido (Compra)</label>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha de Registro / Compra</label>
             <input 
               type="date" 
               name="fechaPedido" 
@@ -212,73 +219,221 @@ export default function IncomingOrdersClient({
   if (showNewForm) {
     return (
       <section className="glass-container" style={{ marginBottom: "40px" }}>
-        <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Registrar Pedido en Camino</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h2 style={{ margin: 0 }}>
+              {newTipo === "PEDIDO" 
+                ? "📦 Registrar Pedido de Compra (En Tránsito)" 
+                : newTipo === "AJUSTE_INGRESO" 
+                  ? "🟢 Ajuste de Stock / Entrada con Precio Inicial" 
+                  : "🔴 Ajuste de Stock / Salida (Merma / Daño)"}
+            </h2>
+            <p style={{ color: "var(--admin-text-muted)", fontSize: "14px", margin: "4px 0 0" }}>
+              {newTipo === "PEDIDO"
+                ? "Registra pedidos que están en camino y que sumarán stock al recibirlos."
+                : newTipo === "AJUSTE_INGRESO"
+                  ? "Ingresa unidades inmediatamente al inventario y configura/actualiza su costo promedio."
+                  : "Descuenta unidades inmediatamente por merma, pérdida o corrección física."}
+            </p>
+          </div>
+          <button 
+            type="button" 
+            className="admin-btn admin-btn-outline" 
+            onClick={() => setShowNewForm(false)}
+            style={{ padding: "6px 12px", fontSize: "13px" }}
+          >
+            ✕ Cerrar Formulario
+          </button>
+        </div>
+
         <form
           action={async (formData) => {
             const res = await createIncomingOrder(formData);
             if (res && res.error) {
-              alert("Error al registrar pedido: " + res.error);
+              alert("Error al registrar: " + res.error);
             } else {
               setShowNewForm(false);
+              if (newTipo !== "PEDIDO") {
+                setActiveTab("historial");
+              }
             }
           }}
           className="admin-grid-form"
         >
+          {/* Selector de Tipo de Movimiento */}
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1", background: "rgba(255,255,255,0.03)", padding: "15px", borderRadius: "10px", border: "1px solid var(--admin-glass-border)" }}>
+            <label style={{ fontSize: "14px", fontWeight: "bold", color: "#f8fafc", display: "block", marginBottom: "10px" }}>
+              Selecciona el Tipo de Operación:
+            </label>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <label style={{ 
+                flex: "1 1 200px",
+                display: "flex", 
+                alignItems: "center", 
+                gap: "10px", 
+                padding: "12px 14px", 
+                borderRadius: "8px", 
+                cursor: "pointer",
+                background: newTipo === "PEDIDO" ? "rgba(59, 130, 246, 0.2)" : "rgba(255,255,255,0.05)",
+                border: `1px solid ${newTipo === "PEDIDO" ? "#60a5fa" : "rgba(255,255,255,0.1)"}`,
+                transition: "all 0.2s"
+              }}>
+                <input 
+                  type="radio" 
+                  name="tipo" 
+                  value="PEDIDO" 
+                  checked={newTipo === "PEDIDO"} 
+                  onChange={() => setNewTipo("PEDIDO")} 
+                />
+                <div>
+                  <div style={{ fontWeight: "bold", color: "#60a5fa", fontSize: "14px" }}>📦 Pedido en Camino</div>
+                  <div style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Llegada estimada a futuro</div>
+                </div>
+              </label>
+
+              <label style={{ 
+                flex: "1 1 200px",
+                display: "flex", 
+                alignItems: "center", 
+                gap: "10px", 
+                padding: "12px 14px", 
+                borderRadius: "8px", 
+                cursor: "pointer",
+                background: newTipo === "AJUSTE_INGRESO" ? "rgba(16, 185, 129, 0.2)" : "rgba(255,255,255,0.05)",
+                border: `1px solid ${newTipo === "AJUSTE_INGRESO" ? "#34d399" : "rgba(255,255,255,0.1)"}`,
+                transition: "all 0.2s"
+              }}>
+                <input 
+                  type="radio" 
+                  name="tipo" 
+                  value="AJUSTE_INGRESO" 
+                  checked={newTipo === "AJUSTE_INGRESO"} 
+                  onChange={() => setNewTipo("AJUSTE_INGRESO")} 
+                />
+                <div>
+                  <div style={{ fontWeight: "bold", color: "#34d399", fontSize: "14px" }}>🟢 Entrada Directa / Precio Inicial</div>
+                  <div style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Ajuste positivo inmediato con costo</div>
+                </div>
+              </label>
+
+              <label style={{ 
+                flex: "1 1 200px",
+                display: "flex", 
+                alignItems: "center", 
+                gap: "10px", 
+                padding: "12px 14px", 
+                borderRadius: "8px", 
+                cursor: "pointer",
+                background: newTipo === "AJUSTE_SALIDA" ? "rgba(239, 68, 68, 0.2)" : "rgba(255,255,255,0.05)",
+                border: `1px solid ${newTipo === "AJUSTE_SALIDA" ? "#f87171" : "rgba(255,255,255,0.1)"}`,
+                transition: "all 0.2s"
+              }}>
+                <input 
+                  type="radio" 
+                  name="tipo" 
+                  value="AJUSTE_SALIDA" 
+                  checked={newTipo === "AJUSTE_SALIDA"} 
+                  onChange={() => setNewTipo("AJUSTE_SALIDA")} 
+                />
+                <div>
+                  <div style={{ fontWeight: "bold", color: "#f87171", fontSize: "14px" }}>🔴 Salida / Merma de Stock</div>
+                  <div style={{ fontSize: "12px", color: "var(--admin-text-muted)" }}>Descuento inmediato por pérdida o daño</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
             <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Seleccionar Producto</label>
-            <select name="productId" required defaultValue="">
+            <select 
+              name="productId" 
+              required 
+              value={newSelectedProductId}
+              onChange={(e) => {
+                setNewSelectedProductId(e.target.value);
+                const prod = products.find(p => p.id === parseInt(e.target.value, 10));
+                if (prod && Number(prod.precioPromedioCompra) > 0 && !newUnitCost) {
+                  setNewUnitCost(Number(prod.precioPromedioCompra).toString());
+                  setNewTotalCost((parseInt(newQty || "1", 10) * Number(prod.precioPromedioCompra)).toString());
+                }
+              }}
+            >
               <option value="" disabled>-- Seleccione un Producto --</option>
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.nombre} (Ref: {p.codigo})
+                  {p.nombre} (Ref: {p.codigo} | Stock: {p.stockActual} | Costo actual: ${Number(p.precioPromedioCompra || 0).toLocaleString()})
                 </option>
               ))}
             </select>
           </div>
 
           <div className="admin-input-group">
-            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Cantidad de Unidades</label>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>
+              {newTipo === "AJUSTE_SALIDA" ? "Cantidad a Descontar" : "Cantidad de Unidades"}
+            </label>
             <input 
               type="number" 
               name="cantidad" 
               required 
               min="1" 
+              max={newTipo === "AJUSTE_SALIDA" && selectedProduct ? selectedProduct.stockActual : undefined}
               value={newQty}
               onChange={(e) => handleNewQtyChange(e.target.value)}
-              placeholder="Ej. 50" 
+              placeholder="Ej. 10" 
             />
+            {newTipo === "AJUSTE_SALIDA" && selectedProduct && (
+              <span style={{ fontSize: "12px", color: "var(--admin-text-muted)", marginTop: "4px", display: "block" }}>
+                Stock disponible para descontar: <strong>{selectedProduct.stockActual} unidades</strong>
+              </span>
+            )}
           </div>
 
-          <div className="admin-input-group">
-            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Unitario (COP)</label>
-            <input 
-              type="number" 
-              name="costoUnitario" 
-              required 
-              min="0" 
-              step="any"
-              value={newUnitCost}
-              onChange={(e) => handleNewUnitCostChange(e.target.value)}
-              placeholder="Ej. 15000" 
-            />
-          </div>
+          {newTipo !== "AJUSTE_SALIDA" ? (
+            <>
+              <div className="admin-input-group">
+                <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>
+                  {newTipo === "AJUSTE_INGRESO" ? "Costo / Precio Inicial Unitario (COP)" : "Costo Unitario de Compra (COP)"}
+                </label>
+                <input 
+                  type="number" 
+                  name="costoUnitario" 
+                  required 
+                  min="0" 
+                  step="any"
+                  value={newUnitCost}
+                  onChange={(e) => handleNewUnitCostChange(e.target.value)}
+                  placeholder="Ej. 15000" 
+                />
+              </div>
+
+              <div className="admin-input-group">
+                <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Total (COP)</label>
+                <input 
+                  type="number" 
+                  name="costoTotal" 
+                  required 
+                  min="0" 
+                  step="any"
+                  value={newTotalCost}
+                  onChange={(e) => handleNewTotalCostChange(e.target.value)}
+                  placeholder="Ej. 150000" 
+                />
+              </div>
+            </>
+          ) : (
+            <div className="admin-input-group">
+              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Promedio Actual (Lectura)</label>
+              <input 
+                type="text" 
+                readOnly 
+                value={selectedProduct ? `COP ${Number(selectedProduct.precioPromedioCompra || 0).toLocaleString()}` : "Seleccione producto"} 
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--admin-glass-border)", color: "var(--admin-text-muted)" }}
+              />
+            </div>
+          )}
 
           <div className="admin-input-group">
-            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Costo Total del Pedido (COP)</label>
-            <input 
-              type="number" 
-              name="costoTotal" 
-              required 
-              min="0" 
-              step="any"
-              value={newTotalCost}
-              onChange={(e) => handleNewTotalCostChange(e.target.value)}
-              placeholder="Ej. 750000" 
-            />
-          </div>
-
-          <div className="admin-input-group">
-            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha del Pedido (Compra)</label>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha de Operación</label>
             <input 
               type="date" 
               name="fechaPedido" 
@@ -287,14 +442,29 @@ export default function IncomingOrdersClient({
             />
           </div>
 
-          <div className="admin-input-group">
-            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha Estimada de Llegada</label>
-            <input type="date" name="fechaEstimada" />
+          {newTipo === "PEDIDO" && (
+            <div className="admin-input-group">
+              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>Fecha Estimada de Llegada</label>
+              <input type="date" name="fechaEstimada" />
+            </div>
+          )}
+
+          <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
+            <label style={{ fontSize: "14px", color: "var(--admin-text-muted)" }}>
+              {newTipo === "PEDIDO" ? "Observaciones / Proveedor (Opcional)" : "Motivo o Detalle del Ajuste"}
+            </label>
+            <input 
+              type="text" 
+              name="motivo" 
+              value={newMotivo}
+              onChange={(e) => setNewMotivo(e.target.value)}
+              placeholder={newTipo === "PEDIDO" ? "Ej. Proveedor Hypertherm Miami, Factura #1234" : "Ej. Inventario inicial físico, 2 piezas con daño de fábrica..."} 
+            />
           </div>
 
           <div style={{ display: "flex", gap: "10px", marginTop: "15px", gridColumn: "1 / -1" }}>
-            <SubmitButton className="admin-btn" loadingText="Registrando...">
-              Registrar Pedido
+            <SubmitButton className="admin-btn" loadingText="Procesando...">
+              {newTipo === "PEDIDO" ? "Registrar Pedido en Tránsito" : "Aplicar Ajuste de Stock"}
             </SubmitButton>
             <button type="button" className="admin-btn admin-btn-outline" onClick={() => setShowNewForm(false)}>
               Cancelar
@@ -315,23 +485,26 @@ export default function IncomingOrdersClient({
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
         <div>
-          <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: 0 }}>Pedidos de Abastecimiento</h1>
+          <h1 style={{ fontSize: "2rem", fontWeight: "700", margin: 0 }}>Pedidos y Movimientos de Stock</h1>
           <p style={{ color: "var(--admin-text-muted)", marginTop: "4px" }}>
-            Gestiona los pedidos de abastecimiento e inventario en tránsito.
+            Gestiona pedidos de abastecimiento, compras en camino y ajustes de stock con costo inicial.
           </p>
         </div>
         <button 
           className="admin-btn" 
           onClick={() => {
             setShowNewForm(true);
+            setNewTipo("PEDIDO");
+            setNewSelectedProductId("");
             setNewQty("1");
             setNewUnitCost("");
             setNewTotalCost("");
+            setNewMotivo("");
           }}
         >
-          + Registrar Pedido en Camino
+          + Registrar Pedido o Ajuste de Stock
         </button>
       </div>
 
@@ -354,7 +527,7 @@ export default function IncomingOrdersClient({
             transition: "all 0.2s"
           }}
         >
-          🚚 Pedidos Activos ({orders.filter(o => o.estado === "EN_CAMINO").length})
+          🚚 En Tránsito / Pendientes ({orders.filter(o => o.estado === "EN_CAMINO").length})
         </button>
         <button 
           onClick={() => {
@@ -373,7 +546,7 @@ export default function IncomingOrdersClient({
             transition: "all 0.2s"
           }}
         >
-          📜 Historial de Pedidos ({orders.filter(o => o.estado !== "EN_CAMINO").length})
+          📜 Historial y Ajustes Aplicados ({orders.filter(o => o.estado !== "EN_CAMINO").length})
         </button>
       </div>
 
@@ -612,89 +785,132 @@ export default function IncomingOrdersClient({
       <section className="glass-container" style={{ padding: "0", overflow: "hidden" }}>
         <div className="admin-card-header">
           <h2 style={{ margin: 0 }}>
-            {activeTab === "activos" ? "Pedidos Activos en Tránsito" : "Historial de Pedidos Ingresados/Cancelados"}
+            {activeTab === "activos" ? "Pedidos Activos en Tránsito" : "Historial de Pedidos y Ajustes de Stock"}
           </h2>
         </div>
 
         <div className="admin-table-container">
-          <table className="admin-table" style={{ minWidth: "850px" }}>
+          <table className="admin-table" style={{ minWidth: "900px" }}>
             <thead>
               <tr>
+                <th>Tipo</th>
                 <th>Producto</th>
                 <th>Código/Ref</th>
-                <th>Imagen</th>
                 <th>Cantidad</th>
                 <th>Costo (U. / Total)</th>
-                <th>Fecha Pedido</th>
-                <th>Llegada Estimada</th>
+                <th>Fecha</th>
+                <th>Motivo / Detalle</th>
                 <th>Estado</th>
               </tr>
             </thead>
             <tbody>
-              {displayedOrders.map((o) => (
-                <tr 
-                  key={o.id}
-                  onClick={() => setSelectedId(selectedId === o.id ? null : o.id)}
-                  style={{ 
-                    cursor: "pointer", 
-                    background: selectedId === o.id ? "rgba(139, 5, 0, 0.15)" : "" 
-                  }}
-                >
-                  <td className="wrap-text" style={{ fontWeight: "bold" }}>
-                    {o.product?.nombre}
-                  </td>
-                  <td>{o.product?.codigo}</td>
-                  <td>
-                    {o.product?.imagenUrl ? (
-                      <img src={o.product.imagenUrl} alt={o.product.nombre} width="40" />
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td><strong>{o.cantidad} uds</strong></td>
-                  <td>
-                    <div>COP {o.costoUnitario ? Number(o.costoUnitario).toLocaleString("es-CO", { minimumFractionDigits: 0 }) : "0"}</div>
-                    <div style={{ fontSize: "11px", color: "var(--admin-text-muted)", marginTop: "2px" }}>
-                      Total: COP {(o.cantidad * Number(o.costoUnitario || 0)).toLocaleString("es-CO", { minimumFractionDigits: 0 })}
-                    </div>
-                  </td>
-                  <td>{formatDate(o.fechaPedido)}</td>
-                  <td>{formatDate(o.fechaEstimada)}</td>
-                  <td>
-                    <span 
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        background: o.estado === "COMPLETADO" 
-                          ? "rgba(16, 185, 129, 0.2)" 
-                          : o.estado === "CANCELADO"
-                            ? "rgba(239, 68, 68, 0.2)"
-                            : "rgba(59, 130, 246, 0.2)",
-                        color: o.estado === "COMPLETADO" 
-                          ? "#34d399" 
-                          : o.estado === "CANCELADO"
-                            ? "#f87171"
-                            : "#60a5fa",
-                        border: o.estado === "COMPLETADO" 
-                          ? "1px solid rgba(16, 185, 129, 0.3)" 
-                          : o.estado === "CANCELADO"
-                            ? "1px solid rgba(239, 68, 68, 0.3)"
-                            : "1px solid rgba(59, 130, 246, 0.3)"
-                      }}
-                    >
-                      {o.estado}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {displayedOrders.map((o) => {
+                const tipo = o.tipo || "PEDIDO";
+                let tipoLabel = "📦 Pedido";
+                let tipoBg = "rgba(59, 130, 246, 0.15)";
+                let tipoColor = "#60a5fa";
+
+                if (tipo === "AJUSTE_INGRESO") {
+                  tipoLabel = "🟢 Entrada / Ajuste";
+                  tipoBg = "rgba(16, 185, 129, 0.15)";
+                  tipoColor = "#34d399";
+                } else if (tipo === "AJUSTE_SALIDA") {
+                  tipoLabel = "🔴 Salida / Merma";
+                  tipoBg = "rgba(239, 68, 68, 0.15)";
+                  tipoColor = "#f87171";
+                } else if (tipo === "INICIALIZACION") {
+                  tipoLabel = "⭐ Inicialización";
+                  tipoBg = "rgba(245, 158, 11, 0.15)";
+                  tipoColor = "#fbbf24";
+                }
+
+                return (
+                  <tr 
+                    key={o.id}
+                    onClick={() => setSelectedId(selectedId === o.id ? null : o.id)}
+                    style={{ 
+                      cursor: "pointer", 
+                      background: selectedId === o.id ? "rgba(139, 5, 0, 0.15)" : "" 
+                    }}
+                  >
+                    <td>
+                      <span 
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: "6px",
+                          fontSize: "11px",
+                          fontWeight: "bold",
+                          background: tipoBg,
+                          color: tipoColor,
+                          border: `1px solid ${tipoColor}40`,
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {tipoLabel}
+                      </span>
+                    </td>
+                    <td className="wrap-text" style={{ fontWeight: "bold" }}>
+                      {o.product?.nombre}
+                    </td>
+                    <td>{o.product?.codigo}</td>
+                    <td>
+                      <strong style={{ color: tipo === "AJUSTE_SALIDA" ? "#f87171" : "inherit" }}>
+                        {tipo === "AJUSTE_SALIDA" ? `-${o.cantidad}` : `+${o.cantidad}`} uds
+                      </strong>
+                    </td>
+                    <td>
+                      <div>COP {o.costoUnitario ? Number(o.costoUnitario).toLocaleString("es-CO", { minimumFractionDigits: 0 }) : "0"}</div>
+                      <div style={{ fontSize: "11px", color: "var(--admin-text-muted)", marginTop: "2px" }}>
+                        Total: COP {(o.cantidad * Number(o.costoUnitario || 0)).toLocaleString("es-CO", { minimumFractionDigits: 0 })}
+                      </div>
+                    </td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {formatDate(o.fechaPedido)}
+                      {o.fechaEstimada && tipo === "PEDIDO" && o.estado === "EN_CAMINO" && (
+                        <div style={{ fontSize: "11px", color: "#60a5fa", marginTop: "2px" }}>
+                          Est: {formatDate(o.fechaEstimada)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="wrap-text" style={{ fontSize: "13px", color: "var(--admin-text-muted)", maxWidth: "200px" }}>
+                      {o.motivo || "-"}
+                    </td>
+                    <td>
+                      <span 
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          background: o.estado === "COMPLETADO" 
+                            ? "rgba(16, 185, 129, 0.2)" 
+                            : o.estado === "CANCELADO"
+                              ? "rgba(239, 68, 68, 0.2)"
+                              : "rgba(59, 130, 246, 0.2)",
+                          color: o.estado === "COMPLETADO" 
+                            ? "#34d399" 
+                            : o.estado === "CANCELADO"
+                              ? "#f87171"
+                              : "#60a5fa",
+                          border: o.estado === "COMPLETADO" 
+                            ? "1px solid rgba(16, 185, 129, 0.3)" 
+                            : o.estado === "CANCELADO"
+                              ? "1px solid rgba(239, 68, 68, 0.3)"
+                              : "1px solid rgba(59, 130, 246, 0.3)"
+                        }}
+                      >
+                        {o.estado}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
               {displayedOrders.length === 0 && (
                 <tr>
                   <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--admin-text-muted)" }}>
                     {activeTab === "activos" 
-                      ? "No hay pedidos en tránsito registrados actualmente."
-                      : "No hay registros históricos de pedidos completados o cancelados."}
+                      ? "No hay pedidos en tránsito pendientes actualmente."
+                      : "No hay registros históricos de pedidos o ajustes."}
                   </td>
                 </tr>
               )}

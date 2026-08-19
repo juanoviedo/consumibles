@@ -45,6 +45,8 @@ model IncomingOrder {
   fechaPedido   DateTime  @default(now()) @db.Timestamp(6)
   fechaEstimada DateTime? @db.Timestamp(6)
   estado        String    @default("EN_CAMINO") // EN_CAMINO, COMPLETADO, CANCELADO
+  tipo          String    @default("PEDIDO") // PEDIDO, AJUSTE_INGRESO, AJUSTE_SALIDA, INICIALIZACION
+  motivo        String?
   createdAt     DateTime? @default(now()) @db.Timestamp(6)
   updatedAt     DateTime? @default(now()) @db.Timestamp(6)
 }

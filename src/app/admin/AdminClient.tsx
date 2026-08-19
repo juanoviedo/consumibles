@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { createProduct, deleteProduct, updateProduct, initializeProductCost, adjustProductStock } from "@/app/actions/product";
+import Link from "next/link";
+import { createProduct, deleteProduct, updateProduct, initializeProductCost } from "@/app/actions/product";
 import SubmitButton from "@/components/SubmitButton";
 import ActionButton from "@/components/ActionButton";
 
@@ -16,7 +17,7 @@ export default function AdminClient({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [filterCategoryId, setFilterCategoryId] = useState<number | "ALL">("ALL");
-  const [activeTab, setActiveTab] = useState<"products" | "audit" | "adjustments">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "audit">("products");
   const [initializingProduct, setInitializingProduct] = useState<any | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -256,55 +257,57 @@ export default function AdminClient({
   return (
     <>
       {/* Sub-Tabs Navigation */}
-      <div style={{ display: "flex", gap: "15px", marginBottom: "25px", borderBottom: "1px solid var(--admin-glass-border)", paddingBottom: "10px" }}>
-        <button 
-          onClick={() => setActiveTab("products")} 
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px", borderBottom: "1px solid var(--admin-glass-border)", paddingBottom: "10px", flexWrap: "wrap", gap: "15px" }}>
+        <div style={{ display: "flex", gap: "15px" }}>
+          <button 
+            onClick={() => setActiveTab("products")} 
+            style={{
+              background: "transparent",
+              border: "none",
+              color: activeTab === "products" ? "white" : "var(--admin-text-muted)",
+              fontSize: "16px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              padding: "8px 16px",
+              borderBottom: activeTab === "products" ? "2px solid #60a5fa" : "none",
+              transition: "all 0.2s"
+            }}
+          >
+            📦 Catálogo de Productos
+          </button>
+          <button 
+            onClick={() => setActiveTab("audit")} 
+            style={{
+              background: "transparent",
+              border: "none",
+              color: activeTab === "audit" ? "white" : "var(--admin-text-muted)",
+              fontSize: "16px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              padding: "8px 16px",
+              borderBottom: activeTab === "audit" ? "2px solid #60a5fa" : "none",
+              transition: "all 0.2s"
+            }}
+          >
+            📜 Historial de Movimientos
+          </button>
+        </div>
+
+        <Link 
+          href="/admin/pedidos-camino" 
+          className="admin-btn admin-btn-outline"
           style={{
-            background: "transparent",
-            border: "none",
-            color: activeTab === "products" ? "white" : "var(--admin-text-muted)",
-            fontSize: "16px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            padding: "8px 16px",
-            borderBottom: activeTab === "products" ? "2px solid #60a5fa" : "none",
-            transition: "all 0.2s"
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "13px",
+            borderColor: "#60a5fa",
+            color: "#60a5fa",
+            textDecoration: "none"
           }}
         >
-          📦 Catálogo de Productos
-        </button>
-        <button 
-          onClick={() => setActiveTab("adjustments")} 
-          style={{
-            background: "transparent",
-            border: "none",
-            color: activeTab === "adjustments" ? "white" : "var(--admin-text-muted)",
-            fontSize: "16px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            padding: "8px 16px",
-            borderBottom: activeTab === "adjustments" ? "2px solid #60a5fa" : "none",
-            transition: "all 0.2s"
-          }}
-        >
-          🔧 Ajustes de Stock
-        </button>
-        <button 
-          onClick={() => setActiveTab("audit")} 
-          style={{
-            background: "transparent",
-            border: "none",
-            color: activeTab === "audit" ? "white" : "var(--admin-text-muted)",
-            fontSize: "16px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            padding: "8px 16px",
-            borderBottom: activeTab === "audit" ? "2px solid #60a5fa" : "none",
-            transition: "all 0.2s"
-          }}
-        >
-          📜 Historial de Auditoría
-        </button>
+          <span>🚚 Gestionar Pedidos y Ajustes de Stock</span>
+        </Link>
       </div>
 
       {activeTab === "products" && (
@@ -724,76 +727,6 @@ export default function AdminClient({
         </section>
       )}
 
-      {activeTab === "adjustments" && (
-        <section className="glass-container" style={{ marginBottom: "40px" }}>
-          <h2 style={{ marginTop: 0, marginBottom: "20px" }}>Realizar Ajuste de Inventario (Entradas y Salidas)</h2>
-          <form
-            action={async (formData) => {
-              const productId = parseInt(formData.get("productId") as string, 10);
-              const tipo = formData.get("tipo") as "INGRESO" | "SALIDA";
-              const cantidad = parseInt(formData.get("cantidad") as string, 10);
-              const detalle = formData.get("detalle") as string;
-              
-              try {
-                const res = await adjustProductStock(productId, tipo, cantidad, detalle);
-                if (res && res.error) {
-                  alert("Error al registrar ajuste: " + res.error);
-                } else {
-                  alert("Ajuste de inventario registrado con éxito");
-                  setActiveTab("products");
-                }
-              } catch (err: any) {
-                alert("Error al registrar ajuste: " + err.message);
-              }
-            }}
-            className="admin-grid-form"
-          >
-            <div className="admin-input-group">
-              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>Seleccionar Producto</label>
-              <select name="productId" required defaultValue="">
-                <option value="" disabled>-- Seleccione un producto --</option>
-                {products.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre} (Código: {p.codigo} | Stock actual: {p.stockActual})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="admin-input-group">
-              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>Tipo de Ajuste</label>
-              <select name="tipo" required defaultValue="SALIDA">
-                <option value="INGRESO">🟢 INGRESO (Entrada / Ajuste Positivo)</option>
-                <option value="SALIDA">🔴 SALIDA (Pérdida, Daño / Ajuste Negativo)</option>
-              </select>
-            </div>
-
-            <div className="admin-input-group">
-              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>Cantidad de Unidades</label>
-              <input type="number" name="cantidad" required min="1" placeholder="Ej. 5" />
-            </div>
-
-            <div className="admin-input-group" style={{ gridColumn: "1 / -1" }}>
-              <label style={{ fontSize: "14px", color: "var(--admin-text-muted)", display: "block", marginBottom: "6px" }}>Detalle / Motivo del Ajuste</label>
-              <textarea 
-                name="detalle" 
-                required 
-                rows={3} 
-                placeholder="Escriba el motivo, ej: '3 piezas dañadas en transporte', 'Ajuste de inventario físico mensual', etc." 
-              />
-            </div>
-
-            <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-              <SubmitButton className="admin-btn" loadingText="Registrando...">
-                Registrar Ajuste
-              </SubmitButton>
-              <button type="button" className="admin-btn admin-btn-outline" onClick={() => setActiveTab("products")}>
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </section>
-      )}
 
       {/* Initial Cost Modal Overlay */}
       {initializingProduct && (

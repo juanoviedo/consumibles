@@ -25,7 +25,15 @@ export async function getIncomingOrders() {
 export async function createIncomingOrder(formData: FormData) {
   try {
     const productId = parseInt(formData.get("productId") as string, 10);
+    const tipo = (formData.get("tipo") as string) || "PEDIDO"; // PEDIDO, AJUSTE_INGRESO, AJUSTE_SALIDA, INICIALIZACION
     const cantidad = parseInt(formData.get("cantidad") as string, 10);
+    const motivo = (formData.get("motivo") as string) || "";
+    const aplicarInmediato = formData.get("aplicarInmediato") === "true" || tipo !== "PEDIDO";
+
+    if (isNaN(cantidad) || cantidad <= 0) {
+      throw new Error("La cantidad debe ser un número mayor a 0.");
+    }
+
     const costoUnitarioInput = formData.get("costoUnitario");
     const costoTotalInput = formData.get("costoTotal");
     let costoUnitario = 0;
@@ -36,17 +44,160 @@ export async function createIncomingOrder(formData: FormData) {
       const costoTotal = parseFloat(costoTotalInput as string || "0");
       costoUnitario = cantidad > 0 ? (costoTotal / cantidad) : 0;
     }
+
     const fechaEstimadaRaw = formData.get("fechaEstimada") as string;
     const fechaEstimada = fechaEstimadaRaw ? new Date(fechaEstimadaRaw) : null;
 
     const fechaPedidoRaw = formData.get("fechaPedido") as string;
     const fechaPedido = fechaPedidoRaw ? new Date(fechaPedidoRaw) : new Date();
 
+    // Si es un AJUSTE DE SALIDA, aplicar inmediatamente descontando inventario
+    if (tipo === "AJUSTE_SALIDA") {
+      await prisma.$transaction(async (tx) => {
+        const product = await tx.product.findUnique({
+          where: { id: productId }
+        });
+
+        if (!product) {
+          throw new Error("Producto no encontrado");
+        }
+
+        const stockPrevio = product.stockActual;
+        if (stockPrevio < cantidad) {
+          throw new Error(`Stock insuficiente. Stock actual: ${stockPrevio}, intento de salida: ${cantidad}`);
+        }
+
+        const stockNuevo = stockPrevio - cantidad;
+        const pPromedio = Number(product.precioPromedioCompra || 0);
+        const valorInventarioNuevo = stockNuevo * pPromedio;
+
+        await tx.product.update({
+          where: { id: productId },
+          data: {
+            stockActual: stockNuevo,
+            valorInventarioActual: valorInventarioNuevo
+          }
+        });
+
+        await tx.incomingOrder.create({
+          data: {
+            productId,
+            cantidad,
+            costoUnitario: pPromedio,
+            fechaPedido,
+            fechaEstimada: null,
+            estado: "COMPLETADO",
+            tipo: "AJUSTE_SALIDA",
+            motivo: motivo || "Ajuste manual de salida / merma"
+          }
+        });
+
+        await tx.inventoryLog.create({
+          data: {
+            productId,
+            tipo: "AJUSTE_SALIDA",
+            cantidad,
+            costoUnit: pPromedio,
+            stockPrevio,
+            stockNuevo,
+            detalle: motivo || `Ajuste manual de salida: -${cantidad} u`
+          }
+        });
+      });
+
+      revalidatePath("/");
+      revalidatePath("/admin");
+      revalidatePath("/admin/productos");
+      revalidatePath("/admin/pedidos-camino");
+      return { success: true };
+    }
+
+    // Si es un AJUSTE DE ENTRADA o INICIALIZACION con aplicación directa
+    if (aplicarInmediato && (tipo === "AJUSTE_INGRESO" || tipo === "INICIALIZACION")) {
+      await prisma.$transaction(async (tx) => {
+        const product = await tx.product.findUnique({
+          where: { id: productId }
+        });
+
+        if (!product) {
+          throw new Error("Producto no encontrado");
+        }
+
+        const stockPrevio = product.stockActual;
+        const stockNuevo = stockPrevio + cantidad;
+
+        let precioPromedioNuevo = 0;
+        let fechaPromedioNuevo: Date | null = null;
+
+        if (tipo === "INICIALIZACION" || !product.costoInicialConfigurado || Number(product.precioPromedioCompra) <= 0 || stockPrevio <= 0) {
+          precioPromedioNuevo = costoUnitario;
+          fechaPromedioNuevo = fechaPedido;
+        } else {
+          const pPrevio = Number(product.precioPromedioCompra);
+          const pCompra = costoUnitario;
+          precioPromedioNuevo = ((stockPrevio * pPrevio) + (cantidad * pCompra)) / stockNuevo;
+
+          const tPrevio = product.fechaPromedioCompra 
+            ? new Date(product.fechaPromedioCompra).getTime() 
+            : fechaPedido.getTime();
+          const tCompra = fechaPedido.getTime();
+          const tNuevo = ((stockPrevio * tPrevio) + (cantidad * tCompra)) / stockNuevo;
+          fechaPromedioNuevo = new Date(tNuevo);
+        }
+
+        const valorInventarioNuevo = stockNuevo * precioPromedioNuevo;
+
+        await tx.product.update({
+          where: { id: productId },
+          data: {
+            stockActual: stockNuevo,
+            precioPromedioCompra: precioPromedioNuevo,
+            fechaPromedioCompra: fechaPromedioNuevo,
+            valorInventarioActual: valorInventarioNuevo,
+            costoInicialConfigurado: true
+          }
+        });
+
+        await tx.incomingOrder.create({
+          data: {
+            productId,
+            cantidad,
+            costoUnitario,
+            fechaPedido,
+            fechaEstimada,
+            estado: "COMPLETADO",
+            tipo,
+            motivo: motivo || (tipo === "INICIALIZACION" ? "Configuración de costo y stock inicial" : "Ajuste de inventario / entrada con costo")
+          }
+        });
+
+        await tx.inventoryLog.create({
+          data: {
+            productId,
+            tipo: tipo === "INICIALIZACION" ? "INICIALIZACION" : "AJUSTE_INGRESO",
+            cantidad,
+            costoUnit: costoUnitario,
+            stockPrevio,
+            stockNuevo,
+            detalle: motivo || (tipo === "INICIALIZACION" ? `Inicialización de costo a $${costoUnitario.toLocaleString()} (${cantidad} u)` : `Ajuste de entrada: +${cantidad} u a $${costoUnitario.toLocaleString()}/u`)
+          }
+        });
+      });
+
+      revalidatePath("/");
+      revalidatePath("/admin");
+      revalidatePath("/admin/productos");
+      revalidatePath("/admin/pedidos-camino");
+      return { success: true };
+    }
+
+    // Pedido regular (EN_CAMINO)
     const duplicate = await prisma.incomingOrder.findFirst({
       where: {
         productId,
         cantidad,
         costoUnitario,
+        tipo,
         createdAt: {
           gte: new Date(Date.now() - 3000)
         }
@@ -64,6 +215,8 @@ export async function createIncomingOrder(formData: FormData) {
         fechaPedido,
         fechaEstimada,
         estado: "EN_CAMINO",
+        tipo,
+        motivo: motivo || null
       },
     });
 
@@ -72,14 +225,13 @@ export async function createIncomingOrder(formData: FormData) {
     revalidatePath("/admin/pedidos-camino");
     return { success: true };
   } catch (err: any) {
-    console.error("Error creating incoming order:", err);
+    console.error("Error creating incoming order / adjustment:", err);
     return { error: err.message || "Error interno del servidor" };
   }
 }
 
 export async function completeIncomingOrder(id: number) {
   try {
-    // 1. Obtener los detalles del pedido en camino
     const order = await prisma.incomingOrder.findUnique({
       where: { id },
     });
@@ -92,9 +244,7 @@ export async function completeIncomingOrder(id: number) {
       throw new Error("El pedido ya no está en camino");
     }
 
-    // 2. Ejecutar la actualización en una transacción interactiva
     await prisma.$transaction(async (tx) => {
-      // A. Obtener el producto
       const product = await tx.product.findUnique({
         where: { id: order.productId }
       });
@@ -109,7 +259,7 @@ export async function completeIncomingOrder(id: number) {
       let precioPromedioNuevo = 0;
       let fechaPromedioNuevo: Date | null = null;
 
-      if (!product.costoInicialConfigurado || Number(product.precioPromedioCompra) <= 0 || stockPrevio <= 0) {
+      if (order.tipo === "INICIALIZACION" || !product.costoInicialConfigurado || Number(product.precioPromedioCompra) <= 0 || stockPrevio <= 0) {
         precioPromedioNuevo = Number(order.costoUnitario);
         fechaPromedioNuevo = new Date(order.fechaPedido);
       } else {
@@ -127,7 +277,6 @@ export async function completeIncomingOrder(id: number) {
 
       const valorInventarioNuevo = stockNuevo * precioPromedioNuevo;
 
-      // B. Actualizar el producto con nuevos stocks y costos
       await tx.product.update({
         where: { id: order.productId },
         data: {
@@ -139,7 +288,6 @@ export async function completeIncomingOrder(id: number) {
         }
       });
 
-      // C. Marcar el pedido como completado
       await tx.incomingOrder.update({
         where: { id },
         data: {
@@ -147,16 +295,17 @@ export async function completeIncomingOrder(id: number) {
         },
       });
 
-      // D. Registrar en el historial de inventario (InventoryLog)
+      const logType = order.tipo === "INICIALIZACION" ? "INICIALIZACION" : order.tipo === "AJUSTE_INGRESO" ? "AJUSTE_INGRESO" : "COMPRA";
+
       await tx.inventoryLog.create({
         data: {
           productId: order.productId,
-          tipo: "COMPRA",
+          tipo: logType,
           cantidad: order.cantidad,
           costoUnit: order.costoUnitario,
           stockPrevio,
           stockNuevo,
-          detalle: `Pedido completado #${order.id}. Compra de ${order.cantidad} unidades a $${Number(order.costoUnitario).toLocaleString()}/u`
+          detalle: order.motivo || `Pedido completado #${order.id}. Compra de ${order.cantidad} unidades a $${Number(order.costoUnitario).toLocaleString()}/u`
         }
       });
     });
@@ -216,8 +365,18 @@ export async function revertIncomingOrder(id: number) {
         }
 
         const stockPrevio = product.stockActual;
-        const stockNuevo = Math.max(0, stockPrevio - order.cantidad);
-        const valorInventarioNuevo = stockNuevo * Number(product.precioPromedioCompra || 0);
+        let stockNuevo = stockPrevio;
+
+        if (order.tipo === "AJUSTE_SALIDA") {
+          // Revertir una salida devuelve las unidades al stock
+          stockNuevo = stockPrevio + order.cantidad;
+        } else {
+          // Revertir una entrada / compra / inicialización descuenta las unidades
+          stockNuevo = Math.max(0, stockPrevio - order.cantidad);
+        }
+
+        const pPromedio = Number(product.precioPromedioCompra || 0);
+        const valorInventarioNuevo = stockNuevo * pPromedio;
 
         await tx.product.update({
           where: { id: order.productId },
@@ -237,12 +396,12 @@ export async function revertIncomingOrder(id: number) {
         await tx.inventoryLog.create({
           data: {
             productId: order.productId,
-            tipo: "AJUSTE",
-            cantidad: -order.cantidad,
+            tipo: "REVERSION",
+            cantidad: order.tipo === "AJUSTE_SALIDA" ? order.cantidad : -order.cantidad,
             costoUnit: order.costoUnitario,
             stockPrevio,
             stockNuevo,
-            detalle: `Reversión de pedido #${order.id} a estado EN_CAMINO para edición. Se descuentan ${order.cantidad} unidades.`,
+            detalle: `Reversión de ${order.tipo} #${order.id} a estado EN_CAMINO para edición.`,
           },
         });
       });
