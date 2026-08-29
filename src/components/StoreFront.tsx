@@ -148,13 +148,64 @@ export default function StoreFront({ products, categories = [] }: { products: an
 
   const ControlCantidad = ({ nombre, codigo, precio }: { nombre: string; codigo: string; precio: number }) => {
     const cantidad = carrito[codigo]?.cantidad || 0;
-    return (
-      <div className="control-cantidad" onClick={(e) => e.stopPropagation()}>
-        <button className="btn-menos" onClick={() => modificarCantidad(codigo, nombre, precio, -1)}>-</button>
-        <div className="indicador-carrito">
-          <i className="icon-basket"></i> <span className="cantidad-producto">{cantidad}</span>
+
+    if (cantidad === 0) {
+      return (
+        <div className="control-cantidad-wrapper" onClick={(e) => e.stopPropagation()}>
+          <button
+            className="btn-agregar-carrito-inicial"
+            onClick={() => modificarCantidad(codigo, nombre, precio, 1)}
+            title="Agregar al Carrito"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <span>Agregar al carrito</span>
+          </button>
         </div>
-        <button className="btn-mas" onClick={() => modificarCantidad(codigo, nombre, precio, 1)}>+</button>
+      );
+    }
+
+    return (
+      <div className="control-cantidad activo" onClick={(e) => e.stopPropagation()}>
+        <button
+          className="btn-menos"
+          onClick={() => modificarCantidad(codigo, nombre, precio, -1)}
+          title={cantidad === 1 ? "Quitar del carrito" : "Quitar una unidad"}
+        >
+          {cantidad === 1 ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          )}
+        </button>
+
+        <div className="indicador-carrito">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span className="cantidad-producto">{cantidad} en carrito</span>
+        </div>
+
+        <button
+          className="btn-mas"
+          onClick={() => modificarCantidad(codigo, nombre, precio, 1)}
+          title="Agregar una unidad más"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
       </div>
     );
   };

@@ -89,26 +89,9 @@
   display: none;
 }
 
-.product-card .control-cantidad {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 5px 0 10px 0;
-}
-
-.product-card .btn-menos, 
-.product-card .btn-mas {
-  padding: 5px 10px;
-  font-size: 1em;
-}
-
-.product-card .indicador-carrito {
-  min-width: 30px;
-  padding: 0 5px;
-}
-
-.product-card .cantidad-producto {
-  font-size: 0.9em;
+.product-card .control-cantidad-wrapper {
+  width: 100%;
+  margin: 8px 0;
 }
 
 .product-card .cuadrodentro {
