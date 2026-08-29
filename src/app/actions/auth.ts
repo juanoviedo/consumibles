@@ -1,9 +1,10 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { excludeAdminIp, getIpFromHeaders } from "@/lib/analytics";
 
 export async function loginAction(state: any, formData: FormData) {
   const email = formData.get("email") as string;
@@ -16,6 +17,12 @@ export async function loginAction(state: any, formData: FormData) {
   if (!valid) return { error: "Credenciales incorrectas" };
 
   const cookieStore = await cookies();
+  const reqHeaders = await headers();
+  const ip = getIpFromHeaders(reqHeaders);
+  if (ip) {
+    await excludeAdminIp(ip, "admin_login_action");
+  }
+
   const sessionData = JSON.stringify({ email: user.email, isSuperAdmin: user.isSuperAdmin });
   
   cookieStore.set("admin_session", sessionData, {

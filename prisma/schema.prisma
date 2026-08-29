@@ -191,3 +191,98 @@ model ProductDiscount {
   @@id([idProducto, idDescuento])
 }
 
+model AnalyticsExcludedIp {
+  id              Int      @id @default(autoincrement())
+  ipHash          String   @unique
+  reason          String   @default("admin_login")
+  firstDetectedAt DateTime @default(now()) @db.Timestamp(6)
+  lastDetectedAt  DateTime @default(now()) @db.Timestamp(6)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @db.Timestamp(6)
+}
+
+model AnalyticsVisitor {
+  id          String             @id
+  firstSeenAt DateTime           @default(now()) @db.Timestamp(6)
+  lastSeenAt  DateTime           @default(now()) @db.Timestamp(6)
+  deviceType  String?
+  os          String?
+  browser     String?
+  screenWidth Int?
+  screenHeight Int?
+  language    String?
+  country     String?
+  countryCode String?
+  region      String?
+  city        String?
+  isExcluded  Boolean            @default(false)
+  sessions    AnalyticsSession[]
+  createdAt   DateTime           @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime           @default(now()) @db.Timestamp(6)
+}
+
+model AnalyticsSession {
+  id              String              @id
+  visitorId       String
+  visitor         AnalyticsVisitor    @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  startedAt       DateTime            @default(now()) @db.Timestamp(6)
+  lastActiveAt    DateTime            @default(now()) @db.Timestamp(6)
+  durationSeconds Int                 @default(0)
+  ipHash          String?
+  referrer        String?
+  referrerHost    String?
+  entryPage       String?
+  exitPage        String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmTerm         String?
+  utmContent      String?
+  country         String?
+  countryCode     String?
+  region          String?
+  city            String?
+  isExcluded      Boolean             @default(false)
+  excludedReason  String?
+  excludedAt      DateTime?           @db.Timestamp(6)
+  pageViews       AnalyticsPageView[]
+  events          AnalyticsEvent[]
+
+  @@index([ipHash])
+  @@index([isExcluded])
+}
+
+model AnalyticsPageView {
+  id         Int              @id @default(autoincrement())
+  visitorId  String
+  sessionId  String
+  session    AnalyticsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  url        String
+  pathname   String
+  title      String?
+  referrer   String?
+  isExcluded Boolean          @default(false)
+  createdAt  DateTime         @default(now()) @db.Timestamp(6)
+
+  @@index([sessionId])
+  @@index([isExcluded])
+}
+
+model AnalyticsEvent {
+  id         Int              @id @default(autoincrement())
+  visitorId  String
+  sessionId  String
+  session    AnalyticsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  eventName  String
+  pathname   String?
+  metadata   Json?
+  isExcluded Boolean          @default(false)
+  createdAt  DateTime         @default(now()) @db.Timestamp(6)
+
+  @@index([sessionId])
+  @@index([eventName])
+  @@index([isExcluded])
+}
+
+

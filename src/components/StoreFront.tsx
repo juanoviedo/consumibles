@@ -100,6 +100,14 @@ export default function StoreFront({ products, categories = [] }: { products: an
       }
       return nuevoCarrito;
     });
+
+    if (typeof window !== "undefined" && window.trackAnalyticsEvent) {
+      if (cambio > 0) {
+        window.trackAnalyticsEvent("add_to_cart", { codigo, nombre, precio });
+      } else if (cambio < 0) {
+        window.trackAnalyticsEvent("remove_from_cart", { codigo, nombre, precio });
+      }
+    }
   };
 
   const formatearMoneda = (valor: number) => {
@@ -122,6 +130,10 @@ export default function StoreFront({ products, categories = [] }: { products: an
       totalFinal += subtotal;
       textoPedido += `${item.cantidad} x ${item.nombre} (Ref: ${codigo}) - ${formatearMoneda(subtotal)}\n`;
     });
+
+    if (typeof window !== "undefined" && window.trackAnalyticsEvent) {
+      window.trackAnalyticsEvent("whatsapp_click", { totalFinal, itemsCount: Object.keys(carrito).length });
+    }
 
     textoPedido += `\nTOTAL: ${formatearMoneda(totalFinal)}`;
     window.open(`https://wa.me/${CONFIG.telefono}?text=${encodeURIComponent(textoPedido)}`, "_blank");
